@@ -1,6 +1,6 @@
 # Plan: Model roster and provider abstraction
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-06-25
 - **Author:** vpc
 - **Spec:** ./spec.md
