@@ -1,6 +1,6 @@
 # Spec: Model roster and provider abstraction
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-06-25
 - **Author:** vpc
 - **Related ADRs:** ADR 0001 (model-agnostic roles, bound by a roster)
