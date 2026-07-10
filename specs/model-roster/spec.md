@@ -111,9 +111,9 @@ a CI check fails on any uncovered criterion, and every `MUST` appears here
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1, R-2 | `tests/…` |
-| SC-2 | R-2, R-3 | `tests/…` |
-| SC-3 | R-3, R-4 | `tests/…` |
-| SC-4 | R-5 | `tests/…` |
-| SC-5 | R-6 | `tests/…` |
-| SC-6 | R-7 | `tests/…` |
+| SC-1 | R-1, R-2 | `tests/test_roster.py::test_sc1_resolves_each_role_to_its_model_ref` |
+| SC-2 | R-2, R-3 | `tests/test_dispatch.py::test_sc2_dispatch_invokes_bound_provider_and_returns_response` |
+| SC-3 | R-3, R-4 | `tests/…` (T-3, T-4 — adapters) |
+| SC-4 | R-5 | `tests/test_dispatch.py::test_sc4_unknown_role_fails_loudly_and_does_not_invoke`, `…::test_sc4_provider_without_adapter_fails_loudly_and_does_not_invoke` |
+| SC-5 | R-6 | `tests/test_roster.py::test_sc5_roster_with_a_secret_field_is_rejected`, `…::test_sc5_top_level_secret_is_rejected` |
+| SC-6 | R-7 | `tests/test_roster.py::test_sc6_distinct_providers_are_preserved` |
