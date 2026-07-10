@@ -19,6 +19,24 @@ the chief's head; the validator checks tests-vs-criteria, not vibes.
 
 ---
 
+## Model binding (roster) — see ADR 0001
+
+Roles are **model-agnostic slots**; a **roster** binds each to a concrete model
+in one place, so the same orchestration runs any mix of models:
+
+```
+chief:     claude-fable-5     # high-end: planning, decomposition
+worker:    claude-sonnet-5    # cheaper: bulk coding (or a pool)
+validator: gemini-3-pro       # different lineage than worker → blind-spot coverage
+```
+
+Models are reached through thin per-provider adapters (prompt + tools in,
+response out). Because coordination is through the model-neutral artifacts
+above, **every model in every role follows the same methodology practices** —
+the artifact carries the contract, not the model. Full rationale: **ADR 0001**.
+
+---
+
 ## Part 1 — Chief: decomposing a spec into dispatchable tasks
 
 **Input:** an agreed `spec.md` (Goals, Requirements `R-…`, Success criteria

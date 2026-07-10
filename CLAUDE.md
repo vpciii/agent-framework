@@ -64,6 +64,11 @@ durable project-specific rules live in `docs/adr/` and `docs/glossary.md`.
   built.
 - **The human is author of record — above the chief.** No agent, chief
   included, is the final acceptance authority.
+- **Model-agnostic — no hardcoded vendor.** Roles (chief / worker /
+  validator) are slots bound to models by the **roster**; models are
+  reached through provider adapters. Swapping a model is a roster edit,
+  never a code change. The validator should be a different lineage than the
+  worker it gates (ADR 0001).
 
 ## What this file is not
 

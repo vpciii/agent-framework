@@ -29,3 +29,13 @@ and agent prompts. Add a term here before inventing a name for a concept.
 - **Escalation** — when a worker finds the spec wrong (or a term/boundary
   is unspecified), it stops and escalates to the chief; a contract change
   is its own diff for human sign-off, never a quiet `tasks.md` edit.
+- **Role** — a model-agnostic slot (chief / worker / validator), bound to a
+  concrete model by the **roster**. The framework hardcodes no vendor
+  (ADR 0001).
+- **Roster** — the single config that binds each role to a model (e.g.
+  `chief: claude-fable-5`, `worker: claude-sonnet-5`,
+  `validator: gemini-3-pro`). Swapping a model is a roster edit, not a code
+  change; it is the one source of truth for the role→model mapping.
+- **Provider adapter** — a thin per-provider (Anthropic, Google, …) shim
+  behind a common interface (prompt + tools in, response out), so models are
+  pluggable. Adding a provider = a new adapter + a roster entry.

@@ -15,9 +15,16 @@ the code, and a **validator** agent gates their output — all coordinating
   than the worker (blind-spot coverage).
 - **The human** is author of record, above the chief.
 
+**Model-agnostic.** Roles are slots bound to models by a **roster** — e.g.
+`chief: claude-fable-5`, `worker: claude-sonnet-5`, `validator: gemini-3-pro` —
+reached through thin per-provider adapters. Swap a model by config, not code;
+no vendor lock-in ([ADR 0001](docs/adr/0001-model-agnostic-roles.md)).
+
 The design principle: **the methodology's artifacts are the coordination
 protocol.** This repo is disposable orchestration *over* that contract, so
-the harness is swappable while the artifacts endure.
+the harness is swappable while the artifacts endure — and because the
+artifacts are model-neutral, every model in every role follows the same
+practices.
 
 ## Status
 
