@@ -103,9 +103,52 @@ bounded (N attempts → escalate to human).
 
 ---
 
+## Two review stages: conformance vs. refutation
+
+> Design note (2026-06-25). Will shape the future validator spec, and warrants
+> its own ADR when that role is built.
+
+The validator (Part 2) and an *adversarial* reviewer do **different jobs at
+different stages** — don't collapse them:
+
+| Stage | Who | Asks | Frequency |
+|---|---|---|---|
+| **Spec / plan** | Adversarial reviewer (design-mode, different lineage) | "Are these criteria/requirements *right*? What's missing or wrong?" | Selective — substantial / risky specs |
+| **Each worker PR** | Validator (conformance **+ adversarial mindset**, cross-model) | "Does this meet the criteria, with cited evidence? Is any of it test theatre?" | Every task |
+
+The distinction: **the validator checks the worker *against* the spec; the
+adversary checks the *spec itself*.** The validator trusts the criteria as the
+contract and verifies conformance to them — so it structurally *cannot* fully
+challenge them. But a flawed criterion or missing requirement **poisons every
+task built against it**: a worker will perfectly satisfy a wrong spec and sail
+through the validator. So the review that *challenges the contract* must happen
+**upstream, at the spec gate** — catching a bad criterion there is worth far
+more than at fifty PRs downstream.
+
+Two consequences for this design:
+
+- **Do not add a separate per-PR adversarial reviewer.** It's redundant with the
+  validator (already cross-model, already carrying the ADR-0015 test-honesty /
+  no-scope-creep checks) and it's the effort-sink cross-model review is known to
+  become when run on *everything* rather than high-stakes work. Instead, give
+  the validator an explicit **refutation mindset** — construct an unstated edge
+  case, hunt test theatre — not just a checklist to tick.
+- **Add a spec-stage adversarial gate**, selective, different-lineage, in
+  design-mode — the high-leverage place to catch flawed criteria before the
+  chief decomposes and dispatches. This is where "challenge the contract" lives.
+
+Rationale and prior evidence: the cross-model adversarial-review trial in
+`$METHODOLOGY_HOME/experiments/adversarial-review/` (a different model catches
+what the author's model misses; and it earns its keep on design decisions, not
+on every routine change).
+
+---
+
 ## The surrounding loop (for context)
 
-1. **Human** signs off `spec.md` → `plan.md` (methodology gates).
+1. **Human** signs off `spec.md` → `plan.md` (methodology gates). A
+   substantial/risky spec also gets an **adversarial design-mode review** here
+   first (see *Two review stages*).
 2. **Chief** decomposes → `tasks.md` (Part 1).
 3. **Dispatch** — chief sends ready-frontier tasks to **workers** (parallel;
    isolated worktrees/branches so they don't collide).
