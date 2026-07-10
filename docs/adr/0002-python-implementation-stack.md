@@ -29,6 +29,16 @@ subprocesses and git worktrees for workers, and following the methodology
 Provider adapters (ADR 0001) wrap the **official provider SDKs** (`anthropic`,
 `google-genai`) behind the common interface, kept thin so the SDK is swappable.
 
+## Scope — this is the harness's language, not the target's
+
+Python is the language of the **framework itself**. It is **not** a constraint
+on the projects the framework builds: the workers write whatever the target repo
+uses (Java, Go, Rust, TypeScript, …), and the validator runs *that* project's
+own test / lint / build commands. Coordination is through language-neutral
+surfaces — the artifacts (spec / tasks / PRs) and the target's own commands — so
+the framework is **target-language-agnostic**. (A later spec adds the per-target
+"how to run this project's checks" config the validator needs.)
+
 ## Alternatives considered
 
 - **TypeScript / Node** — also has both provider SDKs, the MCP TS SDK, and
