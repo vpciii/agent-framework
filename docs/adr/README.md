@@ -7,4 +7,5 @@ See `$METHODOLOGY_HOME/methodology.md` §1 for when an ADR is required, and
 Newest first when browsing. Never edit an accepted ADR — supersede it with a
 new one and mark the old one `Superseded by NNNN`.
 
+- **0002** — Python implementation stack.
 - **0001** — Model-agnostic roles, bound by a roster.
