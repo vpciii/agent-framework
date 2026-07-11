@@ -30,7 +30,7 @@ T-3 + T-4 (both adapters) · T-5 enforces the whole set in CI.
   (validator + worker on different providers resolve to distinct providers);
   `ruff` + `mypy --strict` clean; `uv sync` reproducible.
 
-### [x] T-2 — Provider interface + registry + dispatch (this PR)
+### [x] T-2 — Provider interface + registry + dispatch (#6)
 - **Satisfies:** SC-2, SC-4
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/providers/{base,registry}.py`, `src/agent_framework/dispatch.py`, `tests/test_dispatch.py`
@@ -43,7 +43,7 @@ T-3 + T-4 (both adapters) · T-5 enforces the whole set in CI.
   returns a normalized `Response`) and SC-4 (unknown role, or provider with no
   adapter, raises a typed error and does not invoke) pass, citing their ids.
 
-### [ ] T-3 — Anthropic adapter
+### [x] T-3 — Anthropic adapter (#7)
 - **Satisfies:** SC-3 (Anthropic half)
 - **Depends on:** T-2
 - **Touches:** `src/agent_framework/providers/anthropic.py`, `tests/test_provider_anthropic.py`, `pyproject.toml` (`anthropic` dep)
@@ -87,8 +87,8 @@ this is only the planning view.
 | Criterion | Requirement(s) | Task | Status |
 |---|---|---|---|
 | SC-1 | R-1, R-2 | T-1 | ✅ (#5) |
-| SC-2 | R-2, R-3 | T-2 | ✅ (this PR) |
-| SC-3 | R-3, R-4 | T-3, T-4 | T-4 ✅ (this PR); T-3 pending |
-| SC-4 | R-5 | T-2 | ✅ (this PR) |
+| SC-2 | R-2, R-3 | T-2 | ✅ (#6) |
+| SC-3 | R-3, R-4 | T-3, T-4 | T-3 ✅ (#7); T-4 ✅ (this PR) |
+| SC-4 | R-5 | T-2 | ✅ (#6) |
 | SC-5 | R-6 | T-1 | ✅ (#5) |
 | SC-6 | R-7 | T-1 | ✅ (#5) |
