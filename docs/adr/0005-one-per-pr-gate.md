@@ -1,6 +1,6 @@
 # ADR 0005: One per-PR gate — conformance and refutation in a single validator
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-07-11
 - **Deciders:** vpc
 
