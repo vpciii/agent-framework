@@ -53,7 +53,7 @@ T-3 + T-4 (both adapters) · T-5 enforces the whole set in CI.
 - **Done when:** SC-3's Anthropic test round-trips a request → normalized
   `Response` against a **mocked SDK transport** (no live call), citing SC-3.
 
-### [ ] T-4 — Google adapter
+### [x] T-4 — Google adapter (this PR)
 - **Satisfies:** SC-3 (Google half)
 - **Depends on:** T-2 (parallel with T-3)
 - **Touches:** `src/agent_framework/providers/google.py`, `tests/test_provider_google.py`, `pyproject.toml` (`google-genai` dep)
@@ -88,7 +88,7 @@ this is only the planning view.
 |---|---|---|---|
 | SC-1 | R-1, R-2 | T-1 | ✅ (#5) |
 | SC-2 | R-2, R-3 | T-2 | ✅ (this PR) |
-| SC-3 | R-3, R-4 | T-3, T-4 | pending |
+| SC-3 | R-3, R-4 | T-3, T-4 | T-4 ✅ (this PR); T-3 pending |
 | SC-4 | R-5 | T-2 | ✅ (this PR) |
 | SC-5 | R-6 | T-1 | ✅ (#5) |
 | SC-6 | R-7 | T-1 | ✅ (#5) |
