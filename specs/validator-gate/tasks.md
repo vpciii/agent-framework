@@ -33,7 +33,7 @@ spec.
 - **Done when:** SC-6's test round-trips `Pass` and `Reject` through JSON to
   equal values, citing SC-6; `ruff` + `mypy --strict` clean.
 
-### [x] T-2 — Judgment stage (prompt + `return_verdict` tool + dispatch) (this PR)
+### [x] T-2 — Judgment stage (prompt + `return_verdict` tool + dispatch) (#16)
 - **Satisfies:** SC-4, SC-5
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/validator/judgment.py`,
@@ -50,7 +50,7 @@ spec.
   checklist) pass, citing their ids; the no-tool-call path raises the typed
   error.
 
-### [ ] T-3 — Deterministic checks + the gate
+### [x] T-3 — Deterministic checks + the gate (this PR)
 - **Satisfies:** SC-1, SC-2, SC-3, SC-7
 - **Depends on:** T-2
 - **Touches:** `src/agent_framework/validator/{checks,gate}.py`,
@@ -94,10 +94,10 @@ this is only the planning view.
 
 | Criterion | Requirement(s) | Task | Status |
 |---|---|---|---|
-| SC-1 | R-1, R-2, R-5 | T-3 | pending |
-| SC-2 | R-3, R-4 | T-3 | pending |
-| SC-3 | R-3, R-4 | T-3 | pending |
-| SC-4 | R-1, R-3, R-6 | T-2 | ✅ (this PR) |
-| SC-5 | R-5, R-6 | T-2 | ✅ (this PR) |
+| SC-1 | R-1, R-2, R-5 | T-3 | ✅ (this PR) |
+| SC-2 | R-3, R-4 | T-3 | ✅ (this PR) |
+| SC-3 | R-3, R-4 | T-3 | ✅ (this PR) |
+| SC-4 | R-1, R-3, R-6 | T-2 | ✅ (#16) |
+| SC-5 | R-5, R-6 | T-2 | ✅ (#16) |
 | SC-6 | R-7 | T-1 | ✅ (#15) |
-| SC-7 | R-8 | T-3 | pending |
+| SC-7 | R-8 | T-3 | ✅ (this PR) |

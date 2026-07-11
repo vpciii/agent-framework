@@ -163,10 +163,10 @@ shorthand, ADR 0003) and the requirement(s) it covers; the CI coverage check
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1, R-2, R-5 | *(pending)* |
-| SC-2 | R-3, R-4 | *(pending)* |
-| SC-3 | R-3, R-4 | *(pending)* |
+| SC-1 | R-1, R-2, R-5 | `tests/validator/test_gate.py::test_sc1_clean_bundle_and_clean_judgment_pass_with_citations` |
+| SC-2 | R-3, R-4 | `tests/validator/test_gate.py::test_sc2_uncited_criterion_rejects_without_model_call` |
+| SC-3 | R-3, R-4 | `tests/validator/test_gate.py::test_sc3_red_ci_rejects_without_model_call` |
 | SC-4 | R-1, R-3, R-6 | `tests/validator/test_judgment.py::test_sc4_defect_from_return_verdict_is_carried_verbatim` |
 | SC-5 | R-5, R-6 | `tests/validator/test_judgment.py::test_sc5_judgment_dispatches_through_validator_role_with_checklist` |
 | SC-6 | R-7 | `tests/validator/test_verdict.py::test_sc6_pass_round_trips_through_json`, `tests/validator/test_verdict.py::test_sc6_reject_round_trips_through_json` |
-| SC-7 | R-8 | *(pending)* |
+| SC-7 | R-8 | `tests/validator/test_gate.py::test_sc7_fix_without_red_evidence_rejects_naming_it` |
