@@ -1,6 +1,6 @@
 # Spec: Model roster and provider abstraction
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-06-25
 - **Author:** vpc
 - **Related ADRs:** ADR 0001 (model-agnostic roles, bound by a roster)
@@ -114,6 +114,6 @@ a CI check fails on any uncovered criterion, and every `MUST` appears here
 | SC-1 | R-1, R-2 | `tests/test_roster.py::test_sc1_resolves_each_role_to_its_model_ref` |
 | SC-2 | R-2, R-3 | `tests/test_dispatch.py::test_sc2_dispatch_invokes_bound_provider_and_returns_response` |
 | SC-3 | R-3, R-4 | `tests/test_provider_anthropic.py::test_sc3_anthropic_adapter_round_trips_to_normalized_response`, `tests/test_provider_google.py::test_sc3_google_adapter_round_trips_to_normalized_response` |
-| SC-4 | R-5 | `tests/test_dispatch.py::test_sc4_unknown_role_fails_loudly_and_does_not_invoke`, `…::test_sc4_provider_without_adapter_fails_loudly_and_does_not_invoke` |
-| SC-5 | R-6 | `tests/test_roster.py::test_sc5_roster_with_a_secret_field_is_rejected`, `…::test_sc5_top_level_secret_is_rejected` |
+| SC-4 | R-5 | `tests/test_dispatch.py::test_sc4_unknown_role_fails_loudly_and_does_not_invoke`, `tests/test_dispatch.py::test_sc4_provider_without_adapter_fails_loudly_and_does_not_invoke` |
+| SC-5 | R-6 | `tests/test_roster.py::test_sc5_roster_with_a_secret_field_is_rejected`, `tests/test_roster.py::test_sc5_top_level_secret_is_rejected` |
 | SC-6 | R-7 | `tests/test_roster.py::test_sc6_distinct_providers_are_preserved` |
