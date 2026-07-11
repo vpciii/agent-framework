@@ -17,3 +17,11 @@ class UnknownRoleError(AgentFrameworkError):
 
 class UnknownProviderError(AgentFrameworkError):
     """A role's provider has no registered adapter."""
+
+
+class ValidationError(AgentFrameworkError):
+    """The validator was given inconsistent inputs or built an invalid verdict."""
+
+
+class JudgmentFormatError(ValidationError):
+    """The judgment model did not answer with the required verdict tool call."""

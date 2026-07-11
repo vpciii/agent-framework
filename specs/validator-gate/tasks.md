@@ -20,7 +20,7 @@ spec.
 
 ---
 
-### [ ] T-1 — Verdict + bundle types, JSON round-trip
+### [x] T-1 — Verdict + bundle types, JSON round-trip (this PR)
 - **Satisfies:** SC-6
 - **Depends on:** —
 - **Touches:** `src/agent_framework/validator/{__init__,bundle,verdict}.py`,
@@ -99,5 +99,5 @@ this is only the planning view.
 | SC-3 | R-3, R-4 | T-3 | pending |
 | SC-4 | R-1, R-3, R-6 | T-2 | pending |
 | SC-5 | R-5, R-6 | T-2 | pending |
-| SC-6 | R-7 | T-1 | pending |
+| SC-6 | R-7 | T-1 | ✅ (this PR) |
 | SC-7 | R-8 | T-3 | pending |
