@@ -1,6 +1,6 @@
 # Tasks: Validator agent — the cite-the-test gate
 
-- **Status:** Draft
+- **Status:** Approved
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
