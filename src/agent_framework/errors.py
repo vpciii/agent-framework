@@ -13,3 +13,7 @@ class RosterError(AgentFrameworkError):
 
 class UnknownRoleError(AgentFrameworkError):
     """A role was requested that has no binding in the roster."""
+
+
+class UnknownProviderError(AgentFrameworkError):
+    """A role's provider has no registered adapter."""

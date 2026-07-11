@@ -16,7 +16,7 @@ T-3 + T-4 (both adapters) · T-5 enforces the whole set in CI.
 
 ---
 
-### [ ] T-1 — Scaffold + roster
+### [x] T-1 — Scaffold + roster (#5)
 - **Satisfies:** SC-1, SC-5, SC-6
 - **Depends on:** —
 - **Touches:** `pyproject.toml`, `uv.lock`, `src/agent_framework/{__init__,models,errors,roster}.py`, `tests/test_roster.py`, `examples/roster.toml`, `ruff`/`mypy` config
@@ -30,7 +30,7 @@ T-3 + T-4 (both adapters) · T-5 enforces the whole set in CI.
   (validator + worker on different providers resolve to distinct providers);
   `ruff` + `mypy --strict` clean; `uv sync` reproducible.
 
-### [ ] T-2 — Provider interface + registry + dispatch
+### [x] T-2 — Provider interface + registry + dispatch (this PR)
 - **Satisfies:** SC-2, SC-4
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/providers/{base,registry}.py`, `src/agent_framework/dispatch.py`, `tests/test_dispatch.py`
@@ -78,15 +78,17 @@ T-3 + T-4 (both adapters) · T-5 enforces the whole set in CI.
 
 ---
 
-## Traceability (spec source of truth: `spec.md`)
+## Criterion → task map
 
-Filled as tasks land; must be complete before the spec is `Implemented`.
+Which task delivers each criterion. The canonical `SC-` → **test** mapping
+lives in `spec.md`'s Traceability table (single source, checked in CI by T-5);
+this is only the planning view.
 
-| Criterion | Requirement(s) | Task | Verified by (test) |
+| Criterion | Requirement(s) | Task | Status |
 |---|---|---|---|
-| SC-1 | R-1, R-2 | T-1 | `tests/test_roster.py::…` |
-| SC-2 | R-2, R-3 | T-2 | `tests/test_dispatch.py::…` |
-| SC-3 | R-3, R-4 | T-3, T-4 | `tests/test_provider_{anthropic,google}.py::…` |
-| SC-4 | R-5 | T-2 | `tests/test_dispatch.py::…` |
-| SC-5 | R-6 | T-1 | `tests/test_roster.py::…` |
-| SC-6 | R-7 | T-1 | `tests/test_roster.py::…` |
+| SC-1 | R-1, R-2 | T-1 | ✅ (#5) |
+| SC-2 | R-2, R-3 | T-2 | ✅ (this PR) |
+| SC-3 | R-3, R-4 | T-3, T-4 | pending |
+| SC-4 | R-5 | T-2 | ✅ (this PR) |
+| SC-5 | R-6 | T-1 | ✅ (#5) |
+| SC-6 | R-7 | T-1 | ✅ (#5) |
