@@ -22,6 +22,12 @@ By default coverage is enforced for specs with status `Implemented`;
 `--include-approved` also enforces `Approved` specs (this repo's CI passes
 it, so the gate tightens as implementation proceeds). Other statuses are
 skipped. Exits 0 if every enforced spec passes, 1 otherwise.
+
+Pending-row semantics: an `Approved` spec may mark a Traceability row's
+test cell as exactly `*(pending)*` — the criterion is scheduled but its
+tests haven't landed (anything actually cited is still validated). At
+`Implemented`, pending rows are failures: that status *means* complete
+coverage.
 """
 
 from __future__ import annotations
@@ -35,6 +41,7 @@ STATUS_RE = re.compile(r"^\s*-\s*\*\*Status:\*\*\s*(.+?)\s*$", re.M)
 REQ_RE = re.compile(r"\*\*(R-\d+)\s*\((MUST(?:\s+NOT)?|SHOULD(?:\s+NOT)?|MAY)\)\*\*")
 SC_DEF_RE = re.compile(r"^\s*[-*]\s+\*\*(SC-\d+)\*\*", re.M)
 HEADING_RE = re.compile(r"^##\s+(.+?)\s*$", re.M)
+PENDING_RE = re.compile(r"\*\(pending\)\*")
 ENFORCED_DEFAULT = frozenset({"implemented"})
 
 
@@ -68,7 +75,7 @@ def cites(text: str, sc_id: str) -> bool:
     return re.search(rf"\b{re.escape(sc_id)}\b", text) is not None
 
 
-def check_spec(spec_path: Path, root: Path) -> list[str]:
+def check_spec(spec_path: Path, root: Path, *, allow_pending: bool = False) -> list[str]:
     """Return a list of failure messages for one spec.md."""
     text = spec_path.read_text(encoding="utf-8")
     failures: list[str] = []
@@ -87,6 +94,17 @@ def check_spec(spec_path: Path, root: Path) -> list[str]:
         sc_ids = re.findall(r"\bSC-\d+\b", sc_cell)
         if not sc_ids:
             failures.append(f"Traceability row with no SC id: {cells!r}")
+            continue
+        if PENDING_RE.fullmatch(test_cell.strip()):
+            if allow_pending:
+                # Scheduled, not yet landed — counts as an entry at Approved.
+                covered_sc.update(sc for sc in sc_ids if sc in criteria)
+                covered_req.update(re.findall(r"\bR-\d+\b", req_cell))
+            else:
+                failures.extend(
+                    f"{sc} is marked *(pending)* — Implemented requires "
+                    "complete coverage" for sc in sc_ids
+                )
             continue
         refs = re.findall(r"`([^`]+)`", test_cell) or (
             [test_cell] if test_cell.strip() else []
@@ -162,7 +180,7 @@ def main(argv: list[str] | None = None) -> int:
         if status not in enforced:
             print(f"SKIP  {spec} (status: {m.group(1).strip() if m else 'missing'})")
             continue
-        failures = check_spec(spec, root)
+        failures = check_spec(spec, root, allow_pending=(status == "approved"))
         if failures:
             failed = True
             print(f"FAIL  {spec}")
