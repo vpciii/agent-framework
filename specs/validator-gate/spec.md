@@ -125,22 +125,20 @@ cover every `MUST`.
 
 Resolved before the spec is `Approved` (inline or via an ADR).
 
-- [ ] **Evidence-bundle source** — assembled from the local git checkout +
-  `gh` (PR diff, checks API), or from raw inputs handed in? Leaning: the
-  validator core takes a bundle *value* (testable, hermetic); a thin
-  collector assembles it from `gh`/git. `plan.md` decides the boundary.
-- [ ] **Verdict format** — JSON file vs. markdown-with-frontmatter. JSON is
-  the machine-parseable floor (R-7); a human-readable rendering can be
-  derived. `plan.md` decides.
-- [ ] **ADR 0005** — the two-stage review note says this role's shape
-  (conformance + refutation in one gate; no separate per-PR adversary;
-  cite-don't-assert semantics) warrants its own ADR when built. Draft it
-  alongside `plan.md`, mirroring how ADR 0002 landed with the model-roster
-  plan.
-- [ ] **How the model's structured response is enforced** — free text
-  parsed, or a tool-call/JSON-schema constraint through the provider
-  interface? May need a small, backward-compatible extension to `Request`
-  (ADR 0001's thinness is load-bearing — extension, not vendor leakage).
+- [x] **Evidence-bundle source** — resolved in `plan.md`: the core takes
+  an `EvidenceBundle` *value* (hermetic, unit-testable); a thin collector
+  edge assembles it from `gh`/git behind one fakeable seam.
+- [x] **Verdict format** — resolved in `plan.md`: JSON (round-tripping
+  dataclasses, SC-6); human-readable rendering derived from it, never a
+  second source of truth.
+- [x] **ADR 0005** — drafted alongside `plan.md`
+  (`docs/adr/0005-one-per-pr-gate.md`): one per-PR gate, conformance +
+  refutation in a single validator; contract-challenge stays upstream.
+- [x] **How the model's structured response is enforced** — resolved in
+  `plan.md`: a single `return_verdict` `ToolDef` whose schema is the
+  judgment shape; the model must answer with that tool call, else a typed
+  `JudgmentFormatError`. Zero extension to `Request`/`Response` — the
+  existing tool mechanism carries it (ADR 0001's thinness untouched).
 - [x] **Coverage-checker semantics for `Approved` specs (drift found
   drafting this).** Resolved by #12 before approval: at `Approved` the
   checker allows rows whose test cell is exactly `*(pending)*` (anything
