@@ -1,6 +1,6 @@
 # Spec: Validator agent — the cite-the-test gate
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-07-11
 - **Author:** vpc
 - **Related ADRs:** ADR 0001 (model-agnostic roles), ADR 0003 (spec-coverage
@@ -141,15 +141,11 @@ Resolved before the spec is `Approved` (inline or via an ADR).
   parsed, or a tool-call/JSON-schema constraint through the provider
   interface? May need a small, backward-compatible extension to `Request`
   (ADR 0001's thinness is load-bearing — extension, not vendor leakage).
-- [ ] **Coverage-checker semantics for `Approved` specs (drift found
-  drafting this).** ADR 0003 runs the checker with `--include-approved`,
-  but an Approved-not-yet-implemented spec *necessarily* has pending
-  Traceability rows — approving this spec would fail CI on `main` before
-  any task lands. Proposed resolution (fits ADR 0003's "gate tightens"
-  intent): for `Approved`, enforce *validity* of present references
-  (cited files exist and cite their ids) while allowing explicitly-marked
-  `*(pending)*` rows; for `Implemented`, require zero pending. Checker
-  change + docstring; decide before this spec is Approved.
+- [x] **Coverage-checker semantics for `Approved` specs (drift found
+  drafting this).** Resolved by #12 before approval: at `Approved` the
+  checker allows rows whose test cell is exactly `*(pending)*` (anything
+  cited is still validated); at `Implemented`, pending rows fail.
+  Regression-tested in `tests/test_check_spec_coverage.py`.
 
 ## Out of scope (for now)
 
