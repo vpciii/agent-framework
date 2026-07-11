@@ -20,7 +20,7 @@ spec.
 
 ---
 
-### [x] T-1 — Verdict + bundle types, JSON round-trip (this PR)
+### [x] T-1 — Verdict + bundle types, JSON round-trip (#15)
 - **Satisfies:** SC-6
 - **Depends on:** —
 - **Touches:** `src/agent_framework/validator/{__init__,bundle,verdict}.py`,
@@ -33,7 +33,7 @@ spec.
 - **Done when:** SC-6's test round-trips `Pass` and `Reject` through JSON to
   equal values, citing SC-6; `ruff` + `mypy --strict` clean.
 
-### [ ] T-2 — Judgment stage (prompt + `return_verdict` tool + dispatch)
+### [x] T-2 — Judgment stage (prompt + `return_verdict` tool + dispatch) (this PR)
 - **Satisfies:** SC-4, SC-5
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/validator/judgment.py`,
@@ -97,7 +97,7 @@ this is only the planning view.
 | SC-1 | R-1, R-2, R-5 | T-3 | pending |
 | SC-2 | R-3, R-4 | T-3 | pending |
 | SC-3 | R-3, R-4 | T-3 | pending |
-| SC-4 | R-1, R-3, R-6 | T-2 | pending |
-| SC-5 | R-5, R-6 | T-2 | pending |
-| SC-6 | R-7 | T-1 | ✅ (this PR) |
+| SC-4 | R-1, R-3, R-6 | T-2 | ✅ (this PR) |
+| SC-5 | R-5, R-6 | T-2 | ✅ (this PR) |
+| SC-6 | R-7 | T-1 | ✅ (#15) |
 | SC-7 | R-8 | T-3 | pending |
