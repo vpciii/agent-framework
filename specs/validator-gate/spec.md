@@ -168,5 +168,5 @@ shorthand, ADR 0003) and the requirement(s) it covers; the CI coverage check
 | SC-3 | R-3, R-4 | *(pending)* |
 | SC-4 | R-1, R-3, R-6 | *(pending)* |
 | SC-5 | R-5, R-6 | *(pending)* |
-| SC-6 | R-7 | *(pending)* |
+| SC-6 | R-7 | `tests/validator/test_verdict.py::test_sc6_pass_round_trips_through_json`, `tests/validator/test_verdict.py::test_sc6_reject_round_trips_through_json` |
 | SC-7 | R-8 | *(pending)* |
