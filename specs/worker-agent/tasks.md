@@ -1,6 +1,6 @@
 # Tasks: Worker agent — one task to one gated PR
 
-- **Status:** Draft
+- **Status:** Approved
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
