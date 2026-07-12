@@ -46,6 +46,18 @@ def run_checks(bundle: EvidenceBundle) -> tuple[Finding, ...]:
     """All deterministic findings for the bundle; empty means the model may judge."""
     findings: list[Finding] = []
 
+    if not bundle.task.criteria:
+        # A task PR that claims nothing has nothing to verify — and a PASS
+        # with no citations is unconstructible by design. Reject for free
+        # rather than crash after a wasted judgment call.
+        return (
+            Finding(
+                check="satisfies-declaration",
+                finding="PR claims no success criteria",
+                evidence="no SC- ids claimed in the PR title or body",
+            ),
+        )
+
     citations = find_citations(bundle)
     for sc in bundle.task.criteria:
         if sc not in citations:
