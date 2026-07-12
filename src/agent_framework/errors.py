@@ -25,3 +25,19 @@ class ValidationError(AgentFrameworkError):
 
 class JudgmentFormatError(ValidationError):
     """The judgment model did not answer with the required verdict tool call."""
+
+
+class WorkerError(AgentFrameworkError):
+    """Base class for worker-orchestration errors."""
+
+
+class UnknownTaskError(WorkerError):
+    """The requested spec slug or task id does not exist in the artifacts."""
+
+
+class SessionResultError(WorkerError):
+    """The session did not honor the `.worker-result.json` contract."""
+
+
+class WorktreeError(WorkerError):
+    """The worktree or branch could not be created (collision or git failure)."""

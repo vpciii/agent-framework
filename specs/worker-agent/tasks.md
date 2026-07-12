@@ -20,7 +20,7 @@ T-3 · SC-7 → T-4 · T-5 is the delivery edge and closes out the spec.
 
 ---
 
-### [ ] T-1 — Types + brief assembly
+### [x] T-1 — Types + brief assembly (this PR)
 - **Satisfies:** SC-1
 - **Depends on:** —
 - **Touches:** `src/agent_framework/worker/{__init__,types,brief}.py`,
@@ -115,7 +115,7 @@ this is only the planning view.
 
 | Criterion | Requirement(s) | Task | Status |
 |---|---|---|---|
-| SC-1 | R-1 | T-1 | pending |
+| SC-1 | R-1 | T-1 | ✅ (this PR) |
 | SC-2 | R-2 | T-3 | pending |
 | SC-3 | R-3 | T-3 | pending |
 | SC-4 | R-4 | T-3 | pending |
