@@ -121,18 +121,15 @@ outcome, not a unit test).
 
 Resolved before the spec is `Approved` (inline or via an ADR).
 
-- [ ] **Config file name/format** — `.agent-framework.toml` at the target
-  root vs a section in the target's `roster.toml`. Leaning a single
-  `agent-framework.toml` carrying *both* the roster and project config
-  (one file to adopt), with the standalone roster still honored.
-  `plan.md` decides.
-- [ ] **Entry-point names** — e.g. `af-worker` / `af-validate` vs
-  `agent-framework-worker` / `agent-framework-validate`. `plan.md`
-  decides (short wins ergonomics; long wins clarity).
-- [ ] **Where the pilot's opn-mcp changes land** — opn-mcp needs its
-  config, roster, CI job, and secret: those are opn-mcp PRs, reviewed
-  under its own methodology. The adoption doc should say exactly what
-  lands target-side vs framework-side.
+- [x] **Config file name/format** — resolved in `plan.md`: one
+  `agent-framework.toml` at the target root carrying `[roles]` + `[project]`
+  (one file to adopt); standalone roster paths still honored via `--roster`.
+- [x] **Entry-point names** — resolved in `plan.md`:
+  `agent-framework-worker` / `agent-framework-validate` (unambiguous,
+  alias-able).
+- [x] **Where the pilot's opn-mcp changes land** — resolved in `plan.md`:
+  config/CI job/secret/mini-spec are opn-mcp PRs under its own methodology;
+  the adoption doc enumerates the target-side vs framework-side split.
 
 ## Out of scope (for now)
 
