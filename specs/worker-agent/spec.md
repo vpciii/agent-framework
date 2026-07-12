@@ -171,7 +171,7 @@ Rows may be `*(pending)*` while `Approved` (#12).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
+| SC-1 | R-1 | `tests/worker/test_brief.py::test_sc1_brief_contains_task_criteria_and_conventions`, `tests/worker/test_brief.py::test_sc1_brief_contains_nothing_from_outside_the_artifacts`, `tests/worker/test_brief.py::test_sc1_unknown_task_or_slug_fails_loudly` |
 | SC-2 | R-2 | *(pending)* |
 | SC-3 | R-3 | *(pending)* |
 | SC-4 | R-4 | *(pending)* |
