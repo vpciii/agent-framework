@@ -18,6 +18,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from ..errors import WorkerError
+from ..project import load_project_config
 from ..roster import Roster
 from .orchestrator import work
 from .types import Escalated, PrOpened, WorkerOutcome
@@ -35,7 +36,7 @@ def main(argv: list[str] | None = None, *, work_fn: WorkFn = work) -> int:
     ap.add_argument("spec_slug", help="spec folder under specs/")
     ap.add_argument("task_id", help="task id from that spec's tasks.md (e.g. T-2)")
     ap.add_argument("--timeout", type=float, default=1800, metavar="SECONDS")
-    ap.add_argument("--roster", type=Path, default=Path("examples/roster.toml"))
+    ap.add_argument("--roster", type=Path, default=Path("agent-framework.toml"))
     ap.add_argument(
         "--session-arg",
         action="append",
@@ -46,6 +47,7 @@ def main(argv: list[str] | None = None, *, work_fn: WorkFn = work) -> int:
     args = ap.parse_args(argv)
 
     roster = Roster.from_file(args.roster)
+    project = load_project_config()
     try:
         outcome = work_fn(
             args.spec_slug,
@@ -53,6 +55,7 @@ def main(argv: list[str] | None = None, *, work_fn: WorkFn = work) -> int:
             roster,
             timeout_s=args.timeout,
             session_args=tuple(args.session_arg),
+            project=project,
         )
     except WorkerError as e:
         print(json.dumps({"outcome": "error", "detail": str(e)}, indent=2))

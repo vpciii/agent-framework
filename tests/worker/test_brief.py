@@ -108,3 +108,30 @@ def test_task_claiming_undefined_criterion_fails_loudly(specs_dir: Path) -> None
     )
     with pytest.raises(UnknownTaskError, match="SC-77"):
         parse_task("fixture", "T-1", specs_dir=specs_dir)
+
+
+def test_sc2_brief_renders_the_configured_gate_not_the_framework_one(
+    specs_dir: Path,
+) -> None:
+    """SC-2: a custom gate appears verbatim, with the conventions note, and
+    none of the framework's own toolchain names."""
+    from agent_framework.project import ProjectConfig
+
+    project = ProjectConfig(
+        gate_commands=("uv run pytest", "docker build -t opn-mcp-ci ."),
+        conventions_note="Read CLAUDE.md; NOTE-SENTINEL applies.",
+    )
+    brief = build_brief(parse_task("fixture", "T-1", specs_dir=specs_dir), project)
+
+    assert "uv run pytest" in brief
+    assert "docker build -t opn-mcp-ci ." in brief
+    assert "NOTE-SENTINEL" in brief
+    assert "ruff" not in brief and "mypy" not in brief  # no framework toolchain leakage
+
+
+def test_sc2_default_brief_carries_the_framework_gate(specs_dir: Path) -> None:
+    """SC-2 (no-config half): absent config, the brief is today's — the
+    framework's own gate, from DEFAULTS rather than fixed text."""
+    brief = build_brief(parse_task("fixture", "T-1", specs_dir=specs_dir))
+    assert "uv run mypy --strict" in brief
+    assert "check_spec_coverage" in brief

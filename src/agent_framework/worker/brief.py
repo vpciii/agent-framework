@@ -11,6 +11,7 @@ import re
 from pathlib import Path
 
 from ..errors import UnknownTaskError
+from ..project import DEFAULTS, ProjectConfig
 from .types import TaskSpec
 
 _SC_RE = re.compile(r"\bSC-\d+\b")
@@ -24,23 +25,38 @@ or, if you are escalating (see ESCALATION below):
    "spec_location": "<file and section you are challenging>"}
 A missing or malformed file means your work cannot be accepted."""
 
-_CONVENTIONS = """\
-CONVENTIONS (the gate your PR must pass):
-- Work only on this task. Its criteria are the contract; do not rework them.
-- Commit with Conventional Commits (`feat:`, `fix:`, ...); keep the diff
-  PR-sized (~<300 lines).
-- Every claimed criterion needs a test *function* citing its SC- id; the
-  validator REJECTs any claimed id with no citing test, and a PASS without
-  citations is impossible by construction. CI (ruff, mypy --strict, pytest,
-  spec-coverage) must be green.
-- Commit everything you want reviewed; the orchestrator pushes your branch
-  and opens the PR with the `Satisfies:` declaration for you. Never merge,
-  never push, never open a PR yourself.
-
+_ESCALATION = """\
 ESCALATION: if you believe the spec or task is wrong, contradictory, or
 underspecified, STOP. Do not code around it, do not reword criteria, do not
 edit spec/tasks files. Report status "escalated" with the blocking question
 and the spec location — a contract change is a human decision."""
+
+
+def _conventions(project: ProjectConfig) -> str:
+    """The conventions block, with the gate rendered from project config —
+    the framework's own toolchain names never appear in fixed text (R-2)."""
+    gate = "\n".join(f"    {i}. {cmd}" for i, cmd in enumerate(project.gate_commands, 1))
+    note = (
+        f"\n- Project note: {project.conventions_note}"
+        if project.conventions_note
+        else ""
+    )
+    return f"""\
+CONVENTIONS (the gate your PR must pass):
+- Work only on this task. Its criteria are the contract; do not rework them.
+- Commit with Conventional Commits (`feat:`, `fix:`, ...); keep the diff
+  PR-sized (~<300 lines).
+- Every claimed criterion needs a test citing its SC- id; the validator
+  REJECTs any claimed id with no citing test, and a PASS without citations
+  is impossible by construction.
+- This project's gate — run every command and make it green before you
+  commit:
+{gate}
+- Commit everything you want reviewed; the orchestrator pushes your branch
+  and opens the PR with the `Satisfies:` declaration for you. Never merge,
+  never push, never open a PR yourself.{note}
+
+{_ESCALATION}"""
 
 
 def _section(text: str, title: str) -> str:
@@ -105,7 +121,7 @@ def branch_name(task: TaskSpec) -> str:
     return f"feat/{task.spec_slug}-{task.task_id.lower()}"
 
 
-def build_brief(task: TaskSpec) -> str:
+def build_brief(task: TaskSpec, project: ProjectConfig = DEFAULTS) -> str:
     """Render the self-contained brief the session executes from."""
     criteria_block = "\n\n".join(task.criterion_texts[sc] for sc in task.criteria)
     return f"""\
@@ -126,6 +142,6 @@ You are a worker agent. Execute exactly one task and nothing else.
 Your branch: {branch_name(task)} (already checked out in this worktree).
 Your PR body will declare: Satisfies: {", ".join(task.criteria) or "—"}
 
-{_CONVENTIONS}
+{_conventions(project)}
 
 {_RESULT_CONTRACT}"""
