@@ -1,6 +1,6 @@
 # Spec: Validator agent — the cite-the-test gate
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-07-11
 - **Author:** vpc
 - **Related ADRs:** ADR 0001 (model-agnostic roles), ADR 0003 (spec-coverage

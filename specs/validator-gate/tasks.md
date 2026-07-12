@@ -50,7 +50,7 @@ spec.
   checklist) pass, citing their ids; the no-tool-call path raises the typed
   error.
 
-### [x] T-3 — Deterministic checks + the gate (this PR)
+### [x] T-3 — Deterministic checks + the gate (#17)
 - **Satisfies:** SC-1, SC-2, SC-3, SC-7
 - **Depends on:** T-2
 - **Touches:** `src/agent_framework/validator/{checks,gate}.py`,
@@ -66,7 +66,7 @@ spec.
   → same, citing CI), SC-7 (fix without red evidence → REJECT naming the
   missing evidence) pass, citing their ids.
 
-### [ ] T-4 — Collector edge + CLI + spec close-out
+### [x] T-4 — Collector edge + CLI + spec close-out (this PR)
 - **Satisfies:** — (delivery edge; the core criteria are T-1–T-3's)
 - **Depends on:** T-3
 - **Touches:** `src/agent_framework/validator/{collector,__main__}.py`,
@@ -94,10 +94,10 @@ this is only the planning view.
 
 | Criterion | Requirement(s) | Task | Status |
 |---|---|---|---|
-| SC-1 | R-1, R-2, R-5 | T-3 | ✅ (this PR) |
-| SC-2 | R-3, R-4 | T-3 | ✅ (this PR) |
-| SC-3 | R-3, R-4 | T-3 | ✅ (this PR) |
+| SC-1 | R-1, R-2, R-5 | T-3 | ✅ (#17) |
+| SC-2 | R-3, R-4 | T-3 | ✅ (#17) |
+| SC-3 | R-3, R-4 | T-3 | ✅ (#17) |
 | SC-4 | R-1, R-3, R-6 | T-2 | ✅ (#16) |
 | SC-5 | R-5, R-6 | T-2 | ✅ (#16) |
 | SC-6 | R-7 | T-1 | ✅ (#15) |
-| SC-7 | R-8 | T-3 | ✅ (this PR) |
+| SC-7 | R-8 | T-3 | ✅ (#17) |

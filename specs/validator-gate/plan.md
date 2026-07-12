@@ -1,6 +1,6 @@
 # Plan: Validator agent — the cite-the-test gate
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-07-11
 - **Author:** vpc
 - **Spec:** ./spec.md
