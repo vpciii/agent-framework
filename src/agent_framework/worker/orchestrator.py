@@ -12,6 +12,7 @@ from pathlib import Path
 
 from ..errors import SessionTimeoutError
 from ..proc import Runner, run_command
+from ..project import DEFAULTS, ProjectConfig
 from ..roster import Roster
 from .brief import build_brief, parse_task
 from .handoff import open_pr, write_escalation
@@ -29,13 +30,14 @@ def work(
     *,
     timeout_s: float = 1800,
     specs_dir: Path = Path("specs"),
+    project: ProjectConfig = DEFAULTS,
     session_args: tuple[str, ...] = (),
     run: Runner = run_command,
     session_run: SessionRunner = run_claude,
 ) -> WorkerOutcome:
     """Dispatch one task to one headless session; return its outcome."""
     task = parse_task(spec_slug, task_id, specs_dir=specs_dir)
-    brief = build_brief(task)
+    brief = build_brief(task, project)
     logger.info("worker %s/%s: brief built (%d criteria)", spec_slug, task_id, len(task.criteria))
 
     worktree, branch = create_worktree(task, run=run)

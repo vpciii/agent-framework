@@ -81,3 +81,24 @@ def test_from_file_loads_the_example(tmp_path: Path) -> None:
     p.write_text(_ROSTER, encoding="utf-8")
     r = Roster.from_file(p)
     assert r.resolve("chief") == ModelRef("anthropic", "claude-fable-5")
+
+
+def test_roster_loads_from_agent_framework_toml_with_project_table(tmp_path: Path) -> None:
+    """Regression (project-portability plan risk): the combined
+    agent-framework.toml carries a [project] table whose *content* may
+    innocently mention words like "key" — the roster's secret-field
+    rejection must scope to the roster, not trip on [project] values."""
+    path = tmp_path / "agent-framework.toml"
+    path.write_text(
+        """
+[roles]
+worker = { provider = "anthropic", model = "m" }
+
+[project]
+gate_commands = ["make test"]
+conventions_note = "The API key comes from the environment, never config."
+""",
+        encoding="utf-8",
+    )
+    roster = Roster.from_file(path)
+    assert roster.resolve("worker").model == "m"

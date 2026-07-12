@@ -1,0 +1,18 @@
+# This repo's own team configuration (dogfooding project-portability R-2).
+# [roles] binds each role to a model (ADR 0001); [project] tells the roles
+# this project's gate and conventions. Secrets never live here.
+
+[roles]
+chief     = { provider = "anthropic", model = "claude-fable-5" }
+worker    = { provider = "anthropic", model = "claude-sonnet-5" }
+validator = { provider = "google",    model = "gemini-3.5-flash" }
+
+[project]
+gate_commands = [
+    "uv run ruff check .",
+    "uv run mypy --strict",
+    "uv run pytest",
+    "uv run python scripts/check_spec_coverage.py --include-approved",
+]
+conventions_note = "Read CLAUDE.md and docs/glossary.md; use the glossary's terms exactly."
+ignore_checks = ["validator"]
