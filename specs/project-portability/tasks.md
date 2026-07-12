@@ -22,7 +22,7 @@ SC-5 → T-5 (delivery + pilot).
 
 ---
 
-### [ ] T-1 — ProjectConfig + loader
+### [x] T-1 — ProjectConfig + loader (this PR)
 - **Satisfies:** SC-1
 - **Depends on:** —
 - **Touches:** `src/agent_framework/project.py` (new),
@@ -111,7 +111,7 @@ SC-5 → T-5 (delivery + pilot).
 
 | Criterion | Requirement(s) | Task | Status |
 |---|---|---|---|
-| SC-1 | R-1 | T-1 | pending |
+| SC-1 | R-1 | T-1 | ✅ (this PR) |
 | SC-2 | R-1, R-2 | T-2 | pending |
 | SC-3 | R-1, R-3 | T-3 | pending |
 | SC-4 | R-4 | T-4 | pending |
