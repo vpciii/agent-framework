@@ -1,6 +1,6 @@
 # Spec: Regression claims — the gate verifies bug fixes' evidence
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-07-12
 - **Author:** vpc
 - **Related ADRs:** ADR 0005 (one per-PR gate — this adds a claim *type*,
