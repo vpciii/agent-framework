@@ -36,6 +36,11 @@ and agent prompts. Add a term here before inventing a name for a concept.
   `chief: claude-fable-5`, `worker: claude-sonnet-5`,
   `validator: gemini-3-pro`). Swapping a model is a roster edit, not a code
   change; it is the one source of truth for the role→model mapping.
+- **Regression claim** — the token `regression` in a PR's Satisfies
+  declaration: the author's explicit claim that the PR fixes a bug with a
+  cited red→green regression test. The gate verifies the evidence
+  discipline (honest test, red→green, scoped diff), never the fix's
+  approach or method.
 - **Satisfies declaration** — the structured `Satisfies: SC-…` line in a
   task PR's body: the worker's explicit claim of which success criteria the
   PR delivers. The validator's collector reads claims from it exclusively
