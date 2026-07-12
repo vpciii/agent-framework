@@ -87,7 +87,7 @@ SC-5 → T-5 (delivery + pilot).
 - **Done when:** SC-4's tests pass citing it; `uv sync` installs both
   commands; `ruff` + `mypy --strict` clean.
 
-### [ ] T-5 — Adoption doc + opn-mcp pilot + spec close-out
+### [x] T-5 — Adoption doc + opn-mcp pilot + spec close-out (this PR)
 - **Satisfies:** SC-5 (R-5, R-6)
 - **Depends on:** T-2, T-3, T-4
 - **Touches:** `docs/adoption.md` (new), `docs/architecture.md` (config
@@ -115,4 +115,4 @@ SC-5 → T-5 (delivery + pilot).
 | SC-2 | R-1, R-2 | T-2 | ✅ (#39) |
 | SC-3 | R-1, R-3 | T-3 | ✅ (this PR) |
 | SC-4 | R-4 | T-4 | ✅ (#38, worker) |
-| SC-5 | R-5, R-6 | T-5 | pending |
+| SC-5 | R-5, R-6 | T-5 | ✅ (this PR; pilot: opn-mcp#21) |
