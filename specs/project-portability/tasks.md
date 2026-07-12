@@ -1,6 +1,6 @@
 # Tasks: Project portability — run the team on any adopted repo
 
-- **Status:** Draft
+- **Status:** Approved
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
