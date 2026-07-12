@@ -7,4 +7,4 @@
 [roles]
 chief     = { provider = "anthropic", model = "claude-fable-5" }
 worker    = { provider = "anthropic", model = "claude-sonnet-5" }
-validator = { provider = "google",    model = "gemini-3-pro" }
+validator = { provider = "google",    model = "gemini-3.5-flash" }
