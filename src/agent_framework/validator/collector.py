@@ -19,29 +19,17 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
-from collections.abc import Callable, Sequence
 from typing import Any, cast
 
+from ..proc import Runner, run_command
 from .bundle import CIEvidence, EvidenceBundle, TaskRef
 
-Runner = Callable[[Sequence[str]], str]
+__all__ = ["Runner", "collect_bundle", "run_command"]
 
 _TASK_ID_RE = re.compile(r"\bT-\d+\b")
 _SC_RE = re.compile(r"\bSC-\d+\b")
 _SATISFIES_RE = re.compile(r"^Satisfies:(.*)$", re.M)
 _FIX_TITLE_RE = re.compile(r"^fix[(!:]")
-
-
-def run_command(args: Sequence[str]) -> str:
-    """The single subprocess seam. A failing command raises with its stderr —
-    fail loudly means the evidence rides along, not just the exit status."""
-    result = subprocess.run(list(args), capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"command failed ({result.returncode}): {' '.join(args)}\n{result.stderr.strip()}"
-        )
-    return result.stdout
 
 
 def _pr_view(pr: int, repo: str | None, run: Runner) -> dict[str, Any]:
