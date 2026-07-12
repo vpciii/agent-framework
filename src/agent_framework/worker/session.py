@@ -56,6 +56,10 @@ def read_result(worktree: Path) -> SessionResult:
         data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         raise SessionResultError(f"{RESULT_FILE} is not valid JSON: {e}") from None
+    if not isinstance(data, dict):
+        raise SessionResultError(
+            f"{RESULT_FILE} must be a JSON object, got {type(data).__name__}"
+        )
     status = data.get("status")
     if status not in ("completed", "escalated"):
         raise SessionResultError(f"{RESULT_FILE} has invalid status: {status!r}")

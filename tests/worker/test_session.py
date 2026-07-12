@@ -61,6 +61,11 @@ def test_escalated_result_carries_spec_location(tmp_path: Path) -> None:
     [
         (None, "wrote no"),  # no file at all
         ("not json{", "not valid JSON"),
+        # Valid JSON that is not an object — the validator's own live REJECT
+        # finding on this PR (#27): must be the typed error, not AttributeError.
+        ("null", "must be a JSON object"),
+        ("[]", "must be a JSON object"),
+        ('"status-text"', "must be a JSON object"),
         ({"status": "maybe", "detail": "x"}, "invalid status"),
         ({"status": "completed"}, "non-empty detail"),
         ({"status": "escalated", "detail": "q", "spec_location": 7}, "must be a string"),
