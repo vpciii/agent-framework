@@ -127,3 +127,20 @@ async def test_sc7_fix_without_red_evidence_rejects_naming_it() -> None:
         for f in verdict.findings
     )
     assert fake.calls == []
+
+
+async def test_zero_claim_bundle_rejects_deterministically_instead_of_crashing() -> None:
+    """Regression (#21 advisory run): a bundle claiming NO criteria sailed
+    through the deterministic stage vacuously, burned a judgment call, then
+    crashed in Pass.from_evidence ("a PASS with no citations is not a PASS").
+    It must instead REJECT deterministically — free, before any model call."""
+    fake, reg = _wire()
+
+    verdict = await validate(_bundle(criteria=()), _roster(), registry=reg)
+
+    assert isinstance(verdict, Reject)
+    assert any(
+        f.check == "satisfies-declaration" and "claims no success criteria" in f.finding
+        for f in verdict.findings
+    )
+    assert fake.calls == []  # no model call for a claimless PR
