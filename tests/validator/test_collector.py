@@ -107,3 +107,24 @@ def test_run_command_failure_surfaces_stderr() -> None:
         run_command(
             [sys.executable, "-c", "import sys; sys.exit(sys.stderr.write('the actual reason') and 1 or 1)"]
         )
+
+
+def test_ignore_checks_excludes_named_check_from_ci_evidence() -> None:
+    """The in-CI advisory run must not count its own in-progress check as red
+    (found dogfooding #20: 'validator: IN_PROGRESS' made CI never-green)."""
+    view = dict(
+        _VIEW,
+        statusCheckRollup=[
+            {"name": "ci", "status": "COMPLETED", "conclusion": "SUCCESS"},
+            {"name": "validator", "status": "IN_PROGRESS", "conclusion": None},
+        ],
+    )
+    _, run = _fake_runner(view)
+
+    with_self = collect_bundle(1, run=run).ci
+    assert with_self.green is False  # unfiltered: its own check keeps CI red
+
+    _, run = _fake_runner(view)
+    filtered = collect_bundle(1, run=run, ignore_checks=frozenset({"validator"})).ci
+    assert filtered.green is True
+    assert "validator" not in filtered.summary

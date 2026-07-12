@@ -31,6 +31,7 @@ jobs:
   # GEMINI_API_KEY secret is configured.
   validator:
     if: github.event_name == 'pull_request'
+    needs: ci  # the gate reads CI evidence, so the required check must finish first
     runs-on: ubuntu-latest
     continue-on-error: true
     permissions:
@@ -54,4 +55,4 @@ jobs:
             echo "::notice::GEMINI_API_KEY secret not set — advisory validator skipped"
             exit 0
           fi
-          uv run python -m agent_framework.validator ${{ github.event.pull_request.number }}
+          uv run python -m agent_framework.validator --ignore-check validator ${{ github.event.pull_request.number }}
