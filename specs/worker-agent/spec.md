@@ -1,6 +1,6 @@
 # Spec: Worker agent — one task to one gated PR
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-07-12
 - **Author:** vpc
 - **Related ADRs:** ADR 0001 (model-agnostic roles), ADR 0004 (role execution

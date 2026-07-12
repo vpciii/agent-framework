@@ -57,7 +57,8 @@ def test_create_worktree_invokes_git_with_derived_pair(tmp_path: Path) -> None:
     path, branch = create_worktree(task, run=run)
 
     assert (path, branch) == (expected_path, expected_branch)
-    assert ["git", "worktree", "add", str(expected_path), "-b", expected_branch] in calls
+    # Cut from main explicitly (plan): a worker PR contains only its own work.
+    assert ["git", "worktree", "add", str(expected_path), "-b", expected_branch, "main"] in calls
     assert wt.WORKTREES_DIR.name == ".worktrees"
 
 
@@ -78,3 +79,19 @@ def test_create_worktree_collisions_fail_loudly(tmp_path: Path, monkeypatch: pyt
     path.mkdir(parents=True)
     with pytest.raises(WorktreeError, match="worktree already exists"):
         create_worktree(task, run=lambda args: "")
+
+
+def test_remove_worktree_forces_past_the_result_file() -> None:
+    """Regression (first live smoke, #31): the success path always has the
+    untracked .worker-result.json, so a non-forced remove ALWAYS fails
+    ("contains modified or untracked files") after an otherwise perfect run."""
+    from agent_framework.worker.worktree import remove_worktree
+
+    calls: list[list[str]] = []
+
+    def run(args: Sequence[str]) -> str:
+        calls.append(list(args))
+        return ""
+
+    remove_worktree(Path(".worktrees/x"), run=run)
+    assert calls == [["git", "worktree", "remove", "--force", ".worktrees/x"]]
