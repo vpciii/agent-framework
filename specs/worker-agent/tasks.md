@@ -74,7 +74,7 @@ T-3 · SC-7 → T-4 · T-5 is the delivery edge and closes out the spec.
   + artifact with task/question/spec location), SC-5 (budget expiry →
   `TimedOut`, no PR, preserved path reported) pass, citing their ids.
 
-### [ ] T-4 — Collector reads the Satisfies declaration
+### [x] T-4 — Collector reads the Satisfies declaration (this PR)
 - **Satisfies:** SC-7
 - **Depends on:** — (parallel with T-1; merge before T-5)
 - **Touches:** `src/agent_framework/validator/collector.py`,
@@ -121,4 +121,4 @@ this is only the planning view.
 | SC-4 | R-4 | T-3 | pending |
 | SC-5 | R-5 | T-3 | pending |
 | SC-6 | R-6 | T-2 | pending |
-| SC-7 | R-7 | T-4 | pending |
+| SC-7 | R-7 | T-4 | ✅ (this PR) |
