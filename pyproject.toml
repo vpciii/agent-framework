@@ -2,6 +2,8 @@
 name = "agent-framework"
 version = "0.0.0"
 description = "Hierarchical, model-agnostic agent orchestration over the methodology's artifacts"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 dependencies = [
     "anthropic>=0.116.0",
