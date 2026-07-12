@@ -32,12 +32,28 @@ DEFAULT_TEST_PATTERN = r"^(?:async\s+)?def\s+(test_\w+)"
 
 @dataclass(frozen=True)
 class ProjectConfig:
-    """The target project's contract with the framework's roles."""
+    """The target project's contract with the framework's roles.
+
+    An invalid `test_pattern` is unconstructible (validated here, not just
+    in the loader) — a directly-constructed config reaching the gate must
+    be as safe as a loaded one.
+    """
 
     gate_commands: tuple[str, ...] = DEFAULT_GATE_COMMANDS
     conventions_note: str = ""
     test_pattern: str = DEFAULT_TEST_PATTERN  # exactly one capture group: the test name
     ignore_checks: tuple[str, ...] = ("validator",)
+
+    def __post_init__(self) -> None:
+        try:
+            groups = re.compile(self.test_pattern).groups
+        except re.error as e:
+            raise ProjectConfigError(f"test_pattern is not a valid regex: {e}") from None
+        if groups != 1:
+            raise ProjectConfigError(
+                "test_pattern must have exactly one capture group "
+                f"(the test name), got {groups}"
+            )
 
 
 DEFAULTS = ProjectConfig()
@@ -71,30 +87,23 @@ def load_project_config(root: Path = Path(".")) -> ProjectConfig:
             f"{path}: unknown [project] field(s): {', '.join(sorted(unknown))}"
         )
 
-    config = ProjectConfig(
-        gate_commands=(
-            _string_tuple(table["gate_commands"], "gate_commands")
-            if "gate_commands" in table
-            else DEFAULTS.gate_commands
-        ),
-        conventions_note=_as_str(table, "conventions_note", path),
-        test_pattern=_as_str(table, "test_pattern", path) or DEFAULTS.test_pattern,
-        ignore_checks=(
-            _string_tuple(table["ignore_checks"], "ignore_checks")
-            if "ignore_checks" in table
-            else DEFAULTS.ignore_checks
-        ),
-    )
-
     try:
-        groups = re.compile(config.test_pattern).groups
-    except re.error as e:
-        raise ProjectConfigError(f"{path}: test_pattern is not a valid regex: {e}") from None
-    if groups != 1:
-        raise ProjectConfigError(
-            f"{path}: test_pattern must have exactly one capture group "
-            f"(the test name), got {groups}"
+        config = ProjectConfig(
+            gate_commands=(
+            _string_tuple(table["gate_commands"], "gate_commands")
+                if "gate_commands" in table
+                else DEFAULTS.gate_commands
+            ),
+            conventions_note=_as_str(table, "conventions_note", path),
+            test_pattern=_as_str(table, "test_pattern", path) or DEFAULTS.test_pattern,
+            ignore_checks=(
+                _string_tuple(table["ignore_checks"], "ignore_checks")
+                if "ignore_checks" in table
+                else DEFAULTS.ignore_checks
+            ),
         )
+    except ProjectConfigError as e:
+        raise ProjectConfigError(f"{path}: {e}") from None
     return config
 
 
