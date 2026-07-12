@@ -10,7 +10,7 @@ self-contained.
 
 ---
 
-### [ ] T-1 — Render verdicts to markdown
+### [x] T-1 — Render verdicts to markdown (#31)
 - **Satisfies:** SC-1
 - **Depends on:** —
 - **Touches:** `src/agent_framework/validator/render.py` (new),
@@ -40,4 +40,4 @@ self-contained.
 
 | Criterion | Requirement(s) | Task | Status |
 |---|---|---|---|
-| SC-1 | R-1, R-2 | T-1 | pending |
+| SC-1 | R-1, R-2 | T-1 | ✅ (#31) |
