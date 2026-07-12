@@ -45,4 +45,4 @@ value — never a second source of truth.
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1, R-2 | *(pending)* |
+| SC-1 | R-1, R-2 | `tests/validator/test_render.py::test_sc1_pass_renders_task_id_citations_and_ci`, `tests/validator/test_render.py::test_sc1_reject_renders_task_id_and_every_finding_field` |
