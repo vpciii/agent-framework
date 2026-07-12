@@ -8,6 +8,10 @@ dependencies = [
     "google-genai>=2.11.0",
 ]
 
+[project.scripts]
+agent-framework-worker = "agent_framework.worker.__main__:main"
+agent-framework-validate = "agent_framework.validator.__main__:main"
+
 [dependency-groups]
 dev = [
     "pytest>=8.3",
