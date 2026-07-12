@@ -6,7 +6,10 @@ the core (checks, judgment, gate) stays hermetic.
 
 Conventions the collector reads from a PR (the worker/task contract):
 - task id: the first `T-n` in the PR title or body (else `PR-<number>`);
-- claimed criteria: every distinct `SC-n` in the title + body;
+- claimed criteria: the **Satisfies declaration** (`Satisfies: SC-…`, first
+  matching body line) exclusively when present — prose mentions of `SC-`
+  ids are not claims; only when no declaration exists does the collector
+  fall back to scraping every distinct `SC-n` from the title + body;
 - fix: a Conventional-Commits `fix` type in the title;
 - red evidence (fixes): the body paragraph describing the failing-before
   run (contains both "fail" and "before").
@@ -26,6 +29,7 @@ Runner = Callable[[Sequence[str]], str]
 
 _TASK_ID_RE = re.compile(r"\bT-\d+\b")
 _SC_RE = re.compile(r"\bSC-\d+\b")
+_SATISFIES_RE = re.compile(r"^Satisfies:(.*)$", re.M)
 _FIX_TITLE_RE = re.compile(r"^fix[(!:]")
 
 
@@ -104,7 +108,11 @@ def collect_bundle(
 
     task_match = _TASK_ID_RE.search(text)
     task_id = task_match.group(0) if task_match else f"PR-{pr}"
-    criteria = tuple(sorted(set(_SC_RE.findall(text)), key=lambda s: int(s[3:])))
+    declaration = _SATISFIES_RE.search(body)
+    claim_source = declaration.group(1) if declaration else text
+    criteria = tuple(
+        sorted(set(_SC_RE.findall(claim_source)), key=lambda s: int(s[3:]))
+    )
     is_fix = _FIX_TITLE_RE.match(title) is not None
 
     diff_cmd = ["gh", "pr", "diff", str(pr)]

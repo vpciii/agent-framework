@@ -128,3 +128,32 @@ def test_ignore_checks_excludes_named_check_from_ci_evidence() -> None:
     filtered = collect_bundle(1, run=run, ignore_checks=frozenset({"validator"})).ci
     assert filtered.green is True
     assert "validator" not in filtered.summary
+
+
+def test_sc7_satisfies_declaration_is_the_exclusive_claim_channel() -> None:
+    """SC-7: with a Satisfies declaration present, claims come from it alone —
+    prose mentions of other SC- ids are not claims."""
+    view = dict(
+        _VIEW,
+        title="feat: T-7 something",
+        body=(
+            "Implements the thing.\n\n"
+            "Satisfies: SC-1, SC-3\n\n"
+            "Prose discussion of SC-9 and even SC-42 changes nothing."
+        ),
+    )
+    _, run = _fake_runner(view)
+
+    bundle = collect_bundle(7, run=run)
+
+    assert bundle.task.criteria == ("SC-1", "SC-3")
+
+
+def test_sc7_without_declaration_scraping_is_unchanged() -> None:
+    """SC-7 (fallback half): no declaration → existing prose scraping stands."""
+    view = dict(_VIEW, title="feat: T-7 mentions SC-2", body="and prose SC-5 here")
+    _, run = _fake_runner(view)
+
+    bundle = collect_bundle(7, run=run)
+
+    assert bundle.task.criteria == ("SC-2", "SC-5")

@@ -177,4 +177,4 @@ Rows may be `*(pending)*` while `Approved` (#12).
 | SC-4 | R-4 | *(pending)* |
 | SC-5 | R-5 | *(pending)* |
 | SC-6 | R-6 | *(pending)* |
-| SC-7 | R-7 | *(pending)* |
+| SC-7 | R-7 | `tests/validator/test_collector.py::test_sc7_satisfies_declaration_is_the_exclusive_claim_channel`, `tests/validator/test_collector.py::test_sc7_without_declaration_scraping_is_unchanged` |
