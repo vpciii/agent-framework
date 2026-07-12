@@ -1,6 +1,6 @@
 # ADR 0006: License the framework under the MIT License
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-07-12
 - **Deciders:** Vince Ciganik
 
