@@ -157,3 +157,41 @@ def test_sc7_without_declaration_scraping_is_unchanged() -> None:
     bundle = collect_bundle(7, run=run)
 
     assert bundle.task.criteria == ("SC-2", "SC-5")
+
+
+def test_skipped_or_neutral_checks_do_not_block_ci_evidence() -> None:
+    """Regression (opn-mcp pilot survey): a conditional job that didn't run
+    (SKIPPED/NEUTRAL — e.g. an advisory reviewer) made green=False, so the
+    gate would deterministically REJECT every PR on repos with conditional
+    checks. Absent evidence is not failing evidence."""
+    view = dict(
+        _VIEW,
+        statusCheckRollup=[
+            {"name": "test", "status": "COMPLETED", "conclusion": "SUCCESS"},
+            {"name": "claude-review", "status": "COMPLETED", "conclusion": "SKIPPED"},
+            {"name": "other", "status": "COMPLETED", "conclusion": "NEUTRAL"},
+        ],
+    )
+    _, run = _fake_runner(view)
+    assert collect_bundle(1, run=run).ci.green is True
+
+    # But skipped-only evidence is no evidence: at least one SUCCESS required.
+    view = dict(
+        _VIEW,
+        statusCheckRollup=[
+            {"name": "claude-review", "status": "COMPLETED", "conclusion": "SKIPPED"},
+        ],
+    )
+    _, run = _fake_runner(view)
+    assert collect_bundle(1, run=run).ci.green is False
+
+    # And a real failure still blocks, skipped neighbors notwithstanding.
+    view = dict(
+        _VIEW,
+        statusCheckRollup=[
+            {"name": "test", "status": "COMPLETED", "conclusion": "FAILURE"},
+            {"name": "claude-review", "status": "COMPLETED", "conclusion": "SKIPPED"},
+        ],
+    )
+    _, run = _fake_runner(view)
+    assert collect_bundle(1, run=run).ci.green is False

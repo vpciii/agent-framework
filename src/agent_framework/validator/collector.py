@@ -52,6 +52,11 @@ def _file_at_ref(path: str, ref: str, repo: str | None, run: Runner) -> str:
     )
 
 
+# Conclusions that must not block: a conditional job that didn't run is
+# absent evidence, not failing evidence (e.g. an advisory reviewer job).
+_NON_BLOCKING_CONCLUSIONS = frozenset({"SKIPPED", "NEUTRAL"})
+
+
 def _ci_evidence(
     rollup: list[dict[str, Any]], ignore_checks: frozenset[str] = frozenset()
 ) -> CIEvidence:
@@ -62,7 +67,10 @@ def _ci_evidence(
         f"{c.get('name', '?')}: {c.get('conclusion') or c.get('status', '?')}"
         for c in rollup
     ]
-    green = all(c.get("conclusion") == "SUCCESS" for c in rollup)
+    conclusions = [c.get("conclusion") for c in rollup]
+    green = any(x == "SUCCESS" for x in conclusions) and all(
+        x == "SUCCESS" or x in _NON_BLOCKING_CONCLUSIONS for x in conclusions
+    )
     return CIEvidence(green=green, summary="; ".join(lines))
 
 
