@@ -147,6 +147,6 @@ Rows may be `*(pending)*` while `Approved` (#12).
 |---|---|---|
 | SC-1 | R-1 | `tests/test_project_config.py::test_sc1_full_config_parses_all_four_fields`, `tests/test_project_config.py::test_sc1_missing_file_and_missing_table_yield_defaults`, `tests/test_project_config.py::test_sc1_malformed_config_fails_loudly_naming_the_problem` |
 | SC-2 | R-1, R-2 | `tests/worker/test_brief.py::test_sc2_brief_renders_the_configured_gate_not_the_framework_one`, `tests/worker/test_brief.py::test_sc2_default_brief_carries_the_framework_gate` |
-| SC-3 | R-1, R-3 | *(pending)* |
+| SC-3 | R-1, R-3 | `tests/validator/test_checks_pattern.py::test_sc3_custom_pattern_finds_and_cites_non_python_tests`, `tests/validator/test_checks_pattern.py::test_sc3_gate_threads_the_project_pattern_end_to_end` |
 | SC-4 | R-4 | `tests/test_entry_points.py::test_sc4_entry_points_declared_in_packaging_metadata`, `tests/test_entry_points.py::test_sc4_worker_entry_point_loads_the_same_main_as_python_dash_m` |
 | SC-5 | R-5, R-6 | *(pending)* |

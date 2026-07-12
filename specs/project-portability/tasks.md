@@ -37,7 +37,7 @@ SC-5 → T-5 (delivery + pilot).
 - **Done when:** SC-1's tests pass citing it (full parse; defaults on
   missing; loud on malformed, each message naming the offending field).
 
-### [x] T-2 — Config-driven brief + this repo's own config (this PR)
+### [x] T-2 — Config-driven brief + this repo's own config (#39)
 - **Satisfies:** SC-2
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/worker/brief.py`,
@@ -58,7 +58,7 @@ SC-5 → T-5 (delivery + pilot).
   commands + note, sentinel-proof no framework toolchain names; no config
   → today's brief); the repo's own advisory CI job still runs green.
 
-### [ ] T-3 — Config-driven citation scan
+### [x] T-3 — Config-driven citation scan (this PR)
 - **Satisfies:** SC-3
 - **Depends on:** T-1 (parallel with T-2)
 - **Touches:** `src/agent_framework/validator/{checks,gate}.py`,
@@ -112,7 +112,7 @@ SC-5 → T-5 (delivery + pilot).
 | Criterion | Requirement(s) | Task | Status |
 |---|---|---|---|
 | SC-1 | R-1 | T-1 | ✅ (#37) |
-| SC-2 | R-1, R-2 | T-2 | ✅ (this PR) |
-| SC-3 | R-1, R-3 | T-3 | pending |
+| SC-2 | R-1, R-2 | T-2 | ✅ (#39) |
+| SC-3 | R-1, R-3 | T-3 | ✅ (this PR) |
 | SC-4 | R-4 | T-4 | ✅ (#38, worker) |
 | SC-5 | R-5, R-6 | T-5 | pending |

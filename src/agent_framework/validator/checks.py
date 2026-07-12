@@ -10,15 +10,21 @@ from __future__ import annotations
 
 import re
 
+from ..project import DEFAULTS
 from .bundle import EvidenceBundle
 from .verdict import Citation, Finding
 
-_TEST_DEF_RE = re.compile(r"^(?:async\s+)?def\s+(test_\w+)", re.M)
+# The default (Python) pattern comes from project config's defaults — the
+# target project may declare its own (ADR 0002: Python is the harness's
+# language, not the target's).
+_DEFAULT_TEST_RE = re.compile(DEFAULTS.test_pattern, re.M)
 
 
-def _citing_test(sc_id: str, path: str, source: str) -> str | None:
-    """The first test function in `source` whose span cites `sc_id`, as path::name."""
-    matches = list(_TEST_DEF_RE.finditer(source))
+def _citing_test(
+    sc_id: str, path: str, source: str, pattern: re.Pattern[str] = _DEFAULT_TEST_RE
+) -> str | None:
+    """The first test in `source` whose span cites `sc_id`, as path::name."""
+    matches = list(pattern.finditer(source))
     for i, m in enumerate(matches):
         end = matches[i + 1].start() if i + 1 < len(matches) else len(source)
         if re.search(rf"\b{re.escape(sc_id)}\b", source[m.start() : end]):
@@ -26,23 +32,27 @@ def _citing_test(sc_id: str, path: str, source: str) -> str | None:
     return None
 
 
-def find_citations(bundle: EvidenceBundle) -> dict[str, str]:
+def find_citations(
+    bundle: EvidenceBundle, pattern: re.Pattern[str] = _DEFAULT_TEST_RE
+) -> dict[str, str]:
     """Map each claimed criterion to a citing test (`path::test_name`), where one exists.
 
-    Citation is at *test-function* level: an id mentioned only in a module
-    docstring names no test and does not count.
+    Citation is at *test* level per the project's pattern: an id mentioned
+    only in a module docstring names no test and does not count.
     """
     citations: dict[str, str] = {}
     for sc in bundle.task.criteria:
         for path in sorted(bundle.tests):
-            cited = _citing_test(sc, path, bundle.tests[path])
+            cited = _citing_test(sc, path, bundle.tests[path], pattern)
             if cited is not None:
                 citations[sc] = cited
                 break
     return citations
 
 
-def run_checks(bundle: EvidenceBundle) -> tuple[Finding, ...]:
+def run_checks(
+    bundle: EvidenceBundle, pattern: re.Pattern[str] = _DEFAULT_TEST_RE
+) -> tuple[Finding, ...]:
     """All deterministic findings for the bundle; empty means the model may judge."""
     findings: list[Finding] = []
 
@@ -58,7 +68,7 @@ def run_checks(bundle: EvidenceBundle) -> tuple[Finding, ...]:
             ),
         )
 
-    citations = find_citations(bundle)
+    citations = find_citations(bundle, pattern)
     for sc in bundle.task.criteria:
         if sc not in citations:
             findings.append(
@@ -92,7 +102,9 @@ def run_checks(bundle: EvidenceBundle) -> tuple[Finding, ...]:
     return tuple(findings)
 
 
-def citations_for_pass(bundle: EvidenceBundle) -> tuple[Citation, ...]:
+def citations_for_pass(
+    bundle: EvidenceBundle, pattern: re.Pattern[str] = _DEFAULT_TEST_RE
+) -> tuple[Citation, ...]:
     """The Citation tuple a PASS carries — call only after run_checks is clean."""
-    found = find_citations(bundle)
+    found = find_citations(bundle, pattern)
     return tuple(Citation(sc, found[sc]) for sc in bundle.task.criteria)

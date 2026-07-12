@@ -83,3 +83,16 @@ def test_defaults_reproduce_the_framework_gate() -> None:
     assert "uv run pytest" in DEFAULTS.gate_commands
     assert any("mypy --strict" in c for c in DEFAULTS.gate_commands)
     assert DEFAULTS.ignore_checks == ("validator",)
+
+
+def test_invalid_pattern_is_unconstructible_even_programmatically() -> None:
+    """Regression (#40 advisory REJECT, a live Gemini finding): a directly
+    constructed ProjectConfig bypassed the loader's pattern validation, so
+    validate(project=...) could crash with a raw IndexError during citation
+    scanning. Invalid patterns are now unconstructible — by construction."""
+    from agent_framework.project import ProjectConfig
+
+    with pytest.raises(ProjectConfigError, match="exactly one capture group"):
+        ProjectConfig(test_pattern="test_no_group")
+    with pytest.raises(ProjectConfigError, match="not a valid regex"):
+        ProjectConfig(test_pattern="(unclosed")
