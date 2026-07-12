@@ -34,7 +34,9 @@ def create_worktree(task: TaskSpec, *, run: Runner = run_command) -> tuple[Path,
         raise WorktreeError(f"worktree already exists: {path} — remove it or finish the task")
     if run(["git", "branch", "--list", branch]).strip():
         raise WorktreeError(f"branch already exists: {branch} — no silent reuse")
-    run(["git", "worktree", "add", str(path), "-b", branch])
+    # Cut from main explicitly (plan §Approach 2), never from the
+    # orchestrator's checkout — a worker PR must contain only its own work.
+    run(["git", "worktree", "add", str(path), "-b", branch, "main"])
     return path, branch
 
 

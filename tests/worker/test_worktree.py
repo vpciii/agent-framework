@@ -57,7 +57,8 @@ def test_create_worktree_invokes_git_with_derived_pair(tmp_path: Path) -> None:
     path, branch = create_worktree(task, run=run)
 
     assert (path, branch) == (expected_path, expected_branch)
-    assert ["git", "worktree", "add", str(expected_path), "-b", expected_branch] in calls
+    # Cut from main explicitly (plan): a worker PR contains only its own work.
+    assert ["git", "worktree", "add", str(expected_path), "-b", expected_branch, "main"] in calls
     assert wt.WORKTREES_DIR.name == ".worktrees"
 
 

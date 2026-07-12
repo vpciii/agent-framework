@@ -89,7 +89,7 @@ def test_sc2_session_runs_in_worktree_with_roster_model_and_brief(repo: Path) ->
 
     [(args, cwd, timeout)] = record
     assert cwd == Path(".worktrees/fixture-t-1")  # the fresh, derived worktree
-    assert ["git", "worktree", "add", ".worktrees/fixture-t-1", "-b", "feat/fixture-t-1"] in git.calls
+    assert ["git", "worktree", "add", ".worktrees/fixture-t-1", "-b", "feat/fixture-t-1", "main"] in git.calls
     assert "--model" in args and "worker-model-x" in args  # roster binding
     prompt = args[args.index("-p") + 1]
     assert "WIDGET-DETAIL-SENTINEL" in prompt  # the brief is the prompt

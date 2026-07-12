@@ -3,10 +3,11 @@
 The system as it exists *now*. The ADRs say why; this says what. Update in
 the same PR as any structural change (methodology §8).
 
-Two implemented slices: the **model-roster substrate** and the **validator
-agent**. The chief and worker roles do not exist as code — per ADR 0004 the
-chief's seat is a human-driven interactive session, and the worker (future
-slice) will be orchestrated headless Claude Code.
+Three implemented slices: the **model-roster substrate**, the **validator
+agent**, and the **worker agent**. The chief does not exist as code — per
+ADR 0004 its seat is a human-driven interactive session; the worker is
+orchestrated headless Claude Code (`claude -p` behind a seam), not a
+dispatch through the provider adapters.
 
 ```
                       roster.toml           env (ANTHROPIC_API_KEY,
@@ -51,7 +52,10 @@ slice) will be orchestrated headless Claude Code.
 | Adapters | `providers/anthropic.py`, `providers/google.py` | The only vendor-SDK imports; thin normalization |
 | Registry + dispatch | `providers/registry.py`, `dispatch.py` | Role → adapter → invoke; typed errors, no silent fallback |
 | Validator core | `validator/{bundle,checks,judgment,gate,verdict}.py` | The cite-the-test gate (ADR 0005): deterministic before model; verdicts cite, never assert |
-| Validator edges | `validator/{collector,__main__}.py` | Bundle assembly from a PR via `gh` (one fakeable seam); CLI for the human consumer |
+| Validator edges | `validator/{collector,__main__}.py` | Bundle assembly from a PR via `gh` (one fakeable seam; `Satisfies:` declaration is the claim channel); CLI for the human consumer |
+| Worker core | `worker/{types,brief,worktree,session,orchestrator,handoff}.py` | One task → one gated PR: self-contained brief, isolated worktree cut from `main`, headless `claude -p` session (roster's worker model, hard timeout), `.worker-result.json` contract, PR with the Satisfies declaration / escalation artifact / preserved-tree timeout. Never merges |
+| Worker edge | `worker/__main__.py` | CLI: `python -m agent_framework.worker <slug> <task>` — exit 0 PR / 2 escalated / 3 timeout-error, composable with the validator's 0/1 |
+| Shared seam | `proc.py` | The one subprocess runner both edges shell out through; failures carry stderr |
 | Spec-coverage checker | `scripts/check_spec_coverage.py` | CI-enforced traceability (ADR 0003); `*(pending)*` rows allowed at `Approved`, forbidden at `Implemented` |
 | CI | `.github/workflows/ci.yml` | `uv sync --frozen` → ruff → mypy --strict → pytest → coverage check; required status check on `main`. Plus an **advisory** `validator` job: the cite-the-test gate runs on every PR (never blocking; judgment only when the `GEMINI_API_KEY` secret is set) |
 
@@ -67,3 +71,4 @@ Gemini via `GoogleProvider` (free tier; Vertex fallback). Retrieval/triage
 
 - `specs/model-roster/` — Implemented (frozen).
 - `specs/validator-gate/` — Implemented (frozen).
+- `specs/worker-agent/` — Implemented (frozen).
