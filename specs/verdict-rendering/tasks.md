@@ -1,6 +1,6 @@
 # Tasks: Verdict rendering
 
-- **Status:** Draft
+- **Status:** Approved
 - **Spec:** ./spec.md
 - **Plan:** — (single-function slice; the spec's Requirements are the plan)
 
