@@ -15,6 +15,7 @@ import asyncio
 import sys
 from pathlib import Path
 
+from ..project import load_project_config
 from ..providers.anthropic import AnthropicProvider
 from ..providers.google import GoogleProvider
 from ..providers.registry import register_provider
@@ -43,10 +44,14 @@ def main(argv: list[str] | None = None) -> int:
     register_provider("google", GoogleProvider())
 
     roster = Roster.from_file(args.roster)
+    project = load_project_config()
     bundle = collect_bundle(
-        args.pr, repo=args.repo, ignore_checks=frozenset(args.ignore_check)
+        args.pr,
+        repo=args.repo,
+        # The CLI's flags extend the project config's list (plan §Approach 3).
+        ignore_checks=frozenset(project.ignore_checks) | set(args.ignore_check),
     )
-    verdict = asyncio.run(validate(bundle, roster))
+    verdict = asyncio.run(validate(bundle, roster, project=project))
 
     print(verdict_to_json(verdict))
     return 0 if isinstance(verdict, Pass) else 1

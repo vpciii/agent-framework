@@ -10,7 +10,9 @@ evidence — `Pass.from_evidence` makes an uncited criterion unconstructible.
 from __future__ import annotations
 
 import logging
+import re
 
+from ..project import DEFAULTS, ProjectConfig
 from ..providers.registry import ProviderRegistry
 from ..roster import Roster
 from .bundle import EvidenceBundle
@@ -26,11 +28,13 @@ async def validate(
     roster: Roster,
     *,
     registry: ProviderRegistry | None = None,
+    project: ProjectConfig = DEFAULTS,
 ) -> Verdict:
     """Gate one task's PR evidence; the verdict cites, it never asserts."""
     task_id = bundle.task.task_id
+    pattern = re.compile(project.test_pattern, re.M)
 
-    findings = run_checks(bundle)
+    findings = run_checks(bundle, pattern)
     if findings:
         logger.info(
             "gate %s: REJECT at deterministic stage (%d findings, no model call)",
@@ -48,6 +52,8 @@ async def validate(
         )
         return Reject(task_id=task_id, findings=judgment.findings)
 
-    verdict = Pass.from_evidence(bundle.task, citations_for_pass(bundle), ci=bundle.ci.summary)
+    verdict = Pass.from_evidence(
+        bundle.task, citations_for_pass(bundle, pattern), ci=bundle.ci.summary
+    )
     logger.info("gate %s: PASS (%d criteria cited)", task_id, len(verdict.citations))
     return verdict

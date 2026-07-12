@@ -58,7 +58,7 @@ SC-5 → T-5 (delivery + pilot).
   commands + note, sentinel-proof no framework toolchain names; no config
   → today's brief); the repo's own advisory CI job still runs green.
 
-### [ ] T-3 — Config-driven citation scan
+### [x] T-3 — Config-driven citation scan (this PR)
 - **Satisfies:** SC-3
 - **Depends on:** T-1 (parallel with T-2)
 - **Touches:** `src/agent_framework/validator/{checks,gate}.py`,
@@ -113,6 +113,6 @@ SC-5 → T-5 (delivery + pilot).
 |---|---|---|---|
 | SC-1 | R-1 | T-1 | ✅ (this PR) |
 | SC-2 | R-1, R-2 | T-2 | pending |
-| SC-3 | R-1, R-3 | T-3 | pending |
+| SC-3 | R-1, R-3 | T-3 | ✅ (this PR) |
 | SC-4 | R-4 | T-4 | pending |
 | SC-5 | R-5, R-6 | T-5 | pending |
