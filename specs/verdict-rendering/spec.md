@@ -1,6 +1,6 @@
 # Spec: Verdict rendering — human-readable verdicts
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-07-12
 - **Author:** vpc
 - **Related ADRs:** ADR 0005 (verdicts cite, never assert)
