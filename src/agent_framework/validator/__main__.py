@@ -29,13 +29,23 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("pr", type=int, help="PR number to validate")
     ap.add_argument("--roster", type=Path, default=Path("examples/roster.toml"))
     ap.add_argument("--repo", default=None, help="owner/name (default: current repo)")
+    ap.add_argument(
+        "--ignore-check",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="status check to exclude from CI evidence (repeatable); used by the "
+        "in-CI advisory run to exclude its own necessarily-in-progress check",
+    )
     args = ap.parse_args(argv)
 
     register_provider("anthropic", AnthropicProvider())
     register_provider("google", GoogleProvider())
 
     roster = Roster.from_file(args.roster)
-    bundle = collect_bundle(args.pr, repo=args.repo)
+    bundle = collect_bundle(
+        args.pr, repo=args.repo, ignore_checks=frozenset(args.ignore_check)
+    )
     verdict = asyncio.run(validate(bundle, roster))
 
     print(verdict_to_json(verdict))

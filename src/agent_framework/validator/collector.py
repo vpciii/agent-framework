@@ -30,8 +30,13 @@ _FIX_TITLE_RE = re.compile(r"^fix[(!:]")
 
 
 def run_command(args: Sequence[str]) -> str:
-    """The single subprocess seam. Raises on a failing command (fail loudly)."""
-    result = subprocess.run(list(args), capture_output=True, text=True, check=True)
+    """The single subprocess seam. A failing command raises with its stderr —
+    fail loudly means the evidence rides along, not just the exit status."""
+    result = subprocess.run(list(args), capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"command failed ({result.returncode}): {' '.join(args)}\n{result.stderr.strip()}"
+        )
     return result.stdout
 
 
@@ -55,7 +60,10 @@ def _file_at_ref(path: str, ref: str, repo: str | None, run: Runner) -> str:
     )
 
 
-def _ci_evidence(rollup: list[dict[str, Any]]) -> CIEvidence:
+def _ci_evidence(
+    rollup: list[dict[str, Any]], ignore_checks: frozenset[str] = frozenset()
+) -> CIEvidence:
+    rollup = [c for c in rollup if c.get("name") not in ignore_checks]
     if not rollup:
         return CIEvidence(green=False, summary="no status checks reported")
     lines = [
@@ -77,9 +85,18 @@ def _red_evidence(body: str, is_fix: bool) -> str | None:
 
 
 def collect_bundle(
-    pr: int, *, repo: str | None = None, run: Runner = run_command
+    pr: int,
+    *,
+    repo: str | None = None,
+    run: Runner = run_command,
+    ignore_checks: frozenset[str] = frozenset(),
 ) -> EvidenceBundle:
-    """Assemble the evidence bundle for one PR via `gh` (diff, metadata, files)."""
+    """Assemble the evidence bundle for one PR via `gh` (diff, metadata, files).
+
+    `ignore_checks` names status checks excluded from the CI evidence — for
+    the in-CI advisory run, which must not count its own (necessarily
+    in-progress) check as red CI.
+    """
     view = _pr_view(pr, repo, run)
     title = str(view.get("title", ""))
     body = str(view.get("body", ""))
@@ -108,6 +125,6 @@ def collect_bundle(
         task=TaskRef(task_id=task_id, criteria=criteria, is_fix=is_fix),
         diff=diff,
         tests=tests,
-        ci=_ci_evidence(rollup),
+        ci=_ci_evidence(rollup, ignore_checks),
         red_evidence=_red_evidence(body, is_fix),
     )

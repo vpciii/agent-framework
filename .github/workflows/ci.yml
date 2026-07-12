@@ -23,3 +23,36 @@ jobs:
         run: uv run pytest
       - name: Spec coverage (methodology §5, ADR 0003)
         run: uv run python scripts/check_spec_coverage.py --include-approved
+
+  # Advisory dogfooding of the cite-the-test gate (ADR 0005): a verdict on
+  # every PR, never blocking — not in the ruleset's required checks, and
+  # continue-on-error keeps the workflow green on a REJECT. Deterministic
+  # REJECTs cost zero model calls; the judgment call runs only when the
+  # GEMINI_API_KEY secret is configured.
+  validator:
+    if: github.event_name == 'pull_request'
+    needs: ci  # the gate reads CI evidence, so the required check must finish first
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: read     # statusCheckRollup queries check runs
+      statuses: read   # ...and classic commit statuses
+      actions: read    # ...and each check's workflowRun
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --frozen
+      - name: Cite-the-test gate (advisory)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "::notice::GEMINI_API_KEY secret not set — advisory validator skipped"
+            exit 0
+          fi
+          uv run python -m agent_framework.validator --ignore-check validator ${{ github.event.pull_request.number }}
