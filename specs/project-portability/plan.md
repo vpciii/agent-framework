@@ -1,6 +1,6 @@
 # Plan: Project portability — run the team on any adopted repo
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-07-12
 - **Author:** vpc
 - **Spec:** ./spec.md
