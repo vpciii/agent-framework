@@ -1,6 +1,6 @@
 # Plan: Worker agent — one task to one gated PR
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-07-12
 - **Author:** vpc
 - **Spec:** ./spec.md
