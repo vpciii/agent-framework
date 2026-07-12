@@ -1,6 +1,6 @@
 # Spec: Project portability — run the team on any adopted repo
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-07-12
 - **Author:** vpc
 - **Related ADRs:** ADR 0001 (artifacts are the model-neutral coordination
