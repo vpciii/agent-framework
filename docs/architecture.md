@@ -56,6 +56,7 @@ dispatch through the provider adapters.
 | Worker core | `worker/{types,brief,worktree,session,orchestrator,handoff}.py` | One task → one gated PR: self-contained brief, isolated worktree cut from `main`, headless `claude -p` session (roster's worker model, hard timeout), `.worker-result.json` contract, PR with the Satisfies declaration / escalation artifact / preserved-tree timeout. Never merges |
 | Worker edge | `worker/__main__.py` | CLI: `python -m agent_framework.worker <slug> <task>` — exit 0 PR / 2 escalated / 3 timeout-error, composable with the validator's 0/1 |
 | Shared seam | `proc.py` | The one subprocess runner both edges shell out through; failures carry stderr |
+| Project config | `project.py` + `agent-framework.toml` | Per-repo contract: gate commands, conventions note, test-citation pattern, ignore-checks. Defaults = this repo's conventions; invalid patterns unconstructible. Adoption: `docs/adoption.md` |
 | Spec-coverage checker | `scripts/check_spec_coverage.py` | CI-enforced traceability (ADR 0003); `*(pending)*` rows allowed at `Approved`, forbidden at `Implemented` |
 | CI | `.github/workflows/ci.yml` | `uv sync --frozen` → ruff → mypy --strict → pytest → coverage check; required status check on `main`. Plus an **advisory** `validator` job: the cite-the-test gate runs on every PR (never blocking; judgment only when the `GEMINI_API_KEY` secret is set) |
 
