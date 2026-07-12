@@ -144,21 +144,19 @@ delivery task's job, cited not asserted).
 
 Resolved before the spec is `Approved` (inline or via an ADR).
 
-- [ ] **Session invocation surface** — `claude -p` CLI via subprocess (one
-  seam, mirrors the collector pattern) vs the `claude-agent-sdk` Python
-  package. Leaning CLI: no new dependency, structured output via
-  `--output-format json`, and the auth mode (subscription vs API key) stays
-  entirely the session's config per ADR 0004. `plan.md` decides.
-- [ ] **Structured result channel** — how the session reports
-  completed/escalated: parse `claude -p --output-format json`'s result
-  field, or require the session to write a `result.json` in the worktree?
-  `plan.md` decides.
-- [ ] **Worktree lifecycle** — cleanup on success (after PR push), preserve
-  on failure/timeout; where trees live (`.worktrees/` ignored, or a temp
-  dir). `plan.md` decides.
-- [ ] **Does the brief include validator expectations?** (e.g. "your PR
-  will be gated on: every claimed SC cited by a test function") — leaning
-  yes, it is part of the conventions the worker must satisfy.
+- [x] **Session invocation surface** — resolved in `plan.md`: `claude -p`
+  via subprocess behind one seam. No new dependency, no vendor SDK in the
+  orchestrator, auth stays session config (ADR 0004).
+- [x] **Structured result channel** — resolved in `plan.md`: the session
+  writes `.worker-result.json` in the worktree root; missing/malformed →
+  typed `SessionResultError`, worktree preserved. The contract binds to
+  the worktree, not the tool.
+- [x] **Worktree lifecycle** — resolved in `plan.md`: `.worktrees/<task>`
+  in-repo (gitignored); cleanup after successful push, preserved on
+  failure/timeout with the path reported in the outcome.
+- [x] **Does the brief include validator expectations?** — yes (resolved
+  in `plan.md`): the gate's checks are part of the conventions the brief
+  states.
 
 ## Out of scope (for now)
 
