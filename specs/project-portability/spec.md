@@ -145,7 +145,7 @@ Rows may be `*(pending)*` while `Approved` (#12).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
+| SC-1 | R-1 | `tests/test_project_config.py::test_sc1_full_config_parses_all_four_fields`, `tests/test_project_config.py::test_sc1_missing_file_and_missing_table_yield_defaults`, `tests/test_project_config.py::test_sc1_malformed_config_fails_loudly_naming_the_problem` |
 | SC-2 | R-1, R-2 | *(pending)* |
 | SC-3 | R-1, R-3 | *(pending)* |
 | SC-4 | R-4 | *(pending)* |

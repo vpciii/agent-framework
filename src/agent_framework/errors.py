@@ -27,6 +27,10 @@ class JudgmentFormatError(ValidationError):
     """The judgment model did not answer with the required verdict tool call."""
 
 
+class ProjectConfigError(AgentFrameworkError):
+    """agent-framework.toml's [project] table is malformed."""
+
+
 class WorkerError(AgentFrameworkError):
     """Base class for worker-orchestration errors."""
 
