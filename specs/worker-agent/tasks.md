@@ -87,7 +87,7 @@ T-3 · SC-7 → T-4 · T-5 is the delivery edge and closes out the spec.
   → claims exactly the declared ids; no declaration → scraping unchanged);
   ends the false-positive advisory REJECTs for declared PRs.
 
-### [ ] T-5 — CLI + delivery + spec close-out
+### [x] T-5 — CLI + delivery + spec close-out (this PR)
 - **Satisfies:** — (delivery edge; the core criteria are T-1–T-4's)
 - **Depends on:** T-3, T-4
 - **Touches:** `src/agent_framework/worker/__main__.py`,

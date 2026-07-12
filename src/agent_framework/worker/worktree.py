@@ -41,5 +41,10 @@ def create_worktree(task: TaskSpec, *, run: Runner = run_command) -> tuple[Path,
 
 
 def remove_worktree(path: Path, *, run: Runner = run_command) -> None:
-    """Clean up after a successful push (failures keep their tree, by design)."""
-    run(["git", "worktree", "remove", str(path)])
+    """Clean up after a successful push (failures keep their tree, by design).
+
+    --force is required and safe here: the tree always contains the
+    untracked `.worker-result.json` (the result contract), and this is
+    only called after the branch is pushed — nothing unpushed is lost.
+    """
+    run(["git", "worktree", "remove", "--force", str(path)])
