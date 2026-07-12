@@ -39,6 +39,9 @@ there.
    No secrets here, ever. `gate_commands` are what a worker must run
    green before committing; `test_pattern` needs exactly one capture
    group (the test name) — non-Python projects set their own.
+   `ignore_checks` entries are **check names** (the job name GitHub
+   reports, e.g. `review`), not workflow filenames — the pilot's first
+   worker PR was REJECTed on exactly this confusion (opn-mcp#22).
 2. **`.worktrees/`** in `.gitignore`.
 3. **The advisory validator CI job** — copy the `validator` job from this
    repo's `.github/workflows/ci.yml`, adjusting: `needs:` to the target's
