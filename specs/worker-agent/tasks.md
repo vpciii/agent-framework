@@ -38,7 +38,7 @@ T-3 · SC-7 → T-4 · T-5 is the delivery edge and closes out the spec.
   every criterion text, and the conventions; contains nothing from outside
   the two artifact files; unknown slug/task id → `UnknownTaskError`.
 
-### [x] T-2 — Worktree + session seams (this PR)
+### [x] T-2 — Worktree + session seams (#27)
 - **Satisfies:** SC-6
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/worker/{worktree,session}.py`,
@@ -55,7 +55,7 @@ T-3 · SC-7 → T-4 · T-5 is the delivery edge and closes out the spec.
   result-file happy path, malformed file, and timeout kill against a fake
   runner.
 
-### [ ] T-3 — Orchestrator + handoff
+### [x] T-3 — Orchestrator + handoff (this PR)
 - **Satisfies:** SC-2, SC-3, SC-4, SC-5
 - **Depends on:** T-2
 - **Touches:** `src/agent_framework/worker/{handoff,orchestrator}.py`,
@@ -116,9 +116,9 @@ this is only the planning view.
 | Criterion | Requirement(s) | Task | Status |
 |---|---|---|---|
 | SC-1 | R-1 | T-1 | ✅ (#26) |
-| SC-2 | R-2 | T-3 | pending |
-| SC-3 | R-3 | T-3 | pending |
-| SC-4 | R-4 | T-3 | pending |
-| SC-5 | R-5 | T-3 | pending |
-| SC-6 | R-6 | T-2 | ✅ (this PR) |
+| SC-2 | R-2 | T-3 | ✅ (this PR) |
+| SC-3 | R-3 | T-3 | ✅ (this PR) |
+| SC-4 | R-4 | T-3 | ✅ (this PR) |
+| SC-5 | R-5 | T-3 | ✅ (this PR) |
+| SC-6 | R-6 | T-2 | ✅ (#27) |
 | SC-7 | R-7 | T-4 | ✅ (#25) |

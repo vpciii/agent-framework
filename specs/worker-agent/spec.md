@@ -172,9 +172,9 @@ Rows may be `*(pending)*` while `Approved` (#12).
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
 | SC-1 | R-1 | `tests/worker/test_brief.py::test_sc1_brief_contains_task_criteria_and_conventions`, `tests/worker/test_brief.py::test_sc1_brief_contains_nothing_from_outside_the_artifacts`, `tests/worker/test_brief.py::test_sc1_unknown_task_or_slug_fails_loudly` |
-| SC-2 | R-2 | *(pending)* |
-| SC-3 | R-3 | *(pending)* |
-| SC-4 | R-4 | *(pending)* |
-| SC-5 | R-5 | *(pending)* |
+| SC-2 | R-2 | `tests/worker/test_orchestrator.py::test_sc2_session_runs_in_worktree_with_roster_model_and_brief` |
+| SC-3 | R-3 | `tests/worker/test_orchestrator.py::test_sc3_completed_session_becomes_declared_pr_and_never_merges` |
+| SC-4 | R-4 | `tests/worker/test_orchestrator.py::test_sc4_escalation_writes_artifact_and_opens_no_pr` |
+| SC-5 | R-5 | `tests/worker/test_orchestrator.py::test_sc5_budget_expiry_times_out_with_preserved_worktree` |
 | SC-6 | R-6 | `tests/worker/test_worktree.py::test_sc6_distinct_tasks_derive_distinct_trees_and_branches` |
 | SC-7 | R-7 | `tests/validator/test_collector.py::test_sc7_satisfies_declaration_is_the_exclusive_claim_channel`, `tests/validator/test_collector.py::test_sc7_without_declaration_scraping_is_unchanged` |
