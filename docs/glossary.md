@@ -36,6 +36,10 @@ and agent prompts. Add a term here before inventing a name for a concept.
   `chief: claude-fable-5`, `worker: claude-sonnet-5`,
   `validator: gemini-3-pro`). Swapping a model is a roster edit, not a code
   change; it is the one source of truth for the role→model mapping.
+- **Satisfies declaration** — the structured `Satisfies: SC-…` line in a
+  task PR's body: the worker's explicit claim of which success criteria the
+  PR delivers. The validator's collector reads claims from it exclusively
+  when present; prose mentions of `SC-` ids are not claims.
 - **Provider adapter** — a thin per-provider (Anthropic, Google, …) shim
   behind a common interface (prompt + tools in, response out), so models are
   pluggable. Adding a provider = a new adapter + a roster entry.
