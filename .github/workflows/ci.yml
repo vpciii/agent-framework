@@ -38,6 +38,7 @@ jobs:
       pull-requests: read
       checks: read     # statusCheckRollup queries check runs
       statuses: read   # ...and classic commit statuses
+      actions: read    # ...and each check's workflowRun
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
