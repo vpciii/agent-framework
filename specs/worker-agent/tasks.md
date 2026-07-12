@@ -20,7 +20,7 @@ T-3 · SC-7 → T-4 · T-5 is the delivery edge and closes out the spec.
 
 ---
 
-### [x] T-1 — Types + brief assembly (this PR)
+### [x] T-1 — Types + brief assembly (#26)
 - **Satisfies:** SC-1
 - **Depends on:** —
 - **Touches:** `src/agent_framework/worker/{__init__,types,brief}.py`,
@@ -38,7 +38,7 @@ T-3 · SC-7 → T-4 · T-5 is the delivery edge and closes out the spec.
   every criterion text, and the conventions; contains nothing from outside
   the two artifact files; unknown slug/task id → `UnknownTaskError`.
 
-### [ ] T-2 — Worktree + session seams
+### [x] T-2 — Worktree + session seams (this PR)
 - **Satisfies:** SC-6
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/worker/{worktree,session}.py`,
@@ -74,7 +74,7 @@ T-3 · SC-7 → T-4 · T-5 is the delivery edge and closes out the spec.
   + artifact with task/question/spec location), SC-5 (budget expiry →
   `TimedOut`, no PR, preserved path reported) pass, citing their ids.
 
-### [x] T-4 — Collector reads the Satisfies declaration (this PR)
+### [x] T-4 — Collector reads the Satisfies declaration (#25)
 - **Satisfies:** SC-7
 - **Depends on:** — (parallel with T-1; merge before T-5)
 - **Touches:** `src/agent_framework/validator/collector.py`,
@@ -115,10 +115,10 @@ this is only the planning view.
 
 | Criterion | Requirement(s) | Task | Status |
 |---|---|---|---|
-| SC-1 | R-1 | T-1 | ✅ (this PR) |
+| SC-1 | R-1 | T-1 | ✅ (#26) |
 | SC-2 | R-2 | T-3 | pending |
 | SC-3 | R-3 | T-3 | pending |
 | SC-4 | R-4 | T-3 | pending |
 | SC-5 | R-5 | T-3 | pending |
-| SC-6 | R-6 | T-2 | pending |
-| SC-7 | R-7 | T-4 | ✅ (this PR) |
+| SC-6 | R-6 | T-2 | ✅ (this PR) |
+| SC-7 | R-7 | T-4 | ✅ (#25) |

@@ -176,5 +176,5 @@ Rows may be `*(pending)*` while `Approved` (#12).
 | SC-3 | R-3 | *(pending)* |
 | SC-4 | R-4 | *(pending)* |
 | SC-5 | R-5 | *(pending)* |
-| SC-6 | R-6 | *(pending)* |
+| SC-6 | R-6 | `tests/worker/test_worktree.py::test_sc6_distinct_tasks_derive_distinct_trees_and_branches` |
 | SC-7 | R-7 | `tests/validator/test_collector.py::test_sc7_satisfies_declaration_is_the_exclusive_claim_channel`, `tests/validator/test_collector.py::test_sc7_without_declaration_scraping_is_unchanged` |

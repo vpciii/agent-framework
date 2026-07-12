@@ -39,5 +39,9 @@ class SessionResultError(WorkerError):
     """The session did not honor the `.worker-result.json` contract."""
 
 
+class SessionTimeoutError(WorkerError):
+    """The session exceeded its time budget and was killed."""
+
+
 class WorktreeError(WorkerError):
     """The worktree or branch could not be created (collision or git failure)."""
