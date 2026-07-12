@@ -28,7 +28,7 @@ from .verdict import Pass, verdict_to_json
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Gate one PR through the cite-the-test validator")
     ap.add_argument("pr", type=int, help="PR number to validate")
-    ap.add_argument("--roster", type=Path, default=Path("examples/roster.toml"))
+    ap.add_argument("--roster", type=Path, default=Path("agent-framework.toml"))
     ap.add_argument("--repo", default=None, help="owner/name (default: current repo)")
     ap.add_argument(
         "--ignore-check",

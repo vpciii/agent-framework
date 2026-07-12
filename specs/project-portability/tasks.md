@@ -22,7 +22,7 @@ SC-5 → T-5 (delivery + pilot).
 
 ---
 
-### [x] T-1 — ProjectConfig + loader (this PR)
+### [x] T-1 — ProjectConfig + loader (#37)
 - **Satisfies:** SC-1
 - **Depends on:** —
 - **Touches:** `src/agent_framework/project.py` (new),
@@ -37,7 +37,7 @@ SC-5 → T-5 (delivery + pilot).
 - **Done when:** SC-1's tests pass citing it (full parse; defaults on
   missing; loud on malformed, each message naming the offending field).
 
-### [ ] T-2 — Config-driven brief + this repo's own config
+### [x] T-2 — Config-driven brief + this repo's own config (#39)
 - **Satisfies:** SC-2
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/worker/brief.py`,
@@ -73,7 +73,7 @@ SC-5 → T-5 (delivery + pilot).
   pattern finds and cites per the pattern; all existing default-path tests
   unchanged and green).
 
-### [ ] T-4 — Console entry points  *(worker-dispatch candidate)*
+### [x] T-4 — Console entry points  *(worker-dispatched)* (#38)
 - **Satisfies:** SC-4
 - **Depends on:** — (parallel with all; merge before T-5)
 - **Touches:** `pyproject.toml` (`[project.scripts]`),
@@ -111,8 +111,8 @@ SC-5 → T-5 (delivery + pilot).
 
 | Criterion | Requirement(s) | Task | Status |
 |---|---|---|---|
-| SC-1 | R-1 | T-1 | ✅ (this PR) |
-| SC-2 | R-1, R-2 | T-2 | pending |
+| SC-1 | R-1 | T-1 | ✅ (#37) |
+| SC-2 | R-1, R-2 | T-2 | ✅ (#39) |
 | SC-3 | R-1, R-3 | T-3 | ✅ (this PR) |
-| SC-4 | R-4 | T-4 | pending |
+| SC-4 | R-4 | T-4 | ✅ (#38, worker) |
 | SC-5 | R-5, R-6 | T-5 | pending |
