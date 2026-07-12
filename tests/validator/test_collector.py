@@ -91,3 +91,19 @@ def test_collector_red_ci_and_missing_checks_are_not_green() -> None:
     _, run = _fake_runner(view)
     ci = collect_bundle(1, run=run).ci
     assert ci.green is False and "no status checks" in ci.summary
+
+
+def test_run_command_failure_surfaces_stderr() -> None:
+    """Regression (#20 dogfood run): a failing command must raise WITH its
+    stderr, not a bare exit status — the CI log showed 'exit status 1' and
+    nothing else, hiding the actual gh permission error."""
+    import sys
+
+    import pytest
+
+    from agent_framework.validator.collector import run_command
+
+    with pytest.raises(RuntimeError, match="the actual reason"):
+        run_command(
+            [sys.executable, "-c", "import sys; sys.exit(sys.stderr.write('the actual reason') and 1 or 1)"]
+        )

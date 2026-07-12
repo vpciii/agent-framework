@@ -30,8 +30,13 @@ _FIX_TITLE_RE = re.compile(r"^fix[(!:]")
 
 
 def run_command(args: Sequence[str]) -> str:
-    """The single subprocess seam. Raises on a failing command (fail loudly)."""
-    result = subprocess.run(list(args), capture_output=True, text=True, check=True)
+    """The single subprocess seam. A failing command raises with its stderr —
+    fail loudly means the evidence rides along, not just the exit status."""
+    result = subprocess.run(list(args), capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"command failed ({result.returncode}): {' '.join(args)}\n{result.stderr.strip()}"
+        )
     return result.stdout
 
 
