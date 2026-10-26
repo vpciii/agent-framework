@@ -36,6 +36,11 @@ and agent prompts. Add a term here before inventing a name for a concept.
   `chief: claude-fable-5`, `worker: claude-sonnet-5`,
   `validator: gemini-3-pro`). Swapping a model is a roster edit, not a code
   change; it is the one source of truth for the role→model mapping.
+- **Roster currency check** — the scheduled CI check that each model the
+  roster binds is still served by its provider (failing if not, or if the
+  provider silently routes it elsewhere), reporting newer models in the
+  same family as advisory. It detects; it never edits the roster
+  (specs/roster-currency-check).
 - **Regression claim** — the token `regression` in a PR's Satisfies
   declaration: the author's explicit claim that the PR fixes a bug with a
   cited red→green regression test. The gate verifies the evidence

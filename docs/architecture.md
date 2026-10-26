@@ -48,13 +48,14 @@ dispatch through the provider adapters.
 | Component | Where | Role |
 |---|---|---|
 | Roster | `roster.py` | Binds roles (chief/worker/validator) to `{provider, model}`; rejects secrets in config (ADR 0001) |
-| Provider interface | `providers/base.py` | `Request`/`Response`/`ToolDef`/`ToolCall` + `Provider` Protocol — one shape across vendors |
+| Provider interface | `providers/base.py` | `Request`/`Response`/`ToolDef`/`ToolCall` + `Provider` Protocol — one shape across vendors; optional `ModelCatalog` / `ModelProbe` protocols for listing served models and reporting routing |
 | Adapters | `providers/anthropic.py`, `providers/google.py` | The only vendor-SDK imports; thin normalization |
 | Registry + dispatch | `providers/registry.py`, `dispatch.py` | Role → adapter → invoke; typed errors, no silent fallback |
 | Validator core | `validator/{bundle,checks,judgment,gate,verdict}.py` | The cite-the-test gate (ADR 0005): deterministic before model; verdicts cite, never assert |
 | Validator edges | `validator/{collector,__main__}.py` | Bundle assembly from a PR via `gh` (one fakeable seam; `Satisfies:` declaration is the claim channel); CLI for the human consumer |
 | Worker core | `worker/{types,brief,worktree,session,orchestrator,handoff}.py` | One task → one gated PR: self-contained brief, isolated worktree cut from `main`, headless `claude -p` session (roster's worker model, hard timeout), `.worker-result.json` contract, PR with the Satisfies declaration / escalation artifact / preserved-tree timeout. Never merges |
 | Worker edge | `worker/__main__.py` | CLI: `python -m agent_framework.worker <slug> <task>` — exit 0 PR / 2 escalated / 3 timeout-error, composable with the validator's 0/1 |
+| Roster currency check | `currency/{check,issue,__main__}.py` + `.github/workflows/roster-currency.yml` | Weekly (and on demand): each bound model must be in its provider's catalog — failing / unchecked / advisory findings, one `roster-currency` tracking issue. Never in the per-PR gate (ADR 0005); Anthropic via Workload Identity Federation, API-key fallback |
 | Shared seam | `proc.py` | The one subprocess runner both edges shell out through; failures carry stderr |
 | Project config | `project.py` + `agent-framework.toml` | Per-repo contract: gate commands, conventions note, test-citation pattern, ignore-checks. Defaults = this repo's conventions; invalid patterns unconstructible. Adoption: `docs/adoption.md` |
 | Spec-coverage checker | `scripts/check_spec_coverage.py` | CI-enforced traceability (ADR 0003); `*(pending)*` rows allowed at `Approved`, forbidden at `Implemented` |

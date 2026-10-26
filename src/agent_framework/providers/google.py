@@ -51,6 +51,20 @@ class GoogleProvider:
         )
         return self._normalize(response)
 
+    async def list_models(self) -> tuple[str, ...]:
+        """Model IDs the API serves (`ModelCatalog`), without the `models/` prefix."""
+        client = self._client_or_default()
+        pager = await client.aio.models.list()
+        return tuple([(m.name or "").removeprefix("models/") async for m in pager])
+
+    async def probe_model(self, model: str) -> str | None:
+        """The `model_version` Gemini reports for a 1-token request (`ModelProbe`)."""
+        client = self._client_or_default()
+        response = await client.aio.models.generate_content(
+            model=model, contents="ok", config={"max_output_tokens": 1}
+        )
+        return response.model_version
+
     @staticmethod
     def _normalize(response: GenerateContentResponse) -> Response:
         text_parts: list[str] = []
