@@ -26,8 +26,8 @@ there.
 
    ```toml
    [roles]
-   worker    = { provider = "anthropic", model = "claude-sonnet-5" }
-   validator = { provider = "google",    model = "gemini-3.5-flash" }
+   worker    = { provider = "anthropic", model = "claude-sonnet-5-5" }
+   validator = { provider = "google",    model = "gemini-3.8-flash" }
 
    [project]
    gate_commands = [ ... this repo's real gate, in order ... ]
