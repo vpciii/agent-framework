@@ -15,10 +15,10 @@ the code, and a **validator** agent gates their output — all coordinating
   than the worker (blind-spot coverage).
 - **The human** is author of record, above the chief.
 
-**Model-agnostic.** Roles are slots bound to models by a **roster** — e.g.
-`chief: claude-fable-5-1`, `worker: claude-sonnet-5-5`, `validator: gemini-3.8-flash` —
-reached through thin per-provider adapters. Swap a model by config, not code;
-no vendor lock-in ([ADR 0001](docs/adr/0001-model-agnostic-roles.md)).
+**Model-agnostic.** Roles are slots bound to models by a **roster** — e.g. a
+high-end Claude model as chief, a cheaper one as worker, a Gemini model as
+validator — reached through thin per-provider adapters. Swap a model by
+config, not code; no vendor lock-in ([ADR 0001](docs/adr/0001-model-agnostic-roles.md)).
 
 **Language-agnostic about the work.** The framework itself is written in Python
 ([ADR 0002](docs/adr/0002-python-implementation-stack.md)), but the projects it
