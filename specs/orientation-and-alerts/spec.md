@@ -1,6 +1,6 @@
 # Spec: Orientation and alerts — a resume card, a weekly nudge, escalations that reach vpc
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-10-26
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0001 (artifacts are the coordination protocol),
@@ -187,6 +187,16 @@ and no note of what was in progress (pre-mortem kill-recovery spike,
 - *2026-10-26 (implementation)* — A suite-wide test fixture unsets
   `AF_HA_WEBHOOK_URL`, so no test can push to vpc's phone once it is
   configured.
+- *2026-10-26 (rollout, live)* — Rolled out per Rollout and undo: Home
+  Assistant `automation.agent_framework_alert` (local-only webhook →
+  `notify.mobile_app_typhone`); the env file; launchd
+  `com.ciganik.agent-framework-nudge` (Mondays 08:00 America/New_York),
+  running from its own HTTPS clone of `main` so it never touches the
+  working checkout. Two live runs through launchd: the first opened the
+  `status` issue (#60) and pushed; the second updated #60 in place and
+  pushed. vpc confirmed both pushes arrived. The card's title comes from
+  the checkout folder's name, so the clone lives in a folder named
+  `agent-framework`. The four-week trial runs from 2026-10-26.
 
 ## Rollout and undo
 
