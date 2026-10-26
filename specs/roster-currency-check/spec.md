@@ -1,6 +1,6 @@
 # Spec: Roster currency check — notice when a bound model goes stale
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-10-26
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0001 (model-agnostic roles — the roster is the one
@@ -211,6 +211,16 @@ than in memory. Docs no longer restate model IDs (#49), so the roster in
 - *2026-10-26 (implementation)* — `pyyaml` + `types-pyyaml` added as
   dev-only dependencies so SC-5 and SC-9 are tested against the parsed
   workflow, not by text matching.
+- *2026-10-26 (first live run)* — Dispatched run
+  [40379104466](https://github.com/vpciii/agent-framework/actions/runs/40379104466)
+  on `main`. The Workload Identity Federation exchange succeeded: both
+  Anthropic roles were checked (advisory findings, not *unchecked*).
+  Gemini's `model_version` **does** reveal rerouting: the probe reported
+  `gemini-3.5-flash` served by `gemini-3.6-flash`, a failing finding, so
+  R-10 is met for Google. The run opened tracking issue #52 and exited 1,
+  as specified. After the roster moved to current models (#47), run
+  [40379981751](https://github.com/vpciii/agent-framework/actions/runs/40379981751)
+  came back clean and closed #52 (R-11).
 
 ## Rollout and undo
 
