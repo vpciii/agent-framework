@@ -211,6 +211,14 @@ than in memory. Docs no longer restate model IDs (#49), so the roster in
 - *2026-10-26 (implementation)* — `pyyaml` + `types-pyyaml` added as
   dev-only dependencies so SC-5 and SC-9 are tested against the parsed
   workflow, not by text matching.
+- *2026-10-26 (first live run)* — Dispatched run
+  [40379104466](https://github.com/vpciii/agent-framework/actions/runs/40379104466)
+  on `main`. The Workload Identity Federation exchange succeeded: both
+  Anthropic roles were checked (advisory findings, not *unchecked*).
+  Gemini's `model_version` **does** reveal rerouting: the probe reported
+  `gemini-3.5-flash` served by `gemini-3.6-flash`, a failing finding, so
+  R-10 is met for Google. The run opened tracking issue #52 and exited 1,
+  as specified.
 
 ## Rollout and undo
 
