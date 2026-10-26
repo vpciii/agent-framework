@@ -173,6 +173,20 @@ and no note of what was in progress (pre-mortem kill-recovery spike,
 
 - *2026-10-26* — Resume card published to a GitHub issue rather than
   committed as a CI-checked `STATUS.md` (see Approach).
+- *2026-10-26 (implementation)* — Next-action rule (3) also covers an
+  `Approved` **compact** spec (no `tasks.md`): "implement <spec>". Without
+  it, a compact spec awaiting implementation — this one included — would
+  never surface as the next action.
+- *2026-10-26 (implementation)* — Without a GitHub snapshot, rule (1)
+  falls back to escalation files whose own status is `Open`.
+- *2026-10-26 (implementation)* — Alerts are found again by a title
+  marker, `[<kind>:<key>]`, among open issues with that label — one issue
+  per key, no extra state. New outcome fields (`handoff_path`, `alerts`)
+  are excluded from outcome equality, so the frozen worker-agent tests
+  run unchanged.
+- *2026-10-26 (implementation)* — A suite-wide test fixture unsets
+  `AF_HA_WEBHOOK_URL`, so no test can push to vpc's phone once it is
+  configured.
 
 ## Rollout and undo
 
@@ -214,13 +228,13 @@ marked `Implemented`.
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
-| SC-2 | R-1 | *(pending)* |
-| SC-3 | R-2 | *(pending)* |
-| SC-4 | R-3 | *(pending)* |
-| SC-5 | R-4 | *(pending)* |
-| SC-6 | R-5 | *(pending)* |
-| SC-7 | R-6 | *(pending)* |
-| SC-8 | R-7 | *(pending)* |
-| SC-9 | R-8 | *(pending)* |
-| SC-10 | R-9 | *(pending)* |
+| SC-1 | R-1 | `tests/orientation/test_status_card.py::test_sc1_card_lists_active_work_and_is_deterministic` |
+| SC-2 | R-1 | `tests/orientation/test_status_card.py::test_sc2_next_action_precedence`, `tests/orientation/test_status_card.py::test_sc2_bet_with_a_spec_is_not_pending` |
+| SC-3 | R-2 | `tests/orientation/test_status_card.py::test_sc3_unavailable_github_is_stated`, `tests/orientation/test_status_card.py::test_sc3_cli_reports_a_failing_gh` |
+| SC-4 | R-3 | `tests/orientation/test_nudge.py::test_sc4_nudge_updates_the_existing_status_issue`, `tests/orientation/test_nudge.py::test_sc4_nudge_opens_exactly_one_status_issue_when_none` |
+| SC-5 | R-4 | `tests/orientation/test_alerts.py::test_sc5_alert_opens_one_issue_and_pushes_once_then_finds_it`, `tests/orientation/test_alerts.py::test_sc5_gh_tracker_finds_by_marker_and_creates_with_label`, `tests/worker/test_timeout_and_escalation_alerts.py::test_sc5_escalation_opens_one_issue_and_pushes` |
+| SC-6 | R-5 | `tests/worker/test_timeout_and_escalation_alerts.py::test_sc6_budget_expiry_leaves_no_descendants`, `tests/worker/test_timeout_and_escalation_alerts.py::test_sc6_a_plain_subprocess_kill_would_have_orphaned_them` |
+| SC-7 | R-6 | `tests/worker/test_timeout_and_escalation_alerts.py::test_sc7_timeout_leaves_a_handoff_note_and_alerts` |
+| SC-8 | R-7 | `tests/orientation/test_alerts.py::test_sc8_failing_channels_are_reported_not_raised`, `tests/orientation/test_nudge.py::test_sc8_nudge_survives_failing_channels`, `tests/worker/test_timeout_and_escalation_alerts.py::test_sc8_failing_channels_change_neither_outcome_nor_exit_code` |
+| SC-9 | R-8 | `tests/orientation/test_nudge.py::test_sc9_nudge_imports_nothing_from_the_worker` |
+| SC-10 | R-9 | `tests/orientation/test_alerts.py::test_sc10_push_endpoint_only_from_environment` |

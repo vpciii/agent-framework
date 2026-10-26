@@ -41,6 +41,18 @@ and agent prompts. Add a term here before inventing a name for a concept.
   provider silently routes it elsewhere), reporting newer models in the
   same family as advisory. It detects; it never edits the roster
   (specs/roster-currency-check).
+- **Resume card** — a generated summary of where a project stands: specs in
+  progress, open tasks, bets, escalations, open PRs and alert issues, and
+  exactly one **next action** chosen by a fixed precedence rule. Derived
+  from the artifacts, never hand-written (specs/orientation-and-alerts).
+- **Nudge** — the weekly push of the resume card: it updates one GitHub
+  issue labelled `status` and sends vpc the next action by phone. It only
+  reports; it never dispatches work.
+- **Handoff note** — the `HANDOFF.md` the orchestrator writes into a kept
+  worktree when a worker session is stopped at its budget: task, budget,
+  elapsed time, git state and any progress notes, so the next human or
+  run can pick up without guessing. Written by the orchestrator because a
+  killed session can't write its own.
 - **Regression claim** — the token `regression` in a PR's Satisfies
   declaration: the author's explicit claim that the PR fixes a bug with a
   cited red→green regression test. The gate verifies the evidence

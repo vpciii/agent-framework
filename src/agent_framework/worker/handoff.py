@@ -88,3 +88,70 @@ def write_escalation(
         encoding="utf-8",
     )
     return path
+
+
+HANDOFF_FILE = "HANDOFF.md"
+# Notes a session may leave about its own progress, read into the handoff note.
+PROGRESS_FILES = (".worker-progress", "PROGRESS.md", "claude-progress.txt")
+
+
+def write_handoff_note(
+    task: TaskSpec,
+    worktree: Path,
+    *,
+    budget_s: float,
+    elapsed_s: float,
+    run: Runner = run_command,
+) -> Path:
+    """After a budget expiry, record what the killed session left behind (R-6).
+
+    Written by the orchestrator, not the session — a killed process can't.
+    """
+
+    def git(*args: str) -> str:
+        try:
+            return run(["git", "-C", str(worktree), *args]).strip() or "(none)"
+        except Exception as e:  # noqa: BLE001 — a partial note beats no note
+            return f"(unavailable: {e})"
+
+    progress = []
+    for name in PROGRESS_FILES:
+        f = worktree / name
+        if f.is_file():
+            progress.append(f"### `{name}`\n\n{f.read_text(encoding='utf-8')[:2000].strip()}")
+    path = worktree / HANDOFF_FILE
+    worktree.mkdir(parents=True, exist_ok=True)  # never let the note itself fail the timeout path
+    path.write_text(
+        f"""# Handoff: {task.task_id} ({task.spec_slug}) timed out
+
+- **Budget:** {budget_s:.0f}s — **elapsed:** {elapsed_s:.0f}s
+- **Claimed criteria:** {", ".join(task.criteria) or "—"}
+
+The session was stopped at its budget; nothing was pushed and no PR was
+opened. This worktree is preserved as it was left.
+
+## Commits on the branch
+
+```
+{git("log", "--oneline", "main..HEAD")}
+```
+
+## Uncommitted changes (`git status --short`)
+
+```
+{git("status", "--short")}
+```
+
+## Diff summary (`git diff --stat HEAD`)
+
+```
+{git("diff", "--stat", "HEAD")}
+```
+
+## Progress notes left by the session
+
+{chr(10).join(progress) or "(none)"}
+""",
+        encoding="utf-8",
+    )
+    return path
