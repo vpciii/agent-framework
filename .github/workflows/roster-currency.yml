@@ -1,0 +1,53 @@
+name: Roster currency
+
+# Weekly check that every model the roster binds is still served
+# (specs/roster-currency-check). Advisory: never part of the per-PR gate
+# (ADR 0005); findings go to one tracking issue labelled roster-currency.
+on:
+  schedule:
+    - cron: "17 13 * * 1"  # Mondays, 13:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  id-token: write  # only to request the OIDC token for Anthropic federation
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --frozen
+
+      # Anthropic via Workload Identity Federation when the rule is configured
+      # (R-12): no stored Anthropic secret, and no API key alongside it, since
+      # an API key outranks federation in the SDK.
+      - name: Fetch GitHub OIDC token for Anthropic
+        if: vars.ANTHROPIC_FEDERATION_RULE_ID != ''
+        run: |
+          curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com" \
+            | jq -r .value > "$RUNNER_TEMP/gha-jwt"
+      - name: Check (federation)
+        if: vars.ANTHROPIC_FEDERATION_RULE_ID != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_FEDERATION_RULE_ID: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          ANTHROPIC_ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          ANTHROPIC_SERVICE_ACCOUNT_ID: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          ANTHROPIC_IDENTITY_TOKEN_FILE: ${{ runner.temp }}/gha-jwt
+        run: uv run python -m agent_framework.currency --sync-issue
+
+      # Fallback: an ANTHROPIC_API_KEY secret, only when federation is not set up.
+      - name: Check (API key fallback)
+        if: vars.ANTHROPIC_FEDERATION_RULE_ID == ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: uv run python -m agent_framework.currency --sync-issue
