@@ -6,7 +6,7 @@ seams (plan: pure core, injectable edges).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 
@@ -46,6 +46,8 @@ class Escalated:
 
     artifact_path: str
     detail: str
+    # How vpc was told (orientation-and-alerts R-4/R-7); not part of the outcome's identity.
+    alerts: tuple[str, ...] = field(default=(), compare=False)
 
 
 @dataclass(frozen=True)
@@ -53,6 +55,10 @@ class TimedOut:
     """The session exceeded its budget: no PR, worktree preserved for inspection."""
 
     worktree_path: str
+    # The note left in the worktree and how vpc was told (orientation-and-alerts
+    # R-6/R-7); not part of the outcome's identity.
+    handoff_path: str | None = field(default=None, compare=False)
+    alerts: tuple[str, ...] = field(default=(), compare=False)
 
 
 WorkerOutcome = PrOpened | Escalated | TimedOut

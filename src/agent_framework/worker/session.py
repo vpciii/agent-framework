@@ -10,6 +10,8 @@ contract binds to the worktree, not the tool.
 from __future__ import annotations
 
 import json
+import os
+import signal
 import subprocess
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -25,24 +27,46 @@ SessionRunner = Callable[[Sequence[str], Path, float], None]
 
 
 def run_claude(args: Sequence[str], cwd: Path, timeout_s: float) -> None:
-    """Default seam: run the CLI in the worktree, kill on budget expiry."""
+    """Default seam: run the CLI in the worktree, kill on budget expiry.
+
+    The session leads its own process group, so a budget expiry stops it and
+    every child it started (MCP servers, test runs, shells) — none outlive it.
+    """
     try:
-        result = subprocess.run(
-            list(args), cwd=cwd, capture_output=True, text=True, timeout=timeout_s, check=False
+        proc = subprocess.Popen(
+            list(args), cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            text=True, start_new_session=True,
         )
     except FileNotFoundError:
         raise SessionResultError(
             "the `claude` CLI is not installed or not on PATH — the worker "
             "needs headless Claude Code (ADR 0004)"
         ) from None
+    try:
+        _, stderr = proc.communicate(timeout=timeout_s)
     except subprocess.TimeoutExpired:
+        _kill_group(proc)
         raise SessionTimeoutError(
             f"session exceeded its {timeout_s:.0f}s budget and was killed"
         ) from None
-    if result.returncode != 0:
+    if proc.returncode != 0:
         raise SessionResultError(
-            f"session exited {result.returncode}: {result.stderr.strip()[-500:]}"
+            f"session exited {proc.returncode}: {stderr.strip()[-500:]}"
         )
+
+
+def _kill_group(proc: subprocess.Popen[str], grace_s: float = 5.0) -> None:
+    """SIGTERM the session's whole process group; SIGKILL what ignores it."""
+    for sig, wait_s in ((signal.SIGTERM, grace_s), (signal.SIGKILL, None)):
+        try:
+            os.killpg(proc.pid, sig)
+        except ProcessLookupError:
+            pass  # the whole group is already gone
+        try:
+            proc.communicate(timeout=wait_s)
+            return
+        except subprocess.TimeoutExpired:
+            continue
 
 
 def read_result(worktree: Path) -> SessionResult:
