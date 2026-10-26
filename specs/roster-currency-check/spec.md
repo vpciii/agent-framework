@@ -209,9 +209,13 @@ Nothing irreversible.
   secret is the fallback. Until either exists, the Anthropic roles
   report *unchecked* (R-4). The organization's monthly spend limit is
   the cap (ADR 0004 corollary 4).
-- [ ] **Federation availability.** Confirm the Console's Workload
-  identity page is available to this organization. If it is not, the
-  API-key fallback applies and R-12's federation branch stays dormant.
+- [x] **Federation availability.** Resolved 2026-10-26: available to
+  the organization. vpc registered the `github-actions` issuer, a
+  `roster-currency-check` service account and a federation rule (this
+  repo, `main` only, audience `https://api.anthropic.com`, Default
+  workspace, `workspace:developer`, 10-minute tokens); the rule,
+  service-account and organization IDs are set as repository variables.
+  First real exchange is verified by the implementation PR's manual run.
 - [ ] **Routing visibility.** Does Gemini's response `model_version`
   actually name `gemini-3.6-flash` when `gemini-3.5-flash` is requested?
   Does an Anthropic response's `model` field ever differ from the
