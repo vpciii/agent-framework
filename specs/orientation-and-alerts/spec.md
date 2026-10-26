@@ -1,6 +1,6 @@
 # Spec: Orientation and alerts — a resume card, a weekly nudge, escalations that reach vpc
 
-- **Status:** Under review
+- **Status:** Approved
 - **Date:** 2026-10-26
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0001 (artifacts are the coordination protocol),
@@ -214,13 +214,13 @@ marked `Implemented`.
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | |
-| SC-2 | R-1 | |
-| SC-3 | R-2 | |
-| SC-4 | R-3 | |
-| SC-5 | R-4 | |
-| SC-6 | R-5 | |
-| SC-7 | R-6 | |
-| SC-8 | R-7 | |
-| SC-9 | R-8 | |
-| SC-10 | R-9 | |
+| SC-1 | R-1 | *(pending)* |
+| SC-2 | R-1 | *(pending)* |
+| SC-3 | R-2 | *(pending)* |
+| SC-4 | R-3 | *(pending)* |
+| SC-5 | R-4 | *(pending)* |
+| SC-6 | R-5 | *(pending)* |
+| SC-7 | R-6 | *(pending)* |
+| SC-8 | R-7 | *(pending)* |
+| SC-9 | R-8 | *(pending)* |
+| SC-10 | R-9 | *(pending)* |
