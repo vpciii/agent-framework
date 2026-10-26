@@ -1,6 +1,6 @@
 # Problem brief: agent-framework only moves while vpc is driving it
 
-- **Status:** Exploring
+- **Status:** Validated
 - **Date:** 2026-10-26
 - **Author:** Claude (draft) — vpc is author of record
 
