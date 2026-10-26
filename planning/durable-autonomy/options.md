@@ -1,6 +1,6 @@
 # Options: how agent-framework keeps moving without vpc at the keyboard
 
-- **Status:** Open
+- **Status:** Converged
 - **Date:** 2026-10-26
 - **Author:** Claude (draft, from four independent divergers) — vpc is author of record
 
@@ -245,9 +245,31 @@ new to the options: **validator calibration from vpc's overrides**, and
 
 ## Recommendation
 
-*To be decided with vpc — the divergers don't vote.* A draft to react to:
+**Converged 2026-10-26 (vpc): stage it — D now, A next, with the
+borrowed methods; C's ideas held in reserve.** The reasoning below was
+drafted for vpc's decision and stands as the record of it.
 
-**Stage it: D now, A next, C's ideas held in reserve.**
+**Methods carried into D and A** (from Pi Durable, Anthropic's harness
+posts, 12-Factor Agents and durable-engine approval patterns, above):
+
+- a structured **handoff note** on every stop (budget, usage limit,
+  crash) and a fresh context from it, instead of resuming a killed turn;
+- a fixed **orientation ritual** at the start of every run;
+- **intent recorded before each step**, steps classified safe-to-rerun or
+  not, and outward actions (push, PR, issue) **keyed by task id** so they
+  happen once;
+- every run **ends clean** — a commit and a progress note;
+- workers may flip task status but never rewrite criteria or delete
+  tests;
+- escalations and sign-off requests are **structured requests that pause
+  the run**, recorded once, each with a **timeout and a defined outcome**,
+  and **risk-tiered** (low-risk changes may reach an open PR without
+  asking; specs, ADRs and credentials always ask; vpc merges every PR);
+- execution position **derived from the artifacts** — git stays the one
+  source of truth;
+- a later loop: **calibrate the validator from vpc's overrides**.
+
+The staging:
 
 - **D first**, because it is one session, fully reversible, and tests the
   contrarian's central claim with evidence: if a resume card and an
