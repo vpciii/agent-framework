@@ -1,6 +1,6 @@
 # Spec: Roster currency check — notice when a bound model goes stale
 
-- **Status:** Under review
+- **Status:** Approved
 - **Date:** 2026-10-26
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0001 (model-agnostic roles — the roster is the one
