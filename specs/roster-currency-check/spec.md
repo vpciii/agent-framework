@@ -190,6 +190,27 @@ than in memory. Docs no longer restate model IDs (#49), so the roster in
   in this public repo, and the rule admits only runs on `main` (vpc's
   decision, 2026-10-26). The organization's monthly spend limit still
   applies.
+- *2026-10-26 (implementation)* — Catalog and probe are separate
+  `ModelCatalog` / `ModelProbe` protocols in `providers/base.py` rather
+  than new methods on `Provider`, so existing adapters and test fakes stay
+  valid; an adapter without `ModelCatalog` makes its roles *unchecked*.
+- *2026-10-26 (implementation)* — "Newer" compares the version tokens in
+  the ID for every provider (not Anthropic's `created_at`): one rule,
+  and the listing's dates say when a model shipped, not where it sits in
+  its family. Date-stamped snapshot IDs are never candidates.
+- *2026-10-26 (implementation)* — No Anthropic probe: a request costs
+  tokens and the API echoes the requested model, so it would not reveal
+  routing. The Google probe stays; whether `model_version` reveals
+  Gemini's rerouting is confirmed by the first live run.
+- *2026-10-26 (implementation)* — One CLI step does the check and the
+  issue sync (`--sync-issue`) instead of a separate always-run step; the
+  workflow has two mutually exclusive check steps (federation / API-key
+  fallback) so the key is never exposed alongside federation (R-12).
+  Advisory-only runs close or skip the issue (R-11) and appear in the run
+  log.
+- *2026-10-26 (implementation)* — `pyyaml` + `types-pyyaml` added as
+  dev-only dependencies so SC-5 and SC-9 are tested against the parsed
+  workflow, not by text matching.
 
 ## Rollout and undo
 
@@ -238,12 +259,12 @@ Nothing irreversible.
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
-| SC-2 | R-1 | *(pending)* |
-| SC-3 | R-4 | *(pending)* |
-| SC-4 | R-5 | *(pending)* |
-| SC-5 | R-2, R-3, R-6, R-8 | *(pending)* |
-| SC-6 | R-7 | *(pending)* |
-| SC-7 | R-9 | *(pending)* |
-| SC-8 | R-10 | *(pending)* |
-| SC-9 | R-12 | *(pending)* |
+| SC-1 | R-1 | `tests/currency/test_check.py::test_sc1_unserved_model_is_a_failing_finding`, `tests/currency/test_check.py::test_sc1_sc2_cli_exit_code_follows_findings` |
+| SC-2 | R-1 | `tests/currency/test_check.py::test_sc2_all_served_roster_has_no_failing_finding`, `tests/currency/test_check.py::test_sc1_sc2_cli_exit_code_follows_findings` |
+| SC-3 | R-4 | `tests/currency/test_check.py::test_sc3_unlistable_provider_leaves_roles_unchecked`, `tests/currency/test_check.py::test_sc3_unregistered_provider_is_unchecked` |
+| SC-4 | R-5 | `tests/currency/test_issue.py::test_sc4_failing_run_updates_the_open_issue`, `tests/currency/test_issue.py::test_sc4_failing_run_opens_exactly_one_issue`, `tests/currency/test_issue.py::test_sc4_gh_tracker_finds_and_creates_through_the_gh_cli` |
+| SC-5 | R-2, R-3, R-6, R-8 | `tests/currency/test_workflow.py::test_sc5_triggers_permissions_and_isolation_from_the_gate`, `tests/currency/test_workflow.py::test_sc5_credentials_come_only_from_secrets_and_vars` |
+| SC-6 | R-7 | `tests/currency/test_check.py::test_sc6_new_provider_needs_only_a_registered_adapter`, `tests/currency/test_adapters.py::test_sc6_anthropic_adapter_lists_model_ids`, `tests/currency/test_adapters.py::test_sc6_google_adapter_lists_model_ids_without_prefix` |
+| SC-7 | R-9 | `tests/currency/test_check.py::test_sc7_newer_sibling_is_advisory_only`, `tests/currency/test_check.py::test_sc7_family_parsing_ignores_snapshots_and_other_tiers` |
+| SC-8 | R-10 | `tests/currency/test_check.py::test_sc8_rerouted_model_is_a_failing_finding`, `tests/currency/test_adapters.py::test_sc8_google_probe_reports_the_serving_model` |
+| SC-9 | R-12 | `tests/currency/test_workflow.py::test_sc9_federation_and_api_key_are_never_combined`, `tests/currency/test_workflow.py::test_sc9_oidc_token_requested_for_the_anthropic_audience` |

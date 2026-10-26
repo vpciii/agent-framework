@@ -2,7 +2,8 @@
 
 Wraps the official `anthropic` SDK and normalizes its response into the common
 `Response` (ADR 0001 — the only place the Anthropic SDK is imported; kept thin).
-The API key comes from the environment (`ANTHROPIC_API_KEY`), never config.
+Credentials come from the environment (`ANTHROPIC_API_KEY`, or Workload Identity
+Federation variables), never config.
 """
 
 from __future__ import annotations
@@ -21,12 +22,12 @@ class AnthropicProvider:
     """A `Provider` backed by Anthropic. Serves any Claude model; `model` selects one."""
 
     def __init__(self, client: AsyncAnthropic | None = None) -> None:
-        # Injectable for tests; otherwise built lazily from ANTHROPIC_API_KEY.
+        # Injectable for tests; otherwise built lazily from the environment.
         self._client = client
 
     def _client_or_default(self) -> AsyncAnthropic:
         if self._client is None:
-            self._client = AsyncAnthropic()  # reads ANTHROPIC_API_KEY from env
+            self._client = AsyncAnthropic()  # API key or federation, from env
         return self._client
 
     async def invoke(self, request: Request, *, model: str) -> Response:
@@ -43,6 +44,12 @@ class AnthropicProvider:
             ]
         message = await client.messages.create(**kwargs)
         return self._normalize(message)
+
+    async def list_models(self) -> tuple[str, ...]:
+        """Model IDs this account can use (`ModelCatalog`). No probe: an
+        Anthropic request costs tokens and the response echoes the request."""
+        client = self._client_or_default()
+        return tuple([m.id async for m in client.models.list()])
 
     @staticmethod
     def _normalize(message: Message) -> Response:
