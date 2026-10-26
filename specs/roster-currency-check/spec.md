@@ -1,6 +1,6 @@
 # Spec: Roster currency check — notice when a bound model goes stale
 
-- **Status:** Draft
+- **Status:** Under review
 - **Date:** 2026-10-26
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0001 (model-agnostic roles — the roster is the one
@@ -216,16 +216,16 @@ Nothing irreversible.
   workspace, `workspace:developer`, 10-minute tokens); the rule,
   service-account and organization IDs are set as repository variables.
   First real exchange is verified by the implementation PR's manual run.
-- [ ] **Routing visibility.** Does Gemini's response `model_version`
-  actually name `gemini-3.6-flash` when `gemini-3.5-flash` is requested?
-  Does an Anthropic response's `model` field ever differ from the
-  requested ID? Where neither does, R-10 is unachievable for that
-  provider, which is acceptable — it is a SHOULD.
-- [ ] **Glossary.** "Roster currency check" names a new concept; propose
-  adding it (and "finding", if the term is kept) to `docs/glossary.md`
-  in the implementing PR.
-- [ ] **Cadence.** Weekly is the proposal; daily costs nothing extra but
-  adds issue noise during an outage.
+- [x] **Routing visibility.** Resolved 2026-10-26 as best-effort:
+  R-10 is a SHOULD. The implementation first probes whether Gemini's
+  `model_version` (and Anthropic's response `model`) reveal rerouting;
+  a provider that does not gets no probe, and that is recorded as a
+  dated Decision rather than reopening this spec. SC-8 is verified
+  against a fake adapter either way.
+- [x] **Glossary.** Resolved 2026-10-26: the implementing PR adds
+  **Roster currency check** to `docs/glossary.md` (vpc). "Finding" is
+  used in its ordinary sense and gets no entry.
+- [x] **Cadence.** Resolved 2026-10-26: weekly (vpc).
 
 ## Out of scope (for now)
 
