@@ -1,6 +1,6 @@
 # Pre-mortem: durable autonomy (D now, A next)
 
-- **Status:** Open
+- **Status:** Assumptions tested
 - **Date:** 2026-10-26
 - **Author:** Claude (draft, from three independent red-team postmortems) — vpc is author of record
 
