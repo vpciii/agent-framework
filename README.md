@@ -16,7 +16,7 @@ the code, and a **validator** agent gates their output — all coordinating
 - **The human** is author of record, above the chief.
 
 **Model-agnostic.** Roles are slots bound to models by a **roster** — e.g.
-`chief: claude-fable-5`, `worker: claude-sonnet-5`, `validator: gemini-3-pro` —
+`chief: claude-fable-5-1`, `worker: claude-sonnet-5-5`, `validator: gemini-3.8-flash` —
 reached through thin per-provider adapters. Swap a model by config, not code;
 no vendor lock-in ([ADR 0001](docs/adr/0001-model-agnostic-roles.md)).
 
