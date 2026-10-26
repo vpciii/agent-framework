@@ -16,7 +16,7 @@ Runner = Callable[[Sequence[str]], str]
 def run_command(args: Sequence[str]) -> str:
     """Run a command; a failure raises with its stderr — fail loudly means
     the evidence rides along, not just the exit status."""
-    result = subprocess.run(list(args), capture_output=True, text=True)
+    result = subprocess.run(list(args), capture_output=True, text=True, check=False)
     if result.returncode != 0:
         raise RuntimeError(
             f"command failed ({result.returncode}): {' '.join(args)}\n{result.stderr.strip()}"

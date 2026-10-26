@@ -17,6 +17,7 @@ import pytest
 from agent_framework.errors import SessionResultError, SessionTimeoutError
 from agent_framework.worker.session import run_claude, run_session
 
+
 def _noop_runner(
     record: list[tuple[list[str], Path, float]],
 ) -> Callable[[Sequence[str], Path, float], None]:

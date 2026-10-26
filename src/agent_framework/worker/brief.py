@@ -61,7 +61,7 @@ CONVENTIONS (the gate your PR must pass):
 
 def _section(text: str, title: str) -> str:
     """Body of the `## <title>` section of a spec file, or ""."""
-    matches = list(re.finditer(r"^##\s+(.+?)\s*$", text, re.M))
+    matches = list(re.finditer(r"^##\s+(.+?)\s*$", text, re.MULTILINE))
     for i, m in enumerate(matches):
         if m.group(1).strip().lower() == title.lower():
             end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
@@ -78,14 +78,14 @@ def parse_task(spec_slug: str, task_id: str, *, specs_dir: Path = Path("specs"))
 
     tasks_text = tasks_path.read_text(encoding="utf-8")
     section_re = re.compile(
-        rf"^### \[.\] {re.escape(task_id)}\b.*?(?=^### |^---|\Z)", re.M | re.S
+        rf"^### \[.\] {re.escape(task_id)}\b.*?(?=^### |^---|\Z)", re.MULTILINE | re.DOTALL
     )
     m = section_re.search(tasks_text)
     if m is None:
         raise UnknownTaskError(f"task {task_id!r} not found in {tasks_path}")
     section = m.group(0).strip()
 
-    satisfies_m = re.search(r"^- \*\*Satisfies:\*\*(.*)$", section, re.M)
+    satisfies_m = re.search(r"^- \*\*Satisfies:\*\*(.*)$", section, re.MULTILINE)
     criteria = tuple(
         sorted(set(_SC_RE.findall(satisfies_m.group(1) if satisfies_m else "")),
                key=lambda s: int(s[3:]))
@@ -98,7 +98,7 @@ def parse_task(spec_slug: str, task_id: str, *, specs_dir: Path = Path("specs"))
         sc_m = re.search(
             rf"^- \*\*{re.escape(sc)}\*\*(.*?)(?=^- \*\*SC-|\Z)",
             criteria_section,
-            re.M | re.S,
+            re.MULTILINE | re.DOTALL,
         )
         if sc_m is None:
             raise UnknownTaskError(

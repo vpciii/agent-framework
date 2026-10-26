@@ -48,7 +48,7 @@ def _bundle() -> EvidenceBundle:
 
 def test_sc3_custom_pattern_finds_and_cites_non_python_tests() -> None:
     """SC-3: a Jest-shaped pattern locates the citing tests and names them."""
-    pattern = re.compile(_JS_PROJECT.test_pattern, re.M)
+    pattern = re.compile(_JS_PROJECT.test_pattern, re.MULTILINE)
     citations = find_citations(_bundle(), pattern)
     assert citations == {
         "SC-1": "tests/render.test.js::test renders the widget",

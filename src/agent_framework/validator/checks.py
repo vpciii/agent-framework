@@ -17,7 +17,7 @@ from .verdict import Citation, Finding
 # The default (Python) pattern comes from project config's defaults — the
 # target project may declare its own (ADR 0002: Python is the harness's
 # language, not the target's).
-_DEFAULT_TEST_RE = re.compile(DEFAULTS.test_pattern, re.M)
+_DEFAULT_TEST_RE = re.compile(DEFAULTS.test_pattern, re.MULTILINE)
 
 
 def _citing_test(
