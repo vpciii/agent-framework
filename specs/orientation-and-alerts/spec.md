@@ -1,6 +1,6 @@
 # Spec: Orientation and alerts — a resume card, a weekly nudge, escalations that reach vpc
 
-- **Status:** Draft
+- **Status:** Under review
 - **Date:** 2026-10-26
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0001 (artifacts are the coordination protocol),
@@ -161,9 +161,10 @@ and no note of what was in progress (pre-mortem kill-recovery spike,
   reach vpc off-LAN (pre-mortem spike 10). The webhook URL lives in
   `~/.config/agent-framework/agent-framework.env` (mode 600), never in
   the repo.
-- **Schedule.** A weekly launchd agent on a LAN machine runs the nudge
-  (it needs both `gh` and the LAN-only webhook). A cloud scheduled task
-  cannot reach Home Assistant (pre-mortem spike 1).
+- **Schedule.** A weekly launchd agent on vpc's primary Mac runs the
+  nudge, Mondays 08:00 America/New_York (it needs both `gh` and the
+  LAN-only webhook; a cloud scheduled task cannot reach Home Assistant,
+  pre-mortem spike 1).
 - **Size.** Renderer, alerts, nudge CLI, worker changes and tests: likely
   400–550 lines, mostly tests. If it outgrows one PR, this spec gains a
   `plan.md` (ADR 0024) rather than the bet gaining sessions.
@@ -185,16 +186,16 @@ stay. Nothing irreversible.
 
 ## Open questions
 
-- [ ] **Glossary.** "Resume card", "nudge" and "handoff note" are new
-  domain terms; propose entries in the implementing PR.
-- [ ] **Where the nudge runs.** defiant (always on, but SSH to it is
-  currently failing) or this Mac (asleep when the lid is closed — launchd
-  runs a missed job on wake). Either is on the LAN.
-- [ ] **Nudge timing.** Proposed: Monday 08:00 America/New_York,
-  alongside the roster currency check's Monday run.
-- [ ] **"Answered" for the trial.** Proposed: an escalation or timeout
-  counts as answered at vpc's first comment on its issue, or its closing,
-  whichever is first.
+- [x] **Glossary.** Resolved 2026-10-26 (vpc): the implementing PR adds
+  "resume card", "nudge" and "handoff note" to `docs/glossary.md`.
+- [x] **Where the nudge runs.** Resolved 2026-10-26 (vpc): on vpc's
+  primary Mac (the one this spec was drafted on), via launchd; a run
+  missed while it sleeps runs on wake.
+- [x] **Nudge timing.** Resolved 2026-10-26 (vpc): Mondays 08:00
+  America/New_York.
+- [x] **"Answered" for the trial.** Resolved 2026-10-26 (vpc): an
+  escalation or timeout counts as answered at vpc's first comment on its
+  issue, or its closing, whichever comes first.
 
 ## Out of scope (for now)
 
