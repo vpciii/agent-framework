@@ -33,8 +33,8 @@ and agent prompts. Add a term here before inventing a name for a concept.
   concrete model by the **roster**. The framework hardcodes no vendor
   (ADR 0001).
 - **Roster** — the single config that binds each role to a model (e.g.
-  `chief: claude-fable-5-1`, `worker: claude-sonnet-5-5`,
-  `validator: gemini-3.8-flash`). Swapping a model is a roster edit, not a code
+  a high-end model as chief, a cheaper one as worker, a different-lineage
+  model as validator). Swapping a model is a roster edit, not a code
   change; it is the one source of truth for the role→model mapping.
 - **Regression claim** — the token `regression` in a PR's Satisfies
   declaration: the author's explicit claim that the PR fixes a bug with a

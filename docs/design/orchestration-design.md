@@ -25,9 +25,9 @@ Roles are **model-agnostic slots**; a **roster** binds each to a concrete model
 in one place, so the same orchestration runs any mix of models:
 
 ```
-chief:     claude-fable-5     # high-end: planning, decomposition
-worker:    claude-sonnet-5    # cheaper: bulk coding (or a pool)
-validator: gemini-3-pro       # different lineage than worker → blind-spot coverage
+chief:     <high-end model>   # planning, decomposition
+worker:    <cheaper model>    # bulk coding (or a pool)
+validator: <other lineage>    # different lineage than worker → blind-spot coverage
 ```
 
 Models are reached through thin per-provider adapters (prompt + tools in,

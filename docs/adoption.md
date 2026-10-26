@@ -26,8 +26,8 @@ there.
 
    ```toml
    [roles]
-   worker    = { provider = "anthropic", model = "claude-sonnet-5-5" }
-   validator = { provider = "google",    model = "gemini-3.8-flash" }
+   worker    = { provider = "anthropic", model = "<anthropic-model-id>" }
+   validator = { provider = "google",    model = "<gemini-model-id>" }
 
    [project]
    gate_commands = [ ... this repo's real gate, in order ... ]
@@ -36,7 +36,8 @@ there.
    ignore_checks = ["validator", "<any conditional advisory checks>"]
    ```
 
-   No secrets here, ever. `gate_commands` are what a worker must run
+   Use each provider's current model IDs; this repo's own
+   `agent-framework.toml` is a working example. No secrets here, ever. `gate_commands` are what a worker must run
    green before committing; `test_pattern` needs exactly one capture
    group (the test name) — non-Python projects set their own.
    `ignore_checks` entries are **check names** (the job name GitHub
