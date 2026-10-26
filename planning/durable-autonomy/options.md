@@ -183,6 +183,57 @@ The handoff idea changes the comparison most: it gives option A a way to
 survive interruption without depending on Claude Code's resume
 semantics, which was A's main unverified risk.
 
+## Other methods surveyed (2026-10-26)
+
+Searched for other published approaches to durable, long-running agents;
+read the primary sources below. Used as methods only, like Pi Durable.
+
+**Anthropic, [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
+(Nov 2025) and [Harness design for long-running apps](https://www.anthropic.com/engineering/harness-design-long-running-apps)
+(Mar 2026).** Claude Agent SDK work spanning many context windows.
+
+| Idea | What it means here | Helps |
+|---|---|---|
+| **Initializer session** sets up a run script, a progress log and a baseline commit; later sessions only make incremental progress | A task's first run writes its worktree's progress note and setup commit; every later run builds on them | A, C, D |
+| **Fixed orientation ritual** at the start of every session: confirm the working directory, read git log + progress file, read the feature list, pick the top unfinished item, run a smoke test *before* new work | The worker brief starts with the same ritual, so a fresh context (after a crash, a budget stop or a handoff) re-orients the same way every time | A, C, D |
+| **Machine-readable feature list** the agent may change only by flipping a pass/fail field; tests may not be edited or removed; JSON because models overwrite Markdown more readily | `tasks.md` + the Traceability table already play this role; add the rule that a worker may tick status but never rewrite criteria or delete tests (consistent with the regression-claims spec) | A, C |
+| **One feature per session; end clean** — commit plus progress update, code mergeable | Matches "one task → one PR"; make "leave a commit and a progress note before stopping" a hard rule of every run, including budget stops | A, C |
+| **Context resets beat compaction** for long jobs, carried by a structured handoff | Same conclusion as Pi Durable's handoff: restart from a handoff note rather than resume a long context | A, C |
+| **Planner / generator / evaluator** as separate agents | The chief / worker / validator split this repo already has — independent confirmation of the design | — |
+| **A separate, skeptical evaluator** beats self-evaluation; it is calibrated with scored few-shot examples and **re-tuned from logs where it disagreed with a human** | Feed vpc's overrides of validator verdicts back into the validator's prompt as calibration examples — a concrete improvement loop for the cite-the-test gate | A, B, C |
+| **"Sprint contract"**: before coding, generator and evaluator agree what "done" means and how it will be verified | The task's `SC-` ids and Satisfies declaration are this contract; a worker that can't state its verification up front escalates instead of starting | A, C |
+| Named failure modes: lost coherence as context fills, **"context anxiety"** (wrapping up early near the limit), lenient self-grading, under-scoping, stubbed features | A checklist for the pre-mortem and for validator rules (e.g. reject stubbed or `TODO` implementations) | pre-mortem |
+
+**HumanLayer, [12-Factor Agents](https://github.com/humanlayer/12-factor-agents).**
+Principles for production LLM software.
+
+| Idea | What it means here | Helps |
+|---|---|---|
+| **Unify execution state and business state** (factor 5): where the run is can be inferred from its history, giving one source of truth that is easy to resume, fork and inspect | The strongest argument for git-as-canonical: execution position derived from artifacts, not held in a separate store — supports A over C's second store | A |
+| **Launch / pause / resume through simple APIs** (6) and **contact humans with tool calls** (7) | An escalation or sign-off request is a structured action the worker *calls* (role, question, options, what it will do on each answer), which pauses the run — not a free-form file written on the way out | A, B, C |
+| **Own your control flow** (8) and **small, focused agents** (10) | Keep the loop in agent-framework's own Python, with each agent doing one phase; don't hand the loop to an opaque framework | A, C |
+| **Trigger from anywhere, meet users where they are** (11) | Answers can come from the phone (GitHub, Home Assistant), not only a terminal | A, B, C |
+| **The agent as a stateless reducer** (12): state + event → new state | Exactly option A's tick: each run reads the artifacts and an event (a merge, an answer) and writes the next state | A |
+
+**Durable-engine human-approval patterns** — [Temporal's human-in-the-loop cookbook](https://docs.temporal.io/ai-cookbook/human-in-the-loop-python)
+and [a 2026 comparison of approval patterns](https://cadenya.com/other-content/human-in-the-loop-approvals-for-ai-agents).
+
+| Idea | What it means here | Helps |
+|---|---|---|
+| **An approval wait costs nothing and survives restarts** — state lives in a durable store, never a process held open | No process blocks waiting for vpc; the gate is an artifact and the next run checks it | A, B, C |
+| **Every wait has a timeout with a defined outcome** (cancel, escalate, or a default) | Each sign-off request states what happens if unanswered (e.g. re-notify after 2 days, park the task after 7) instead of waiting forever | A, B, C |
+| **Policy-based auto-approval for low-risk actions** | Tier the gates: e.g. a dependency patch bump or a docs-only PR may proceed to an open PR without asking; anything touching a spec, an ADR or credentials always asks. vpc still merges every PR | A, B, C |
+| **LLM and tool calls as journaled steps**, not re-executed on replay | Same as Pi Durable's intent-before-action and replay declaration | A, C |
+
+**What this adds to the recommendation:** the surveyed methods converge
+on the same core — *fresh context + a structured handoff + a fixed
+orientation ritual + small units that end clean + an independent
+evaluator + human requests as durable, time-limited waits*. Almost all
+of it is discipline in prompts, artifacts and a small loop, which favors
+A (and D's resume card) over a heavier engine. Two ideas are genuinely
+new to the options: **validator calibration from vpc's overrides**, and
+**risk-tiered gates with timeouts**.
+
 ## Comparison
 
 | Option | Cost / appetite | Risk | Reversibility | Notes |
