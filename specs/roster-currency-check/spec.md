@@ -67,13 +67,15 @@ than in memory. Docs no longer restate model IDs (#49), so the roster in
   are failing or unchecked findings, update it on later runs rather than
   opening duplicates.
 - **R-6 (MUST NOT)** Write to the roster, the repository contents, or
-  open pull requests; the run's GitHub token has read access to contents
-  and write access to issues only.
+  open pull requests. The run's GitHub token has read access to
+  contents, write access to issues, and `id-token: write` — the last
+  used only to request the identity token for Anthropic federation
+  (R-12), never to authenticate anywhere else.
 - **R-7 (MUST)** Reach providers only through provider adapters (ADR
   0001): adding a provider adds a listing method to its adapter, not a
   branch in the check. Tests run against fake adapters, no network.
 - **R-8 (MUST)** Take credentials only from the environment (repository
-  secrets in CI), never from files in the repo.
+  secrets and variables in CI), never from files in the repo.
 - **R-9 (SHOULD)** Report an advisory, non-failing finding when the
   provider's listing contains a newer model in the same family as the
   bound one, naming the candidate.
@@ -82,6 +84,12 @@ than in memory. Docs no longer restate model IDs (#49), so the roster in
   model, with a minimal probe request, and report it as a failing finding.
 - **R-11 (SHOULD)** Close the tracking issue when a run finds nothing
   failing or unchecked.
+- **R-12 (MUST)** Authenticate to Anthropic with Workload Identity
+  Federation when it is configured (no stored Anthropic secret), falling
+  back to an `ANTHROPIC_API_KEY` repository secret only when federation
+  is not configured. When federation is configured, the check step MUST
+  NOT also receive `ANTHROPIC_API_KEY`: the SDK gives an API key
+  precedence over federation, so exposing both would silently bypass it.
 
 ## Success criteria
 
@@ -97,9 +105,10 @@ than in memory. Docs no longer restate model IDs (#49), so the roster in
   updates that issue and opens none; with none present, it opens exactly
   one.
 - **SC-5** — The workflow file triggers on `schedule` and
-  `workflow_dispatch` only, declares `permissions` of `contents: read`
-  and `issues: write` and nothing more, reads credentials only from
-  `secrets.*`, and is not referenced by `ci.yml`.
+  `workflow_dispatch` only, declares `permissions` of `contents: read`,
+  `issues: write` and `id-token: write` and nothing more, reads
+  credentials only from `secrets.*` and `vars.*`, and is not referenced
+  by `ci.yml`.
 - **SC-6** — The check resolves providers through the provider registry:
   registering a fake adapter under a new provider name makes roles bound
   to it checkable without changing the check's code.
@@ -108,6 +117,12 @@ than in memory. Docs no longer restate model IDs (#49), so the roster in
   zero (if nothing else fails).
 - **SC-8** — When a probe reports a serving model different from the
   bound ID, the run reports a failing finding naming both.
+- **SC-9** — In the workflow, the step that runs the check receives the
+  federation variables (`ANTHROPIC_FEDERATION_RULE_ID`,
+  `ANTHROPIC_ORGANIZATION_ID`, `ANTHROPIC_SERVICE_ACCOUNT_ID`,
+  `ANTHROPIC_IDENTITY_TOKEN_FILE`) when the rule ID variable is set, and
+  `ANTHROPIC_API_KEY` only when it is not; the identity token is
+  requested with audience `https://api.anthropic.com`.
 
 ## Approach
 
@@ -134,11 +149,30 @@ than in memory. Docs no longer restate model IDs (#49), so the roster in
   higher version number (Google). A heuristic, so advisory only (R-9).
 - **Workflow:** `.github/workflows/roster-currency.yml` — weekly cron
   (Mondays) plus `workflow_dispatch`; `permissions: {contents: read,
-  issues: write}`; `GEMINI_API_KEY` and `ANTHROPIC_API_KEY` from repo
+  issues: write, id-token: write}`. `GEMINI_API_KEY` comes from repo
   secrets. A step runs the CLI to a JSON report; a following step (always
   runs) opens or updates the issue labelled `roster-currency` with `gh`,
   or closes it when clean (R-11). The issue logic sits in a small tested
   function behind a GitHub-client seam (SC-4).
+- **Anthropic auth (R-12):** following Anthropic's GitHub Actions WIF
+  guide. When `vars.ANTHROPIC_FEDERATION_RULE_ID` is set, a step fetches
+  GitHub's OIDC token (audience `https://api.anthropic.com`) into a
+  file, and the check step gets `ANTHROPIC_FEDERATION_RULE_ID`,
+  `ANTHROPIC_ORGANIZATION_ID`, `ANTHROPIC_SERVICE_ACCOUNT_ID` (repo
+  *variables* — identifiers, not secrets) and
+  `ANTHROPIC_IDENTITY_TOKEN_FILE`; the SDK (already supported by the
+  locked `anthropic` 0.116) exchanges it for a ~10-minute access token.
+  Otherwise the step gets `secrets.ANTHROPIC_API_KEY`; with neither,
+  the Anthropic roles report *unchecked* (R-4). The job runs well under
+  the GitHub token's ~5-minute life, so no refresh loop is needed.
+- **Federation rule (set up once, in the Console):** issuer
+  `https://token.actions.githubusercontent.com` in discovery mode; rule
+  `subject_prefix: "repo:vpciii/agent-framework:ref:refs/heads/main"`,
+  `audience: "https://api.anthropic.com"`, `claims: {repository_owner:
+  vpciii, ref: refs/heads/main}`; target a dedicated service account;
+  `oauth_scope: workspace:developer`; `token_lifetime_seconds: 600`.
+  Scheduled and dispatched runs both run on `main`, so pull-request runs
+  and other branches cannot authenticate.
 - **Size:** adapter methods + core + CLI + workflow + tests ≈ 250–300
   lines; fits one PR. If it doesn't, this spec grows a `plan.md`.
 
@@ -150,21 +184,34 @@ than in memory. Docs no longer restate model IDs (#49), so the roster in
 - *2026-10-26* — Anthropic roles are checked with an `ANTHROPIC_API_KEY`
   repository secret that vpc adds: a Console key with a hard spend cap,
   per ADR 0004 corollary 4 ("spend caps precede live runs").
+- *2026-10-26* — Superseding the entry above: Anthropic access uses
+  **Workload Identity Federation**, with the `ANTHROPIC_API_KEY` secret
+  kept only as a fallback. No long-lived Anthropic credential is stored
+  in this public repo, and the rule admits only runs on `main` (vpc's
+  decision, 2026-10-26). The organization's monthly spend limit still
+  applies.
 
 ## Rollout and undo
 
 Additive and advisory: a new workflow and module, no change to the gate
 or to any existing behavior. Undo is deleting the workflow file (or
 disabling it in the Actions UI) and reverting the PR; the tracking issue
-can be closed by hand. Adding the `ANTHROPIC_API_KEY` secret is
-reversible (delete or rotate it). Nothing irreversible.
+can be closed by hand. The federation setup is
+reversible: archive the federation rule (and, if unused elsewhere, the
+service account and issuer) in the Console and delete the repo
+variables; the fallback secret, if added, is deleted or rotated.
+Nothing irreversible.
 
 ## Open questions
 
-- [x] **Anthropic credential.** Resolved 2026-10-26: vpc adds an
-  `ANTHROPIC_API_KEY` repository secret — a Console key with a hard
-  spend cap (listing models costs nothing). Until it is present, the
-  Anthropic roles report *unchecked* (R-4).
+- [x] **Anthropic credential.** Resolved 2026-10-26: Workload Identity
+  Federation (R-12), set up by vpc in the Console; an `ANTHROPIC_API_KEY`
+  secret is the fallback. Until either exists, the Anthropic roles
+  report *unchecked* (R-4). The organization's monthly spend limit is
+  the cap (ADR 0004 corollary 4).
+- [ ] **Federation availability.** Confirm the Console's Workload
+  identity page is available to this organization. If it is not, the
+  API-key fallback applies and R-12's federation branch stays dormant.
 - [ ] **Routing visibility.** Does Gemini's response `model_version`
   actually name `gemini-3.6-flash` when `gemini-3.5-flash` is requested?
   Does an Anthropic response's `model` field ever differ from the
@@ -195,3 +242,4 @@ reversible (delete or rotate it). Nothing irreversible.
 | SC-6 | R-7 | *(pending)* |
 | SC-7 | R-9 | *(pending)* |
 | SC-8 | R-10 | *(pending)* |
+| SC-9 | R-12 | *(pending)* |
