@@ -157,11 +157,36 @@ phone push as the notification**, and all three keep git as the source
 of truth. A and B differ mainly in who owns the loop (a launchd tick vs.
 GitHub Actions); C is A's shape plus a durable runtime and ports.
 
+## Ideas borrowed from Pi Durable
+
+Earendil's [Pi Durable announcement](https://earendil.com/posts/pi-durable/)
+(2026-10-01) describes a durable agent harness built for the same class
+of problem. As a dependency it is a poor fit — TypeScript against ADR
+0002, and explicitly experimental — but its design choices are portable
+to any option above, in Python, over git artifacts:
+
+| Pi Durable idea | What it means here | Helps |
+|---|---|---|
+| **Store intent before acting**; every step is a task that checkpoints before it moves on | The worker writes "about to run step X" to its worktree record before doing X, so a restart knows exactly where it was | A, C |
+| **Per-step replay declaration** — safe steps rerun after a crash; unsafe ones are reported as *interrupted*, never repeated | Classify each worker step: tests, reads, lint = safe to rerun; `git push`, `gh pr create`, issue creation = unsafe, so they are made idempotent or surfaced to vpc | A, C |
+| **Exactly-once submissions** via a caller-supplied request id | Key every outward action by task id (e.g. look for an existing PR on the task's branch before creating one), so a retry never opens a second PR or issue | A, B, C |
+| **Memoized human decisions** — a hook stores an approval once (first write wins) so a restart finds the answer instead of asking again | A phase sign-off is recorded once as an artifact (approval, commit, or gate file) and every later run reads it rather than re-asking vpc | A, B, C |
+| **Handoff / reset**: end a context with a handoff note, start a fresh one from it; old history stays searchable | Instead of resuming a killed Claude turn, a worker that hits its budget or a usage limit **writes a handoff note** and the next run starts fresh from it — sidesteps option A's biggest unknown (SIGTERM no longer records the interrupted turn since Claude Code 2.1.236) | A, C, D |
+| **Ownership tree with abort cleanup** — aborting a task aborts what it owns, bottom-up, each cleaning up its own effects | Cancelling a task closes its draft PR, deletes its branch and removes its worktree, in that order | A, C |
+| **Foreground vs. background work** | A worker run blocks its phase; a nightly check or a reminder runs in the background and never holds up a gate | A, C |
+| **State lives in documents committed atomically with the transcript** | Already this repo's stance: artifacts are the state. Keep execution position derivable from them, never a second source of truth | all |
+| **Conversations store names, not code** — swapping an extension needs no migration | The roster stores role → provider/model (and a future harness) by name, so swapping a harness or model is a config edit, not a state migration | A, C |
+| **One process owns the storage; others attach and watch** | A single lock owner on defiant; `status` / phone views read committed state and never write it | A, C, D |
+
+The handoff idea changes the comparison most: it gives option A a way to
+survive interruption without depending on Claude Code's resume
+semantics, which was A's main unverified risk.
+
 ## Comparison
 
 | Option | Cost / appetite | Risk | Reversibility | Notes |
 |---|---|---|---|---|
-| A — launchd tick | ~1–1.5 wk, 3 PRs | Medium: resume-after-timeout unverified (2.1.236) | High: `launchctl bootout` | Uses only what's on defiant; ADR 0004 intact |
+| A — launchd tick | ~1–1.5 wk, 3 PRs | Medium → lower with a handoff note instead of turn resume | High: `launchctl bootout` | Uses only what's on defiant; ADR 0004 intact |
 | B — GitHub orchestrator | ~1 wk, 1–2 PRs + op record | Medium–high: self-hosted runner on a **public** repo | High: delete workflows, unregister runner | Lock-in to GitHub; best approval UX for free |
 | C — Durable engine | ~5–6 wk, 3–4 specs, ~5 ADRs | High: build size, replay-safety, methodology shifts | High for engine; moderate for ADR 0004 changes | Only option that uses the local model and a programmatic chief |
 | D — Resume card | ~1 session | Low | Total | Doesn't make work happen unattended — by design |
@@ -178,8 +203,11 @@ GitHub Actions); C is A's shape plus a durable runtime and ports.
   vpc doesn't have.
 - **A as the build** when D isn't enough — it is the smallest option that
   actually makes work happen unattended, keeps ADR 0004 intact, and adds
-  no runtime. Its first PR is a spike on the one unverified load-bearing
-  fact: whether `claude --resume` recovers a budget-killed print-mode run.
+  no runtime. Built with Pi Durable's discipline: intent recorded before
+  each step, steps classified safe-to-rerun or not, outward actions keyed
+  by task id, sign-offs recorded once, and **a handoff note instead of
+  resuming a killed turn** — so it no longer hinges on `claude --resume`
+  recovering a budget-killed print-mode run (still worth a quick check).
 - **Carried forward from the runners-up:** from C, git-as-canonical with
   rebuildable execution state, the `harness` seam (so a local model can
   enter later via its own ADR), and a budget governor that sleeps through
