@@ -147,6 +147,9 @@ than in memory. Docs no longer restate model IDs (#49), so the roster in
 - *2026-10-26* — Detect, don't float: pinned IDs plus a scheduled check,
   rather than "latest" aliases in the roster, so a model change is
   always a visible human edit (discussion with vpc, 2026-10-26).
+- *2026-10-26* — Anthropic roles are checked with an `ANTHROPIC_API_KEY`
+  repository secret that vpc adds: a Console key with a hard spend cap,
+  per ADR 0004 corollary 4 ("spend caps precede live runs").
 
 ## Rollout and undo
 
@@ -158,11 +161,10 @@ reversible (delete or rotate it). Nothing irreversible.
 
 ## Open questions
 
-- [ ] **Anthropic credential.** The repo has only `GEMINI_API_KEY`.
-  Add an `ANTHROPIC_API_KEY` secret (a Console key with a hard spend cap;
-  listing models costs nothing, and Max now includes monthly API
-  credits)? Until then the Anthropic roles report *unchecked* — R-4 keeps
-  that honest, but the issue would stay open permanently.
+- [x] **Anthropic credential.** Resolved 2026-10-26: vpc adds an
+  `ANTHROPIC_API_KEY` repository secret — a Console key with a hard
+  spend cap (listing models costs nothing). Until it is present, the
+  Anthropic roles report *unchecked* (R-4).
 - [ ] **Routing visibility.** Does Gemini's response `model_version`
   actually name `gemini-3.6-flash` when `gemini-3.5-flash` is requested?
   Does an Anthropic response's `model` field ever differ from the
