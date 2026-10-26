@@ -64,9 +64,9 @@ def newest_sibling(model: str, served: tuple[str, ...]) -> str | None:
     best: tuple[tuple[int, ...], str] | None = None
     for candidate in served:
         parsed = family_and_version(candidate)
-        if parsed and parsed[0] == bound[0] and parsed[1] > bound[1]:
-            if best is None or parsed[1] > best[0]:
-                best = (parsed[1], candidate)
+        newer = parsed is not None and parsed[0] == bound[0] and parsed[1] > bound[1]
+        if newer and parsed and (best is None or parsed[1] > best[0]):
+            best = (parsed[1], candidate)
     return best[1] if best else None
 
 
@@ -95,7 +95,7 @@ async def _check_binding(
     if isinstance(adapter, ModelProbe):
         try:
             serving = await adapter.probe_model(model)
-        except Exception as e:  # a probe is best-effort (R-10, a SHOULD)
+        except Exception as e:  # noqa: BLE001 — a probe is best-effort (R-10, a SHOULD)
             results.append((Severity.ADVISORY, f"routing probe failed: {e}"))
         else:
             if serving and not serving.startswith(model):
@@ -115,5 +115,5 @@ async def _catalog(provider: str, registry: ProviderRegistry) -> tuple[str, ...]
         return f"the {provider} adapter cannot list models"
     try:
         return await adapter.list_models()
-    except Exception as e:  # missing credentials, outage: unchecked, never passing
+    except Exception as e:  # noqa: BLE001 — any failure is unchecked, never passing (R-4)
         return f"could not list {provider} models: {type(e).__name__}: {e}"

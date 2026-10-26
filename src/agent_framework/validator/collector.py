@@ -28,7 +28,7 @@ __all__ = ["Runner", "collect_bundle", "run_command"]
 
 _TASK_ID_RE = re.compile(r"\bT-\d+\b")
 _SC_RE = re.compile(r"\bSC-\d+\b")
-_SATISFIES_RE = re.compile(r"^Satisfies:(.*)$", re.M)
+_SATISFIES_RE = re.compile(r"^Satisfies:(.*)$", re.MULTILINE)
 _FIX_TITLE_RE = re.compile(r"^fix[(!:]")
 
 

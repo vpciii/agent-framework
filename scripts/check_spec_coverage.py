@@ -37,10 +37,10 @@ import re
 import sys
 from pathlib import Path
 
-STATUS_RE = re.compile(r"^\s*-\s*\*\*Status:\*\*\s*(.+?)\s*$", re.M)
+STATUS_RE = re.compile(r"^\s*-\s*\*\*Status:\*\*\s*(.+?)\s*$", re.MULTILINE)
 REQ_RE = re.compile(r"\*\*(R-\d+)\s*\((MUST(?:\s+NOT)?|SHOULD(?:\s+NOT)?|MAY)\)\*\*")
-SC_DEF_RE = re.compile(r"^\s*[-*]\s+\*\*(SC-\d+)\*\*", re.M)
-HEADING_RE = re.compile(r"^##\s+(.+?)\s*$", re.M)
+SC_DEF_RE = re.compile(r"^\s*[-*]\s+\*\*(SC-\d+)\*\*", re.MULTILINE)
+HEADING_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 PENDING_RE = re.compile(r"\*\(pending\)\*")
 ENFORCED_DEFAULT = frozenset({"implemented"})
 

@@ -12,7 +12,7 @@ from ..errors import SessionResultError
 from ..proc import Runner, run_command
 from .types import SessionResult, TaskSpec
 
-_TITLE_RE = re.compile(r"^### \[.\] \S+ — (.+?)\s*(?:\((?:this PR|#\d+)\))?\s*$", re.M)
+_TITLE_RE = re.compile(r"^### \[.\] \S+ — (.+?)\s*(?:\((?:this PR|#\d+)\))?\s*$", re.MULTILINE)
 
 
 def _pr_title(task: TaskSpec) -> str:

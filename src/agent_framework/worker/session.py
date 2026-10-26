@@ -28,7 +28,7 @@ def run_claude(args: Sequence[str], cwd: Path, timeout_s: float) -> None:
     """Default seam: run the CLI in the worktree, kill on budget expiry."""
     try:
         result = subprocess.run(
-            list(args), cwd=cwd, capture_output=True, text=True, timeout=timeout_s
+            list(args), cwd=cwd, capture_output=True, text=True, timeout=timeout_s, check=False
         )
     except FileNotFoundError:
         raise SessionResultError(

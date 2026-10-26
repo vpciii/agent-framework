@@ -32,7 +32,7 @@ async def validate(
 ) -> Verdict:
     """Gate one task's PR evidence; the verdict cites, it never asserts."""
     task_id = bundle.task.task_id
-    pattern = re.compile(project.test_pattern, re.M)
+    pattern = re.compile(project.test_pattern, re.MULTILINE)
 
     findings = run_checks(bundle, pattern)
     if findings:
