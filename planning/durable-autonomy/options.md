@@ -161,9 +161,10 @@ GitHub Actions); C is A's shape plus a durable runtime and ports.
 
 Earendil's [Pi Durable announcement](https://earendil.com/posts/pi-durable/)
 (2026-10-01) describes a durable agent harness built for the same class
-of problem. As a dependency it is a poor fit — TypeScript against ADR
-0002, and explicitly experimental — but its design choices are portable
-to any option above, in Python, over git artifacts:
+of problem. It is used here **as a source of methods only — not as a
+candidate dependency** (vpc, 2026-10-26); it would also clash with ADR
+0002 (TypeScript) and is explicitly experimental. Its design choices are
+portable to any option above, in Python, over git artifacts:
 
 | Pi Durable idea | What it means here | Helps |
 |---|---|---|
