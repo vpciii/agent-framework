@@ -94,7 +94,9 @@ def test_remove_worktree_forces_past_the_result_file() -> None:
         return ""
 
     remove_worktree(Path(".worktrees/x"), run=run)
-    assert calls == [["git", "worktree", "remove", "--force", ".worktrees/x"]]
+    [call] = calls
+    assert call[-4:] == ["worktree", "remove", "--force", ".worktrees/x"]
+    assert "core.hooksPath=/dev/null" in call  # never a hook the session left
 
 
 def _git(cwd: Path, *args: str) -> str:

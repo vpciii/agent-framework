@@ -25,6 +25,10 @@ WORKTREES_DIR = Path(".worktrees")
 BASE_REMOTE = "origin"
 BASE_BRANCH = "main"
 BASE_REF = f"{BASE_REMOTE}/{BASE_BRANCH}"
+# Every git command the orchestrator runs for a worktree *after* a session
+# has been in it carries this: the session could have written a hook, and
+# the orchestrator must never execute one (ADR 0007, worker-confinement R-9).
+NO_HOOKS = ("-c", "core.hooksPath=/dev/null")
 
 
 def derive(task: TaskSpec) -> tuple[Path, str]:
@@ -63,4 +67,4 @@ def remove_worktree(path: Path, *, run: Runner = run_command) -> None:
     untracked `.worker-result.json` (the result contract), and this is
     only called after the branch is pushed — nothing unpushed is lost.
     """
-    run(["git", "worktree", "remove", "--force", str(path)])
+    run(["git", *NO_HOOKS, "worktree", "remove", "--force", str(path)])

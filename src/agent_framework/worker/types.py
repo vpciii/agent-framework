@@ -61,4 +61,23 @@ class TimedOut:
     alerts: tuple[str, ...] = field(default=(), compare=False)
 
 
-WorkerOutcome = PrOpened | Escalated | TimedOut
+@dataclass(frozen=True)
+class HandoffFinding:
+    """One reason a handoff is refused: which rule, which path, what was wrong."""
+
+    rule: Literal["contract", "protected-path", "deleted-test"]
+    path: str
+    detail: str
+
+
+@dataclass(frozen=True)
+class HandoffRefused:
+    """The session finished, but its commits failed the handoff check: nothing
+    pushed, no PR, worktree preserved for the human to inspect (ADR 0007)."""
+
+    worktree_path: str
+    findings: tuple[HandoffFinding, ...]
+    alerts: tuple[str, ...] = field(default=(), compare=False)
+
+
+WorkerOutcome = PrOpened | Escalated | TimedOut | HandoffRefused

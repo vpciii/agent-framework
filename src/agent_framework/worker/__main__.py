@@ -5,7 +5,8 @@
 
 Prints the outcome JSON on stdout. Exit codes compose with the validator's
 (0/1) for a future chief: 0 = PR opened, 2 = escalated, 3 = timeout or
-worker error.
+worker error, 4 = handoff refused (the session's commits failed the
+handoff check; nothing was pushed).
 
 There is no way to pass arguments to the session: every session runs under
 the confinement profile (ADR 0007), widened only by the project's
@@ -25,13 +26,15 @@ from ..errors import WorkerError
 from ..project import load_project_config
 from ..roster import Roster
 from .orchestrator import work
-from .types import Escalated, PrOpened, WorkerOutcome
+from .types import Escalated, HandoffRefused, PrOpened, WorkerOutcome
 
 WorkFn = Callable[..., WorkerOutcome]
 
 
 def _outcome_json(outcome: WorkerOutcome) -> str:
-    kind = {PrOpened: "pr_opened", Escalated: "escalated"}.get(type(outcome), "timed_out")
+    kind = {
+        PrOpened: "pr_opened", Escalated: "escalated", HandoffRefused: "handoff_refused",
+    }.get(type(outcome), "timed_out")
     return json.dumps({"outcome": kind, **dataclasses.asdict(outcome)}, indent=2)
 
 
@@ -62,6 +65,8 @@ def main(argv: list[str] | None = None, *, work_fn: WorkFn = work) -> int:
         return 0
     if isinstance(outcome, Escalated):
         return 2
+    if isinstance(outcome, HandoffRefused):
+        return 4
     return 3
 
 

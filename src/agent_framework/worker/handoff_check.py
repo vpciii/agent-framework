@@ -13,26 +13,15 @@ the handoff on any.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
 
 from ..artifacts import normalize_checkboxes, without_section
 from ..proc import Runner, run_command
 from ..project import ProjectConfig, path_matches
-from .worktree import BASE_REF
+from .types import HandoffFinding
+from .worktree import BASE_REF, NO_HOOKS
 
-Rule = Literal["contract", "protected-path", "deleted-test"]
-
-
-@dataclass(frozen=True)
-class HandoffFinding:
-    """One reason the handoff is refused: which rule, which path, what was wrong."""
-
-    rule: Rule
-    path: str
-    detail: str
-
+__all__ = ["HandoffFinding", "check_handoff"]
 
 def _first_difference(before: str, after: str) -> str:
     """The first line that differs, for a finding a human can act on."""
@@ -61,7 +50,7 @@ def check_handoff(
 
     def git(*args: str) -> str:
         # Never a repository hook: the session could have written one (R-9).
-        return run(["git", "-c", "core.hooksPath=/dev/null", "-C", str(worktree), *args])
+        return run(["git", *NO_HOOKS, "-C", str(worktree), *args])
 
     base = git("merge-base", BASE_REF, "HEAD").strip()
     # --no-renames: a rename is a delete plus an add, so neither side of it
