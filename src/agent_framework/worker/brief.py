@@ -68,9 +68,11 @@ CONVENTIONS (the gate your PR must pass):
 - Work only on this task. Its criteria are the contract; do not rework them.
 - Commit with Conventional Commits (`feat:`, `fix:`, ...); keep the diff
   PR-sized (~<300 lines).
-- Every claimed criterion needs a test citing its SC- id; the validator
-  REJECTs any claimed id with no citing test, and a PASS without citations
-  is impossible by construction.
+- Every claimed criterion needs a test that cites its SC- id, and the
+  spec's Traceability row for that criterion must name the test in full
+  (`path::test_name`). The validator takes its citations from that table:
+  it REJECTs a claimed id whose row is empty or pending, or names a test
+  that is missing or does not cite the id.
 - This project's gate — run every command and make it green before you
   commit:
 {gate}

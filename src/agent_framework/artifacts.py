@@ -58,3 +58,26 @@ def normalize_checkboxes(text: str) -> str:
     return re.sub(
         r"^(\s*(?:[-*]|#{1,6})\s+)\[[ ~xX]\]", r"\1[ ]", text, flags=re.MULTILINE
     )
+
+
+def traceability(spec_text: str) -> dict[str, tuple[str, ...]]:
+    """A spec's Traceability table: criterion id → the tests its row names.
+
+    Reads the same conventions as the spec-coverage checker: one row per
+    criterion (`| SC-n | R-… | `path::test_name`, … |`), references in
+    backticks, and a `*(pending)*` cell meaning none yet. A criterion with
+    no row is absent from the result; one with a pending or empty cell maps
+    to an empty tuple.
+    """
+    table: dict[str, tuple[str, ...]] = {}
+    for raw in section(spec_text, "Traceability").splitlines():
+        line = raw.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if len(cells) < 3:
+            continue
+        refs = tuple(r.strip() for r in re.findall(r"`([^`]+)`", cells[2]))
+        for sc_id in re.findall(r"\bSC-\d+\b", cells[0]):
+            table[sc_id] = table.get(sc_id, ()) + refs
+    return table

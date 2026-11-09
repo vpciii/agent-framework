@@ -39,6 +39,11 @@ _SPEC = """# Spec: Widget
   one second. (R-2)
 
 ## Traceability
+
+| Criterion | Requirement(s) | Verified by (test) |
+|---|---|---|
+| SC-1 | R-1 | `tests/test_widget.py::test_spins` |
+| SC-2 | R-2 | `tests/test_widget.py::test_spins` |
 """
 _TASKS = """# Tasks
 
@@ -88,6 +93,9 @@ def _runner(
 _BODY = "Implements **T-3** from `specs/widget/tasks.md`.\n\nSatisfies: SC-1, SC-2\n"
 _AT_BASE = {
     ("specs/widget/spec.md", "base111"): _SPEC,
+    # The PR's head: where the gate reads the Traceability table from
+    # (specs/citation-from-traceability).
+    ("specs/widget/spec.md", "head222"): _SPEC,
     ("specs/widget/tasks.md", "base111"): _TASKS,
     ("tests/test_widget.py", "head222"): _PY_TEST,
 }
@@ -214,7 +222,12 @@ async def test_sc5_test_paths_collects_a_non_python_test_and_the_gate_cites_it()
     project = ProjectConfig(
         test_paths=("src/**/*.test.js",), test_pattern=r"^test\('(\w+)'",
     )
-    files = dict(_AT_BASE) | {("src/widget/spin.test.js", "head222"): _JS_TEST}
+    files = dict(_AT_BASE) | {
+        ("src/widget/spin.test.js", "head222"): _JS_TEST,
+        ("specs/widget/spec.md", "head222"): _SPEC.replace(
+            "tests/test_widget.py::test_spins", "src/widget/spin.test.js::spins"
+        ),
+    }
     run = _runner(_view(_BODY, ["src/widget/spin.js", "src/widget/spin.test.js"]), files)
 
     bundle = collect_bundle(7, run=run, test_paths=project.test_paths)
@@ -230,6 +243,11 @@ def test_sc5_without_test_paths_the_files_collected_are_exactly_todays() -> None
     changed = ["tests/test_a.py", "tests/deep/er/test_b.py", "tests/data.json",
                "src/tests/test_c.py", "src/x.test.js", "testsuite/test_d.py"]
     files = dict(_AT_BASE) | {(p, "head222"): _PY_TEST for p in changed}
+    # The table names one of the changed files, so this stays a test of which
+    # *changed* files are selected (a file the table names is fetched regardless).
+    files[("specs/widget/spec.md", "head222")] = _SPEC.replace(
+        "tests/test_widget.py", "tests/test_a.py"
+    )
 
     bundle = collect_bundle(7, run=_runner(_view(_BODY, changed), files))
 
@@ -262,6 +280,7 @@ async def test_sc6_verdict_json_shape_is_unchanged_and_the_core_needs_no_seam() 
         contract=Contract(
             spec_slug="widget", criterion_texts={"SC-1": "**SC-1** — spins"},
             read_from="base", ref="base111",
+            cited_tests={"SC-1": ("tests/test_widget.py::test_spins",)},
         ),
     )
 

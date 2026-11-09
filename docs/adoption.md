@@ -77,6 +77,13 @@ must say which spec it belongs to: name a `specs/<slug>/` path in the PR
 body (worker PRs always do), or change exactly one spec's files. A claim
 the validator cannot tie to a spec is REJECTed without a model call.
 
+The validator takes each criterion's citation from the spec's
+**Traceability table as the PR leaves it** — so the PR that adds a test
+must also fill in that criterion's row with the test's full
+`path::test_name`. A claimed criterion whose row is empty or `*(pending)*`,
+or names a test that is not there or does not mention the id, is REJECTed
+without a model call. A test the PR did not change can be cited.
+
 Worker tasks come from the target's own artifacts: draft a small
 `specs/<slug>/` (spec + tasks) under the target's methodology, get it
 signed off, then from the target root:

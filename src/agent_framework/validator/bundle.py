@@ -41,6 +41,9 @@ class Contract:
     spec_slug: str | None
     criterion_texts: dict[str, str] = field(default_factory=dict)  # SC-id → text
     task_block: str | None = None  # the task's verbatim block from tasks.md
+    # SC-id → the `path::test_name` references the spec's Traceability table
+    # names for it, read at the PR's head (the PR is what fills the table in).
+    cited_tests: dict[str, tuple[str, ...]] = field(default_factory=dict)
     read_from: Literal["base", "head"] = "base"
     ref: str = ""  # the commit the spec was read at
     problem: str = ""
