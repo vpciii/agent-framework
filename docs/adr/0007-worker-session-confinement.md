@@ -1,6 +1,6 @@
 # ADR 0007: The worker session is confined; the orchestrator holds the credentials and checks what comes back
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-09
 - **Deciders:** vpc
 

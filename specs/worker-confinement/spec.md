@@ -1,10 +1,10 @@
 # Spec: Worker confinement — a confined session, an allowlisted environment, a checked handoff
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
-- **Related ADRs:** ADR 0007 (worker session confinement — Proposed; this
-  spec implements it), ADR 0004 (the worker is headless Claude Code),
+- **Related ADRs:** ADR 0007 (worker session confinement — this spec
+  implements it), ADR 0004 (the worker is headless Claude Code),
   ADR 0001 (the profile sits behind the session seam), methodology
   ADR 0027 (an AI agent is an actor at a trust boundary)
 
@@ -192,33 +192,32 @@ the token read fail.
 
 ## Open questions
 
-Resolved before the spec is `Approved`.
+All resolved 2026-11-09 (human sign-off: vpc accepted ADR 0007 and every
+answer below as drafted).
 
-- [ ] **Deny the whole home directory, or only credential locations?**
-  Drafted as the whole home directory except the repository, git's user
+- [x] **Deny the whole home directory, or only credential locations?**
+  The whole home directory except the repository, git's user
   configuration and declared paths (R-3). It follows "what it can read it
-  can publish" and it measured as workable, at the cost of each project
-  declaring where its toolchain lives. The alternative — deny only
-  `~/.ssh`, `~/.config/gh`, `~/.aws` and similar — needs no declarations
-  but leaves every other repository on the machine readable.
-- [ ] **Remove `--session-arg`, or keep an explicit unconfined escape
-  hatch?** Drafted as removal (R-5). An escape hatch is one flag away from
-  today's behavior; if a project cannot run confined, that is better
-  surfaced than bypassed.
-- [ ] **A refused handoff: its own outcome and `refused` alert, or a plain
-  worker error?** Drafted as its own outcome and alert (R-8): a refusal
-  needs a human decision, and a worker error raises no alert today.
-- [ ] **The default `protected_paths`.** Drafted as `.github/**` and
-  `agent-framework.toml`. Candidates left out: `CLAUDE.md`, `docs/adr/**`,
-  `docs/glossary.md` — a signed-off task can legitimately add a glossary
-  term or an ADR file, so they are left to each project.
-- [ ] **The fixed environment base (R-6).** `plan.md` lists it exactly.
-  Leaning: `PATH`, `HOME`, `USER`, `LOGNAME`, `SHELL`, `LANG`, `LC_*`,
-  `TERM`, `TMPDIR`, and the session tool's own `ANTHROPIC_*` / `CLAUDE_*`
-  variables — which keeps ADR 0004's API-key fallback working and leaves
-  the residual ADR 0007 names.
-- [ ] **ADR 0007 is Proposed.** This spec cannot be `Approved` before the
-  ADR is accepted.
+  can publish" and measured as workable, at the cost of each project
+  declaring where its toolchain lives. Rejected: denying only `~/.ssh`,
+  `~/.config/gh`, `~/.aws` and similar, which leaves every other
+  repository on the machine readable.
+- [x] **Remove `--session-arg`, or keep an explicit unconfined escape
+  hatch?** Removed (R-5). An escape hatch is one flag away from the old
+  behavior; a project that cannot run confined is better surfaced than
+  bypassed.
+- [x] **A refused handoff: its own outcome and `refused` alert, or a plain
+  worker error?** Its own outcome and alert (R-8): a refusal needs a human
+  decision, and a worker error raises no alert today.
+- [x] **The default `protected_paths`.** `.github/**` and
+  `agent-framework.toml`. Left to each project: `CLAUDE.md`,
+  `docs/adr/**`, `docs/glossary.md` — a signed-off task can legitimately
+  add a glossary term or an ADR file.
+- [x] **The fixed environment base (R-6).** Listed exactly in `plan.md`;
+  it keeps the session tool's own `ANTHROPIC_*` / `CLAUDE_*` variables, so
+  ADR 0004's API-key fallback works and the residual ADR 0007 names
+  remains.
+- [x] **ADR 0007** — accepted 2026-11-09.
 
 ## Out of scope (for now)
 
