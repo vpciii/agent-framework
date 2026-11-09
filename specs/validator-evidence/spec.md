@@ -1,6 +1,6 @@
 # Spec: Validator evidence — the judgment sees the criteria; the collector finds any project's tests
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0005 (one per-PR gate — its deterministic-before-model
