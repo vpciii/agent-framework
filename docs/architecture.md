@@ -57,12 +57,13 @@ dispatch through the provider adapters.
 | Validator core | `validator/{bundle,checks,judgment,gate,verdict}.py` | The cite-the-test gate (ADR 0005): deterministic before model; verdicts cite, never assert |
 | Validator edges | `validator/{collector,__main__}.py` | Bundle assembly from a PR via `gh` (one fakeable seam; `Satisfies:` declaration is the claim channel; the claimed criteria's text and the task block are read from `specs/<slug>/` at the PR's base commit; test files are the project's `test_paths`); CLI for the human consumer |
 | Worker core | `worker/{types,brief,worktree,confinement,session,orchestrator,handoff}.py` | One task → one gated PR: self-contained brief, isolated worktree cut from a freshly fetched `origin/main`, headless `claude -p` session under the confinement profile (roster's worker model, hard timeout, allowlisted environment), `.worker-result.json` contract, PR with the Satisfies declaration / escalation artifact / preserved-tree timeout. Never merges; a timeout kills the session's whole process group, writes a handoff note and raises a `timeout` alert; an escalation also raises an `escalation` alert |
+| Handoff check | `worker/handoff_check.py` | What a session may not hand back, checked over git: a spec's text outside its Traceability table, a tasks file beyond a checkbox, a protected path, a deleted test file (ADR 0007). Returns findings; **not yet called by the orchestrator** (specs/worker-confinement T-4) |
 | Worker edge | `worker/__main__.py` | CLI: `python -m agent_framework.worker <slug> <task>` — exit 0 PR / 2 escalated / 3 timeout-error, composable with the validator's 0/1 |
 | Roster currency check | `currency/{check,issue,__main__}.py` + `.github/workflows/roster-currency.yml` | Weekly (and on demand): each bound model must be in its provider's catalog — failing / unchecked / advisory findings, one `roster-currency` tracking issue. Never in the per-PR gate (ADR 0005); Anthropic via Workload Identity Federation, API-key fallback |
 | Resume card | `status/{card,__main__}.py` | `python -m agent_framework.status`: where the project stands + one next action, from the artifacts (and open PRs / alert issues via `gh`, or a stated "unavailable") |
 | Alerts | `alerts.py` | One GitHub issue per alert key (labelled `escalation` / `timeout` / `status`) as the record, plus a best-effort Home Assistant webhook push (`AF_HA_WEBHOOK_URL`, env only); never raises — each channel's outcome is reported |
 | Nudge | `nudge.py` | `python -m agent_framework.nudge`, weekly via launchd: resume card → the `status` issue, next action → vpc's phone. Imports nothing from the worker |
-| Artifact parser | `artifacts.py` | The one reader of `spec.md` / `tasks.md` text (task block, criterion text) — shared by the worker's brief and the validator's collector |
+| Artifact parser | `artifacts.py` | The one reader of `spec.md` / `tasks.md` text (task block, criterion text, and the comparisons the handoff check makes) — shared by the worker's brief, the validator's collector and the handoff check |
 | Shared seam | `proc.py` | The one subprocess runner both edges shell out through; failures carry stderr |
 | Project config | `project.py` + `agent-framework.toml` | Per-repo contract: gate commands, conventions note, test-citation pattern, test paths, ignore-checks, and how far worker sessions are widened (session paths, hosts, environment names; protected paths). Defaults = this repo's conventions; invalid patterns unconstructible. Adoption: `docs/adoption.md` |
 | Spec-coverage checker | `scripts/check_spec_coverage.py` | CI-enforced traceability (ADR 0003); `*(pending)*` rows allowed at `Approved`, forbidden at `Implemented` |
@@ -139,4 +140,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/orientation-and-alerts/` — Implemented (frozen).
 - `specs/regression-claims/` — Approved (not yet implemented).
 - `specs/validator-evidence/` — Implemented (frozen).
-- `specs/worker-confinement/` — Approved, in progress (T-1, T-2 of 5; implements ADR 0007).
+- `specs/worker-confinement/` — Approved, in progress (T-1 to T-3 of 5; implements ADR 0007).
