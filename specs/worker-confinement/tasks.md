@@ -111,7 +111,7 @@ worker that would run them is the unconfined one they replace.
   with a `pre-push` hook planted in a real repository, a successful
   handoff's push leaves no trace of the hook having run.
 
-### [ ] T-5 — Delivery: docs, glossary, the live run
+### [~] T-5 — Delivery: docs, glossary, the live run
 - **Satisfies:** —
 - **Depends on:** T-2, T-4
 - **Touches:** `docs/glossary.md`, `docs/adoption.md`,

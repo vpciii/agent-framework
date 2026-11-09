@@ -143,5 +143,5 @@ carries a change to one, so update this list promptly when one changes
 - `specs/orientation-and-alerts/` — Implemented (frozen).
 - `specs/regression-claims/` — Approved (not yet implemented).
 - `specs/validator-evidence/` — Implemented (frozen).
-- `specs/worker-confinement/` — Approved, in progress (T-1 to T-4 of 5; implements ADR 0007).
+- `specs/worker-confinement/` — Approved; implemented (ADR 0007), awaiting the human's `Implemented` sign-off.
 - `specs/result-file-ignored/` — Approved (not yet implemented; the first task for a confined worker session).
