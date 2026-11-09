@@ -214,9 +214,11 @@ answer below as drafted).
   `docs/adr/**`, `docs/glossary.md` — a signed-off task can legitimately
   add a glossary term or an ADR file.
 - [x] **The fixed environment base (R-6).** Listed exactly in `plan.md`;
-  it keeps the session tool's own `ANTHROPIC_*` / `CLAUDE_*` variables, so
-  ADR 0004's API-key fallback works and the residual ADR 0007 names
-  remains.
+  it keeps the session tool's own `ANTHROPIC_*` variables, so ADR 0004's
+  API-key fallback works and the residual ADR 0007 names remains.
+  *(Corrected 2026-11-09, vpc's sign-off: this note first also named every
+  `CLAUDE_*` variable; `plan.md` records why that was narrowed to four
+  named ones. No requirement or criterion changed.)*
 - [x] **ADR 0007** — accepted 2026-11-09.
 
 ## Out of scope (for now)

@@ -82,13 +82,28 @@ there is no settings file in the worktree for a session to edit.
 
 Passed through from the dispatching environment when set, and nothing
 else: `PATH`, `HOME`, `USER`, `LOGNAME`, `SHELL`, `LANG`, `TERM`,
-`TMPDIR`; any name beginning `LC_`; any name beginning `ANTHROPIC_` or
-`CLAUDE_` (the session tool's own authentication and configuration); and
-the names in the project's `session_env`. Standard input is closed.
+`TMPDIR`; any name beginning `LC_`; any name beginning `ANTHROPIC_` (the
+session tool's authentication and endpoint); exactly `CLAUDE_CONFIG_DIR`,
+`CLAUDE_CODE_OAUTH_TOKEN`, `CLAUDE_CODE_USE_BEDROCK` and
+`CLAUDE_CODE_USE_VERTEX` (where the session tool finds its configuration
+and which backend it authenticates to); and the names in the project's
+`session_env`. Standard input is closed.
 
-Measured: with that base, a sandboxed command sees only the base plus the
-sandbox's own proxy and `GIT_CONFIG_*` variables — no credential the
+Measured: with the base alone, a sandboxed command sees only the base plus
+the sandbox's own proxy and `GIT_CONFIG_*` variables — no credential the
 dispatching shell held.
+
+> **Corrected 2026-11-09 (vpc's sign-off), during T-2.** This section
+> first passed through *every* name beginning `CLAUDE_`. Measured on the
+> T-2 branch: dispatched from inside a Claude Code session, that is 31
+> host-session variables, 29 of them visible to a sandboxed command —
+> among them the account's email address, the account and organization
+> ids and the host session id — and settings such as `CLAUDE_CODE_SIMPLE`
+> that carry the dispatching session's configuration into the worker.
+> None is a credential, but each is something a session can read and so
+> can commit (ADR 0007). A session launched with no `CLAUDE_*` variable at
+> all authenticated and ran normally. Any other `CLAUDE_*` name a project
+> needs goes through `session_env`.
 
 ### The handoff check, exactly (spec R-7)
 
