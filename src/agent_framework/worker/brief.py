@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from ..artifacts import criterion_text, section, task_block
 from ..errors import UnknownTaskError
 from ..project import DEFAULTS, ProjectConfig
 from .types import TaskSpec
@@ -59,16 +60,6 @@ CONVENTIONS (the gate your PR must pass):
 {_ESCALATION}"""
 
 
-def _section(text: str, title: str) -> str:
-    """Body of the `## <title>` section of a spec file, or ""."""
-    matches = list(re.finditer(r"^##\s+(.+?)\s*$", text, re.MULTILINE))
-    for i, m in enumerate(matches):
-        if m.group(1).strip().lower() == title.lower():
-            end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
-            return text[m.end() : end].strip()
-    return ""
-
-
 def parse_task(spec_slug: str, task_id: str, *, specs_dir: Path = Path("specs")) -> TaskSpec:
     """Extract one task from `specs/<slug>/` artifacts; loud on any gap."""
     tasks_path = specs_dir / spec_slug / "tasks.md"
@@ -76,43 +67,34 @@ def parse_task(spec_slug: str, task_id: str, *, specs_dir: Path = Path("specs"))
     if not tasks_path.is_file() or not spec_path.is_file():
         raise UnknownTaskError(f"no spec artifacts under {specs_dir / spec_slug}")
 
-    tasks_text = tasks_path.read_text(encoding="utf-8")
-    section_re = re.compile(
-        rf"^### \[.\] {re.escape(task_id)}\b.*?(?=^### |^---|\Z)", re.MULTILINE | re.DOTALL
-    )
-    m = section_re.search(tasks_text)
-    if m is None:
+    block = task_block(tasks_path.read_text(encoding="utf-8"), task_id)
+    if block is None:
         raise UnknownTaskError(f"task {task_id!r} not found in {tasks_path}")
-    section = m.group(0).strip()
+    section_text = block
 
-    satisfies_m = re.search(r"^- \*\*Satisfies:\*\*(.*)$", section, re.MULTILINE)
+    satisfies_m = re.search(r"^- \*\*Satisfies:\*\*(.*)$", section_text, re.MULTILINE)
     criteria = tuple(
         sorted(set(_SC_RE.findall(satisfies_m.group(1) if satisfies_m else "")),
                key=lambda s: int(s[3:]))
     )
 
     spec_text = spec_path.read_text(encoding="utf-8")
-    criteria_section = _section(spec_text, "Success criteria")
     criterion_texts: dict[str, str] = {}
     for sc in criteria:
-        sc_m = re.search(
-            rf"^- \*\*{re.escape(sc)}\*\*(.*?)(?=^- \*\*SC-|\Z)",
-            criteria_section,
-            re.MULTILINE | re.DOTALL,
-        )
-        if sc_m is None:
+        text = criterion_text(spec_text, sc)
+        if text is None:
             raise UnknownTaskError(
                 f"{task_id} claims {sc}, but {spec_path} defines no such criterion"
             )
-        criterion_texts[sc] = f"**{sc}**{sc_m.group(1).rstrip()}"
+        criterion_texts[sc] = text
 
     return TaskSpec(
         spec_slug=spec_slug,
         task_id=task_id,
         criteria=criteria,
-        section=section,
+        section=section_text,
         criterion_texts=criterion_texts,
-        requirements=_section(spec_text, "Requirements"),
+        requirements=section(spec_text, "Requirements"),
     )
 
 

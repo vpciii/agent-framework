@@ -28,6 +28,30 @@ DEFAULT_GATE_COMMANDS = (
     "uv run python scripts/check_spec_coverage.py --include-approved",
 )
 DEFAULT_TEST_PATTERN = r"^(?:async\s+)?def\s+(test_\w+)"
+DEFAULT_TEST_PATHS = ("tests/**/*.py",)
+
+
+def _path_regex(pattern: str) -> re.Pattern[str]:
+    """A `test_paths` pattern as a regex over a repo-relative POSIX path:
+    `**/` spans zero or more directories, `*` and `?` stay within one."""
+    out, i = "", 0
+    while i < len(pattern):
+        if pattern.startswith("**/", i):
+            out, i = out + "(?:.*/)?", i + 3
+        elif pattern.startswith("**", i):
+            out, i = out + ".*", i + 2
+        elif pattern[i] == "*":
+            out, i = out + "[^/]*", i + 1
+        elif pattern[i] == "?":
+            out, i = out + "[^/]", i + 1
+        else:
+            out, i = out + re.escape(pattern[i]), i + 1
+    return re.compile(out)
+
+
+def is_test_path(path: str, patterns: tuple[str, ...]) -> bool:
+    """Whether a changed file is a test file under the project's `test_paths`."""
+    return any(_path_regex(p).fullmatch(path) for p in patterns)
 
 
 @dataclass(frozen=True)
@@ -43,8 +67,14 @@ class ProjectConfig:
     conventions_note: str = ""
     test_pattern: str = DEFAULT_TEST_PATTERN  # exactly one capture group: the test name
     ignore_checks: tuple[str, ...] = ("validator",)
+    # Which changed files the validator collects as tests (path patterns).
+    test_paths: tuple[str, ...] = DEFAULT_TEST_PATHS
 
     def __post_init__(self) -> None:
+        if not all(isinstance(p, str) and p.strip() for p in self.test_paths):
+            raise ProjectConfigError(
+                f"test_paths must be non-empty path patterns, got {self.test_paths!r}"
+            )
         try:
             groups = re.compile(self.test_pattern).groups
         except re.error as e:
@@ -80,7 +110,7 @@ def load_project_config(root: Path = Path(".")) -> ProjectConfig:
     if not isinstance(table, dict):
         raise ProjectConfigError(f"{path}: [project] must be a table, got {table!r}")
 
-    known = {"gate_commands", "conventions_note", "test_pattern", "ignore_checks"}
+    known = {"gate_commands", "conventions_note", "test_pattern", "ignore_checks", "test_paths"}
     unknown = set(table) - known
     if unknown:
         raise ProjectConfigError(
@@ -100,6 +130,11 @@ def load_project_config(root: Path = Path(".")) -> ProjectConfig:
                 _string_tuple(table["ignore_checks"], "ignore_checks")
                 if "ignore_checks" in table
                 else DEFAULTS.ignore_checks
+            ),
+            test_paths=(
+                _string_tuple(table["test_paths"], "test_paths")
+                if "test_paths" in table
+                else DEFAULTS.test_paths
             ),
         )
     except ProjectConfigError as e:

@@ -68,6 +68,30 @@ def run_checks(
             ),
         )
 
+    contract = bundle.contract
+    if contract is not None and contract.spec_slug is None:
+        # Criterion ids are only unique within a spec: a claim tied to no
+        # spec cannot be judged against anything (validator-evidence R-4).
+        findings.append(
+            Finding(
+                check="spec-resolution",
+                finding=(
+                    f"claimed {', '.join(bundle.task.criteria)} cannot be tied to a spec"
+                ),
+                evidence=contract.problem,
+            )
+        )
+    elif contract is not None:
+        for sc in bundle.task.criteria:
+            if sc not in contract.criterion_texts:
+                findings.append(
+                    Finding(
+                        check="criterion-defined",
+                        finding=f"{sc} is not defined in specs/{contract.spec_slug}/spec.md",
+                        evidence=f"spec read at the PR's {contract.read_from} commit {contract.ref}",
+                    )
+                )
+
     citations = find_citations(bundle, pattern)
     for sc in bundle.task.criteria:
         if sc not in citations:

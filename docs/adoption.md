@@ -33,6 +33,7 @@ there.
    gate_commands = [ ... this repo's real gate, in order ... ]
    conventions_note = "Read CLAUDE.md; <project-specific rules workers must know>."
    test_pattern = '...'   # omit for the Python default: ^(?:async\s+)?def\s+(test_\w+)
+   test_paths = ["..."]   # omit for the Python default: ["tests/**/*.py"]
    ignore_checks = ["validator", "<any conditional advisory checks>"]
    ```
 
@@ -40,6 +41,10 @@ there.
    `agent-framework.toml` is a working example. No secrets here, ever. `gate_commands` are what a worker must run
    green before committing; `test_pattern` needs exactly one capture
    group (the test name) — non-Python projects set their own.
+   `test_paths` says which changed files are test files (`**/` spans
+   directories, `*` stays within one); a non-Python project sets it
+   together with `test_pattern`, e.g. `["src/**/*.test.js"]`, or the
+   validator finds no tests to cite.
    `ignore_checks` entries are **check names** (the job name GitHub
    reports, e.g. `review`), not workflow filenames — the pilot's first
    worker PR was REJECTed on exactly this confusion (opn-mcp#22).
@@ -66,6 +71,11 @@ there.
   root** — config, specs, and worktrees resolve from cwd.
 
 ## The first task
+
+A PR's `SC-` claims are judged against the spec's own text, so the PR
+must say which spec it belongs to: name a `specs/<slug>/` path in the PR
+body (worker PRs always do), or change exactly one spec's files. A claim
+the validator cannot tie to a spec is REJECTed without a model call.
 
 Worker tasks come from the target's own artifacts: draft a small
 `specs/<slug>/` (spec + tasks) under the target's methodology, get it

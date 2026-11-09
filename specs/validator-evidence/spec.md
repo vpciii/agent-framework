@@ -196,9 +196,9 @@ All resolved 2026-11-09 (human sign-off).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1, R-2, R-3 | *(pending)* |
-| SC-2 | R-2 | *(pending)* |
-| SC-3 | R-4 | *(pending)* |
-| SC-4 | R-5 | *(pending)* |
-| SC-5 | R-6 | *(pending)* |
-| SC-6 | R-7 | *(pending)* |
+| SC-1 | R-1, R-2, R-3 | `tests/validator/test_evidence.py::test_sc1_bundle_carries_criterion_text_and_task_block_from_the_base_commit`, `tests/validator/test_evidence.py::test_sc1_spec_is_found_from_the_changed_files_when_the_body_names_none` |
+| SC-2 | R-2 | `tests/validator/test_evidence.py::test_sc2_a_spec_the_pr_introduces_is_read_at_the_head_and_says_so` |
+| SC-3 | R-4 | `tests/validator/test_evidence.py::test_sc3_unresolved_spec_or_undefined_criterion_rejects_without_a_model_call` |
+| SC-4 | R-5 | `tests/validator/test_evidence.py::test_sc4_judgment_request_carries_the_contract_inside_the_data_region` |
+| SC-5 | R-6 | `tests/validator/test_evidence.py::test_sc5_test_paths_collects_a_non_python_test_and_the_gate_cites_it`, `tests/validator/test_evidence.py::test_sc5_without_test_paths_the_files_collected_are_exactly_todays`, `tests/validator/test_evidence.py::test_sc5_malformed_test_paths_fails_loudly_naming_the_field` |
+| SC-6 | R-7 | `tests/validator/test_evidence.py::test_sc6_verdict_json_shape_is_unchanged_and_the_core_needs_no_seam` |

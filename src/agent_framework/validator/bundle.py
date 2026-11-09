@@ -7,7 +7,8 @@ thin edges).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Literal
 
 
 @dataclass(frozen=True)
@@ -28,11 +29,32 @@ class CIEvidence:
 
 
 @dataclass(frozen=True)
+class Contract:
+    """What the PR's claims are judged against, read from the artifacts.
+
+    `spec_slug` is None when the claims could not be tied to a spec
+    (`problem` says why) — the deterministic stage rejects that for free.
+    The texts are the spec as it stood at the PR's base commit, or at its
+    head when the PR itself introduces the spec (`read_from` says which).
+    """
+
+    spec_slug: str | None
+    criterion_texts: dict[str, str] = field(default_factory=dict)  # SC-id → text
+    task_block: str | None = None  # the task's verbatim block from tasks.md
+    read_from: Literal["base", "head"] = "base"
+    ref: str = ""  # the commit the spec was read at
+    problem: str = ""
+
+
+@dataclass(frozen=True)
 class EvidenceBundle:
-    """One task's PR evidence: diff, the tests citing its criteria, CI, red evidence."""
+    """One task's PR evidence: diff, the tests citing its criteria, CI, red evidence,
+    and the contract the claims are judged against."""
 
     task: TaskRef
     diff: str
     tests: dict[str, str]  # path → source
     ci: CIEvidence
     red_evidence: str | None = None  # a fix's failing-before run
+    # None only for a hand-built bundle; the collector always supplies one.
+    contract: Contract | None = None

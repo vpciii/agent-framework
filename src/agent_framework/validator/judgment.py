@@ -77,6 +77,26 @@ class Judgment:
     findings: tuple[Finding, ...]
 
 
+def _contract_block(bundle: EvidenceBundle) -> str:
+    """The criteria and task the claims are judged against, as delimited data."""
+    contract = bundle.contract
+    if contract is None or contract.spec_slug is None:
+        return "[CONTRACT]\nn/a — not supplied with this bundle\n\n"
+    criteria = "\n\n".join(
+        contract.criterion_texts[sc]
+        for sc in bundle.task.criteria
+        if sc in contract.criterion_texts
+    )
+    return (
+        f"[CONTRACT — specs/{contract.spec_slug}/, as it stood at the PR's "
+        f"{contract.read_from} commit {contract.ref}. Judge the diff against "
+        "this text; a diff that changes it is rewording the contract.]\n"
+        f"{criteria}\n\n"
+        f"[TASK {bundle.task.task_id}]\n"
+        f"{contract.task_block or 'n/a — no task block for this PR'}\n\n"
+    )
+
+
 def build_request(bundle: EvidenceBundle) -> Request:
     """The judgment Request: checklist as instructions, bundle as delimited data."""
     tests = "\n\n".join(
@@ -91,7 +111,7 @@ success criteria: {", ".join(bundle.task.criteria)}.
 {_INSTRUCTION_BOUNDARY}
 
 ===== BEGIN DATA =====
-[CI]
+{_contract_block(bundle)}[CI]
 {bundle.ci.summary}
 
 [RED EVIDENCE (fix tasks)]
