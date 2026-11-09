@@ -42,9 +42,10 @@ durable project-specific rules live in `docs/adr/` and `docs/glossary.md`.
 - **Tests before merge.** New behavior ships with tests; fixes ship a
   regression test with the failing-before run cited. Test behavior, not
   implementation. A test verifying a spec success criterion cites its id.
-- **Specs freeze; keep the shape doc honest.** A spec freezes at
-  `Implemented`; update `docs/architecture.md` in the same PR as any
-  structural change.
+- **Specs freeze; keep the shape doc honest.** A spec freezes when the PR
+  marking it `Implemented` merges; update `docs/architecture.md` in the
+  same PR as any structural change, and promptly after a change to a
+  setting outside the repo it lists.
 - **Secrets never in the repo.** Env / secret manager only.
 - **Dependencies are decisions.** Weigh before adding; commit lockfiles;
   ADR non-trivial deps.
