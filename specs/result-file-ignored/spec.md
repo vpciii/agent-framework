@@ -103,6 +103,6 @@ One PR. Undo is reverting it; the one line left in a repository's
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1, R-2 | *(pending)* |
-| SC-2 | R-3 | *(pending)* |
-| SC-3 | R-4 | *(pending)* |
+| SC-1 | R-1, R-2 | `tests/worker/test_worktree.py::test_sc1_result_file_is_ignored_in_a_fresh_worktree` |
+| SC-2 | R-3 | `tests/worker/test_worktree.py::test_sc2_existing_exclude_content_kept_and_entry_added_once` |
+| SC-3 | R-4 | `tests/worker/test_worktree.py::test_sc3_no_exclude_location_raises_and_adds_no_worktree` |

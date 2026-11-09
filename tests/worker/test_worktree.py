@@ -48,6 +48,8 @@ def test_create_worktree_invokes_git_with_derived_pair(tmp_path: Path) -> None:
 
     def run(args: Sequence[str]) -> str:
         calls.append(list(args))
+        if "--git-path" in args:
+            return str(tmp_path / "info" / "exclude")
         return ""  # branch --list: empty → no collision
 
     import agent_framework.worker.worktree as wt
@@ -167,3 +169,56 @@ def test_an_unreachable_remote_fails_loudly_before_any_tree_exists(
     with pytest.raises(WorktreeError, match="origin"):
         create_worktree(_task())
     assert not derive(_task())[0].exists()
+
+
+def test_sc1_result_file_is_ignored_in_a_fresh_worktree(
+    stale_clone: tuple[Path, str],
+) -> None:
+    """SC-1: the result file is neither reported nor staged; no tracked file changes."""
+    clone, upstream_head = stale_clone
+    path, _ = create_worktree(_task())
+    tree = clone / path
+    (tree / ".worker-result.json").write_text("{}", encoding="utf-8")
+    (tree / "other.txt").write_text("x", encoding="utf-8")
+
+    status = _git(tree, "status", "--porcelain")
+    assert "other.txt" in status
+    assert ".worker-result.json" not in status
+    _git(tree, "add", "-A")
+    assert _git(tree, "diff", "--cached", "--name-only") == "other.txt"
+    _git(tree, "reset", "-q")
+    # No tracked file differs from the commit the tree was cut from.
+    assert _git(tree, "diff", "--name-only", upstream_head) == ""
+
+
+def test_sc2_existing_exclude_content_kept_and_entry_added_once(
+    stale_clone: tuple[Path, str],
+) -> None:
+    """SC-2: existing exclude lines survive; the entry appears exactly once."""
+    clone, _ = stale_clone
+    exclude = clone / ".git" / "info" / "exclude"
+    exclude.parent.mkdir(parents=True, exist_ok=True)
+    original = "# mine\n*.swp\nbuild/"  # note: no trailing newline
+    exclude.write_text(original, encoding="utf-8")
+
+    create_worktree(_task(task_id="T-1"))
+    create_worktree(_task(task_id="T-2"))
+
+    text = exclude.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    assert lines[:3] == original.splitlines()
+    assert lines.count(".worker-result.json") == 1
+    assert text.endswith("\n")
+
+
+def test_sc3_no_exclude_location_raises_and_adds_no_worktree() -> None:
+    """SC-3: git reports no exclude location → WorktreeError, no `worktree add`."""
+    calls: list[list[str]] = []
+
+    def run(args: Sequence[str]) -> str:
+        calls.append(list(args))
+        return ""
+
+    with pytest.raises(WorktreeError, match="exclude"):
+        create_worktree(_task(), run=run)
+    assert not [c for c in calls if c[:3] == ["git", "worktree", "add"]]
