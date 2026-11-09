@@ -1,6 +1,6 @@
 # Tasks: The worker's result file never lands in a pull request
 
-- **Status:** Draft
+- **Status:** Approved
 - **Spec:** ./spec.md
 
 One task, one PR. It is the first task dispatched to a worker session

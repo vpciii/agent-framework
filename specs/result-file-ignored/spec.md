@@ -1,6 +1,6 @@
 # Spec: The worker's result file never lands in a pull request
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0004 (the worker is a headless session), ADR 0007
@@ -84,7 +84,7 @@ framework writes, and removing it would race a second session.
 
 ### Decisions
 
-- *2026-11-09* — (none yet).
+- *2026-11-09* — vpc approved the spec and its task as drafted.
 
 ## Rollout and undo
 
@@ -93,7 +93,7 @@ One PR. Undo is reverting it; the one line left in a repository's
 
 ## Open questions
 
-- [ ] None open. Sign-off is the remaining step.
+- [x] None open. Signed off 2026-11-09.
 
 ## Out of scope (for now)
 
