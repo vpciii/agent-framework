@@ -1,6 +1,6 @@
 # Spec: Citations come from the spec's Traceability table
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0005 (one per-PR gate — its deterministic-before-
@@ -139,7 +139,7 @@ One PR, at the same seams validator-evidence used.
 
 ### Decisions
 
-- *2026-11-09* — (none yet).
+- *2026-11-09* — vpc accepted all four open questions as drafted.
 
 ## Rollout and undo
 
@@ -153,21 +153,23 @@ reverting the PR. Two visible changes:
 
 ## Open questions
 
-- [ ] **A claimed criterion whose row is still `*(pending)*`: REJECT?**
-  Drafted as REJECT (R-3a). The PR claims the criterion; the table is
-  where it says which test proves it.
-- [ ] **Keep the id scan for a bundle with no contract?** Drafted as keep
-  (R-7): only hand-built bundles reach it, and removing it means rewriting
-  the frozen validator-gate tests' fixtures for no production effect. The
-  alternative is to remove the scan and make a contract mandatory.
-- [ ] **Keep check (d), that the named test's own text contains the id?**
-  Drafted as keep: it is what "cites" means, and the spec-coverage checker
-  only checks that the *file* mentions the id. Its known limit: a test's
-  "own text" runs to the start of the next test, so a comment between two
-  tests counts for the first.
-- [ ] **Read the table at the head, criterion text at the base?** Drafted
-  so. The table is the one part of a spec a task PR is meant to change;
-  the criteria are the part it must not.
+All resolved 2026-11-09 (human sign-off).
+
+- [x] **A claimed criterion whose row is still `*(pending)*`: REJECT.**
+  (R-3a) The PR claims the criterion; the table is where it says which
+  test proves it.
+- [x] **Keep the id scan for a bundle with no contract.** (R-7) Only
+  hand-built bundles reach it. Rejected: removing the scan and making a
+  contract mandatory, which rewrites the frozen validator-gate tests'
+  fixtures for no production effect.
+- [x] **Keep check (d), that the named test's own text contains the id.**
+  It is what "cites" means, and the spec-coverage checker only checks that
+  the *file* mentions the id. Known limit: a test's "own text" runs to the
+  start of the next test, so a comment between two tests counts for the
+  first.
+- [x] **Read the table at the head, criterion text at the base.** The
+  table is the one part of a spec a task PR is meant to change; the
+  criteria are the part it must not.
 
 ## Out of scope (for now)
 

@@ -145,4 +145,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/validator-evidence/` — Implemented (frozen).
 - `specs/worker-confinement/` — Implemented (frozen).
 - `specs/result-file-ignored/` — Implemented (frozen).
-- `specs/citation-from-traceability/` — Draft (awaiting sign-off).
+- `specs/citation-from-traceability/` — Approved (not yet implemented).
