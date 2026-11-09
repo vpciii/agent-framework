@@ -50,6 +50,7 @@ def main(argv: list[str] | None = None) -> int:
         repo=args.repo,
         # The CLI's flags extend the project config's list (plan §Approach 3).
         ignore_checks=frozenset(project.ignore_checks) | set(args.ignore_check),
+        test_paths=project.test_paths,
     )
     verdict = asyncio.run(validate(bundle, roster, project=project))
 
