@@ -1,5 +1,14 @@
 """The deterministic stage: everything machine-checkable, checked as code.
 
+Citations: when the bundle carries a resolved contract (every bundle the
+collector builds), each claimed criterion's tests are the ones the spec's
+Traceability table names, each confirmed here — the file is in the bundle,
+the project's test pattern finds a test of that name, and that test's own
+text contains the criterion's id. Scanning test files for the id is only
+how a *named* test is confirmed, never how a test is found: ids repeat
+across specs, and a mention is not a citation (specs/citation-from-
+traceability). A hand-built bundle with no contract keeps the plain scan.
+
 Runs before any model call (ADR 0005 — a failure here rejects for free).
 Pure functions over the evidence bundle: criterion→test citation, CI
 status, and red→green evidence for fixes. Also derives the per-criterion
@@ -30,6 +39,63 @@ def _citing_test(
         if re.search(rf"\b{re.escape(sc_id)}\b", source[m.start() : end]):
             return f"{path}::{m.group(1)}"
     return None
+
+
+def _test_spans(source: str, pattern: re.Pattern[str]) -> dict[str, str]:
+    """Each test the pattern finds in `source`: its name → its own text (up
+    to the start of the next test). The first test of a name wins."""
+    matches = list(pattern.finditer(source))
+    spans: dict[str, str] = {}
+    for i, m in enumerate(matches):
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(source)
+        spans.setdefault(m.group(1), source[m.start() : end])
+    return spans
+
+
+def table_citations(
+    bundle: EvidenceBundle, pattern: re.Pattern[str] = _DEFAULT_TEST_RE
+) -> tuple[tuple[Citation, ...], tuple[Finding, ...]]:
+    """Citations from the spec's Traceability table, each confirmed; and a
+    finding for every claimed criterion whose entry is missing or unconfirmed.
+
+    Call only for a bundle whose contract resolved a spec.
+    """
+    contract = bundle.contract
+    assert contract is not None and contract.spec_slug is not None
+    where = f"specs/{contract.spec_slug}/spec.md, Traceability table at the PR's head"
+    citations: list[Citation] = []
+    findings: list[Finding] = []
+
+    def missing(sc: str, what: str, evidence: str) -> None:
+        findings.append(Finding(check="criterion-citation", finding=f"{sc}: {what}",
+                                evidence=evidence))
+
+    for sc in bundle.task.criteria:
+        refs = contract.cited_tests.get(sc, ())
+        if not refs:
+            missing(sc, "the spec's Traceability table names no test for it",
+                    f"{where}: no row, an empty cell, or *(pending)*")
+            continue
+        for ref in refs:
+            path, _, name = ref.partition("::")
+            name = name.rsplit("::", 1)[-1].strip()
+            path = path.strip()
+            if not name:
+                missing(sc, f"`{ref}` names a file but no test", where)
+            elif path not in bundle.tests:
+                missing(sc, f"cited test file {path} does not exist at the PR's head",
+                        f"{where} names `{ref}`")
+            else:
+                span = _test_spans(bundle.tests[path], pattern).get(name)
+                if span is None:
+                    missing(sc, f"no test named {name} in {path}",
+                            f"{where} names `{ref}`; searched with the project's test pattern")
+                elif not re.search(rf"\b{re.escape(sc)}\b", span):
+                    missing(sc, f"cited test {ref} does not cite {sc}",
+                            f"the text of {name} does not contain {sc}")
+                else:
+                    citations.append(Citation(sc, f"{path}::{name}"))
+    return tuple(citations), tuple(findings)
 
 
 def find_citations(
@@ -91,19 +157,21 @@ def run_checks(
                         evidence=f"spec read at the PR's {contract.read_from} commit {contract.ref}",
                     )
                 )
-
-    citations = find_citations(bundle, pattern)
-    for sc in bundle.task.criteria:
-        if sc not in citations:
-            findings.append(
-                Finding(
-                    check="criterion-citation",
-                    finding=f"{sc} has no test citing it",
-                    evidence=(
-                        f"searched test functions in: {', '.join(sorted(bundle.tests)) or '(no tests in bundle)'}"
-                    ),
+        findings.extend(table_citations(bundle, pattern)[1])
+    else:
+        # A hand-built bundle with no contract: the plain id scan.
+        citations = find_citations(bundle, pattern)
+        for sc in bundle.task.criteria:
+            if sc not in citations:
+                findings.append(
+                    Finding(
+                        check="criterion-citation",
+                        finding=f"{sc} has no test citing it",
+                        evidence=(
+                            f"searched test functions in: {', '.join(sorted(bundle.tests)) or '(no tests in bundle)'}"
+                        ),
+                    )
                 )
-            )
 
     if not bundle.ci.green:
         findings.append(
@@ -129,6 +197,12 @@ def run_checks(
 def citations_for_pass(
     bundle: EvidenceBundle, pattern: re.Pattern[str] = _DEFAULT_TEST_RE
 ) -> tuple[Citation, ...]:
-    """The Citation tuple a PASS carries — call only after run_checks is clean."""
+    """The Citation tuple a PASS carries — call only after run_checks is clean.
+
+    With a resolved contract: every test the Traceability table names for a
+    claimed criterion, and no other. Without one: the id scan's first match.
+    """
+    if bundle.contract is not None and bundle.contract.spec_slug is not None:
+        return table_citations(bundle, pattern)[0]
     found = find_citations(bundle, pattern)
     return tuple(Citation(sc, found[sc]) for sc in bundle.task.criteria)

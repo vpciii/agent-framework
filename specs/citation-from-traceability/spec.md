@@ -182,8 +182,8 @@ All resolved 2026-11-09 (human sign-off).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1, R-2 | *(pending)* |
-| SC-2 | R-4 | *(pending)* |
-| SC-3 | R-3 | *(pending)* |
-| SC-4 | R-5 | *(pending)* |
-| SC-5 | R-4, R-6, R-7 | *(pending)* |
+| SC-1 | R-1, R-2 | `tests/validator/test_citations.py::test_sc1_bundle_carries_the_tables_tests_and_fetches_an_unchanged_file` |
+| SC-2 | R-4 | `tests/validator/test_citations.py::test_sc2_pass_cites_the_tables_test_not_an_older_one_that_mentions_the_id` |
+| SC-3 | R-3 | `tests/validator/test_citations.py::test_sc3_a_missing_or_unconfirmed_table_entry_rejects_without_a_model_call` |
+| SC-4 | R-5 | `tests/validator/test_citations.py::test_sc4_judgment_request_lists_each_criterions_cited_tests` |
+| SC-5 | R-4, R-6, R-7 | `tests/validator/test_citations.py::test_sc5_two_tests_in_a_row_are_both_cited_and_the_json_form_is_unchanged` |

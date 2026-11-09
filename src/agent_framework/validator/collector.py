@@ -13,7 +13,10 @@ Conventions the collector reads from a PR (the worker/task contract):
 - the spec the claims belong to: the first `specs/<slug>/` path in the body,
   else the one spec directory among the changed files; its criterion texts
   and the task's block are read at the PR's base commit (head if new);
-- test files: the changed files matching the project's `test_paths`;
+- citations: the spec's Traceability table at the PR's head names each
+  claimed criterion's tests (`path::test_name`);
+- test files: the changed files matching the project's `test_paths`, plus
+  every file the table names for a claimed criterion;
 - fix: a Conventional-Commits `fix` type in the title;
 - red evidence (fixes): the body paragraph describing the failing-before
   run (contains both "fail" and "before").
@@ -25,7 +28,7 @@ import json
 import re
 from typing import Any, cast
 
-from ..artifacts import criterion_text, task_block
+from ..artifacts import criterion_text, task_block, traceability
 from ..proc import Runner, run_command
 from ..project import DEFAULTS, path_matches
 from .bundle import CIEvidence, Contract, EvidenceBundle, TaskRef
@@ -137,10 +140,20 @@ def _contract(
         sc: text for sc in task.criteria if (text := criterion_text(spec_text, sc)) is not None
     }
     tasks = read("tasks.md") if _TASK_ID_RE.fullmatch(task.task_id) else None
+    # Citations come from the Traceability table as the PR leaves it (its
+    # head): the table is the one part of a spec a task PR is meant to change.
+    if where == "head":
+        table = traceability(spec_text)
+    else:
+        try:
+            table = traceability(_file_at_ref(f"specs/{slug}/spec.md", head, repo, run))
+        except RuntimeError:
+            table = {}  # the PR removed the spec: nothing is cited
     return Contract(
         spec_slug=slug,
         criterion_texts=texts,
         task_block=task_block(tasks[0], task.task_id) if tasks else None,
+        cited_tests={sc: table[sc] for sc in task.criteria if sc in table},
         read_from="base" if where == "base" else "head",
         ref=base if where == "base" else head,
     )
@@ -182,20 +195,31 @@ def collect_bundle(
 
     head = str(view.get("headRefOid", ""))
     files = cast("list[dict[str, Any]]", view.get("files") or [])
-    tests: dict[str, str] = {}
-    for f in files:
-        path = str(f.get("path", ""))
-        if path_matches(path, test_paths):
-            tests[path] = _file_at_ref(path, head, repo, run)
+    changed = [str(f.get("path", "")) for f in files]
 
     task = TaskRef(task_id=task_id, criteria=criteria, is_fix=is_fix)
     # A PR that claims nothing is rejected before any contract matters.
     contract = (
-        _contract(task, body, [str(f.get("path", "")) for f in files],
-                  str(view.get("baseRefOid", "")), head, repo, run)
+        _contract(task, body, changed, str(view.get("baseRefOid", "")), head, repo, run)
         if criteria
         else Contract(spec_slug=None, problem="the PR claims no success criteria")
     )
+
+    tests: dict[str, str] = {}
+    for path in changed:
+        if path_matches(path, test_paths):
+            tests[path] = _file_at_ref(path, head, repo, run)
+    # A test file the Traceability table names is evidence whether or not the
+    # PR changed it. One that cannot be read is simply absent — the
+    # deterministic stage reports it against the criterion.
+    for refs in contract.cited_tests.values():
+        for ref in refs:
+            path = ref.split("::")[0].strip()
+            if path and path not in tests:
+                try:
+                    tests[path] = _file_at_ref(path, head, repo, run)
+                except RuntimeError:
+                    continue
 
     rollup = cast("list[dict[str, Any]]", view.get("statusCheckRollup") or [])
     return EvidenceBundle(

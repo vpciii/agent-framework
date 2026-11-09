@@ -87,11 +87,18 @@ def _contract_block(bundle: EvidenceBundle) -> str:
         for sc in bundle.task.criteria
         if sc in contract.criterion_texts
     )
+    cited = "\n".join(
+        f"{sc}: {', '.join(contract.cited_tests.get(sc, ())) or '(none named)'}"
+        for sc in bundle.task.criteria
+    )
     return (
         f"[CONTRACT — specs/{contract.spec_slug}/, as it stood at the PR's "
         f"{contract.read_from} commit {contract.ref}. Judge the diff against "
         "this text; a diff that changes it is rewording the contract.]\n"
         f"{criteria}\n\n"
+        "[CITED TESTS — what the spec's Traceability table, as this PR leaves "
+        "it, names for each criterion. Judge these tests' honesty.]\n"
+        f"{cited}\n\n"
         f"[TASK {bundle.task.task_id}]\n"
         f"{contract.task_block or 'n/a — no task block for this PR'}\n\n"
     )
