@@ -28,8 +28,17 @@ TOOLS = ("Bash", "Read", "Edit", "Write", "Glob", "Grep")
 # The environment a session and ordinary commands need; everything else in
 # the dispatching environment is dropped unless the project names it.
 _BASE_ENV = ("PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "TERM", "TMPDIR")
-# Locale settings, and the session tool's own authentication and configuration.
-_ENV_PREFIXES = ("LC_", "ANTHROPIC_", "CLAUDE_")
+# Locale settings, and the session tool's authentication and endpoint.
+_ENV_PREFIXES = ("LC_", "ANTHROPIC_")
+# Where the session tool finds its configuration and which backend it
+# authenticates to — named one by one. Not the CLAUDE_ prefix: a dispatching
+# Claude Code session exports dozens of its own variables under it (the
+# account's email and ids, its session id, its settings), none of which is
+# the worker's to read (plan, "The environment, exactly").
+_SESSION_TOOL_ENV = (
+    "CLAUDE_CONFIG_DIR", "CLAUDE_CODE_OAUTH_TOKEN",
+    "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX",
+)
 
 # Readable under the otherwise-denied home directory: git needs the user's
 # identity to commit.
@@ -38,7 +47,7 @@ _GIT_USER_CONFIG = ("~/.gitconfig", "~/.config/git")
 
 def session_env(project: ProjectConfig, environ: Mapping[str, str]) -> dict[str, str]:
     """The session's process environment: an allowlist of `environ`."""
-    allowed = {*_BASE_ENV, *project.session_env}
+    allowed = {*_BASE_ENV, *_SESSION_TOOL_ENV, *project.session_env}
     return {
         name: value
         for name, value in environ.items()
