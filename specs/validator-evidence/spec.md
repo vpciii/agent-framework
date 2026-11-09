@@ -1,6 +1,6 @@
 # Spec: Validator evidence — the judgment sees the criteria; the collector finds any project's tests
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0005 (one per-PR gate — its deterministic-before-model
@@ -149,8 +149,10 @@ bundle value.
 
 ### Decisions
 
-- *2026-11-09* — (none yet; open questions below are resolved before
-  `Approved`).
+- *2026-11-09* — vpc accepted all four open questions as drafted (see
+  *Open questions*): REJECT on an unresolved spec; the spec is inferred
+  from the `specs/<slug>/` path; `test_paths` is an explicit list;
+  regression-claims is amended to use it.
 
 ## Rollout and undo
 
@@ -162,23 +164,23 @@ spec in the body, so they are unaffected.
 
 ## Open questions
 
-- [ ] **An unresolved spec: REJECT, or judge without the text?** Drafted as
-  REJECT (R-4a): criterion ids are only unique within a spec, so a claim
-  with no spec is ambiguous, and the house rule is no silent fallback. The
-  cost is the behavior change under *Rollout and undo*.
-- [ ] **How the PR names its spec.** Drafted as inference from the
-  `specs/<slug>/` path the worker's PR body already carries (R-1) — no new
-  convention and no new glossary term. The alternative is an explicit
-  declaration line beside `Satisfies:`, which is stricter but needs a
-  glossary entry and a change to the worker's PR body.
-- [ ] **`test_paths` as path patterns, or detect by content?** Drafted as
-  an explicit list (R-6). The alternative — treat any changed file the
-  `test_pattern` matches as a test — needs no new field but fetches every
-  changed file's content and can mistake source for tests.
-- [ ] **Interaction with `specs/regression-claims/` (Approved, not yet
-  built).** Its R-2 counts "a changed test file" by the project's pattern;
-  it should use `test_paths` once this lands. Noted here; that spec is
-  still editable, and the change to it is its own signed-off commit.
+All resolved 2026-11-09 (human sign-off).
+
+- [x] **An unresolved spec: REJECT, or judge without the text?** REJECT
+  (R-4a): criterion ids are only unique within a spec, so a claim with no
+  spec is ambiguous, and the house rule is no silent fallback. The cost is
+  the behavior change under *Rollout and undo*.
+- [x] **How the PR names its spec.** Inferred from the `specs/<slug>/`
+  path the worker's PR body already carries (R-1) — no new convention and
+  no new glossary term. Rejected: an explicit declaration line beside
+  `Satisfies:`.
+- [x] **`test_paths` as path patterns, or detect by content?** An explicit
+  list (R-6). Rejected: treating any changed file the `test_pattern`
+  matches as a test, which fetches every changed file and can mistake
+  source for tests.
+- [x] **Interaction with `specs/regression-claims/` (Approved, not yet
+  built).** Its R-2 is amended to count a changed test file by the
+  project's `test_paths` — its own signed-off commit beside this one.
 
 ## Out of scope (for now)
 

@@ -129,4 +129,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/roster-currency-check/` — Implemented (frozen).
 - `specs/orientation-and-alerts/` — Implemented (frozen).
 - `specs/regression-claims/` — Approved (not yet implemented).
-- `specs/validator-evidence/` — Draft (awaiting sign-off).
+- `specs/validator-evidence/` — Approved (not yet implemented).
