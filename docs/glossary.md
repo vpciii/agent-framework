@@ -48,6 +48,15 @@ and agent prompts. Add a term here before inventing a name for a concept.
 - **Nudge** — the weekly push of the resume card: it updates one GitHub
   issue labelled `status` and sends vpc the next action by phone. It only
   reports; it never dispatches work.
+- **Confinement profile** — the fixed limits the orchestrator launches
+  every worker session under: its tools, and what its commands may read,
+  write and reach on the network. Owned by the framework; a project widens
+  it only by declaring paths, hosts and variable names in
+  `agent-framework.toml`. No caller can widen it at dispatch (ADR 0007).
+- **Handoff check** — the orchestrator's deterministic check of a
+  completed session's diff, run before anything is pushed: the contract
+  text unchanged, protected paths untouched, no test file deleted. A
+  finding refuses the handoff (ADR 0007).
 - **Handoff note** — the `HANDOFF.md` the orchestrator writes into a kept
   worktree when a worker session is stopped at its budget: task, budget,
   elapsed time, git state and any progress notes, so the next human or

@@ -98,8 +98,45 @@ session_network     = ["pypi.org", "files.pythonhosted.org"]
 session_env         = []                      # extra variable names to pass through
 ```
 
-If a gate command is refused, the session is told to escalate and name
-what was refused; add the path or host it names and dispatch again.
+Each field, and what it must look like:
+
+| Field | Widens | Entries |
+|---|---|---|
+| `session_write_paths` | where a command may write (and read) | absolute, or starting `~/` |
+| `session_read_paths` | what a command may read under your home directory | absolute, or starting `~/` |
+| `session_network` | which hosts a command may reach | bare host names — no scheme, path, port or wildcard |
+| `session_env` | which of your shell's variables the session sees | variable names |
+| `protected_paths` | (narrows) what a session's commits may not touch | path patterns, as for `test_paths`; default `.github/**`, `agent-framework.toml` |
+
+The example above is this repo's own (uv), and its whole gate runs under
+it. For another toolchain, declare the same three things — its cache, its
+installed runtimes if they live under your home directory, and its package
+host. An npm project, for instance (illustrative; not yet run under the
+profile):
+
+```toml
+session_write_paths = ["~/.npm"]
+session_read_paths  = ["~/.nvm"]
+session_network     = ["registry.npmjs.org"]
+```
+
+The session's environment is an allowlist: `PATH`, `HOME`, `USER`,
+`LOGNAME`, `SHELL`, `LANG`, `LC_*`, `TERM`, `TMPDIR`, the session tool's
+own `ANTHROPIC_*` variables and four named `CLAUDE_*` ones. A token your
+shell holds (`GH_TOKEN`, a cloud key) does not reach it unless you name it
+in `session_env` — and anything you name, the session can read.
+
+**When a gate command is refused.** The first confined dispatch in a new
+project usually finds a path or host nobody declared. The refusal is loud
+and names it (`Operation not permitted … <path>`, or `host is not on the
+allow list`); the session is told to escalate with that text rather than
+work around it. Add what it names and dispatch again. A gate step that
+needs something a session should not have — a Docker socket, a deploy
+credential — is better left to CI than declared.
+
+**Platform.** macOS only for now. The profile depends on Claude Code's
+restricted mode and OS sandbox and fails closed: where the sandbox is
+unavailable, the session does not start.
 
 Outcomes: exit 0 = PR opened (with its `Satisfies:` declaration, facing
 the advisory gate); 2 = the worker escalated (read
