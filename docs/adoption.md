@@ -54,6 +54,11 @@ there.
    required check name, and the install line. Keep `continue-on-error:
    true` and do **not** add it to required checks until its judgment has
    earned trust on your PRs.
+   The job holds a secret, so it must not run the pull request's code:
+   keep its checkout on your **default branch** (`ref:` as in this repo's
+   job), so `agent-framework.toml` — the roster and the gate's settings —
+   is the merged one, and install the framework from its own `main` with
+   `uvx`. The PR reaches the validator only as data, through the API.
 4. **`GEMINI_API_KEY` secret** on the repo (free-tier AI Studio key;
    ADR 0004): `gh secret set GEMINI_API_KEY --repo <owner/name> --body ...`
    from a shell holding it. Without it the job skips politely — as it
