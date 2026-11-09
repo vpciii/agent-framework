@@ -53,6 +53,8 @@ class _GitGh:
         self.calls.append(call)
         if call[:3] == ["git", "branch", "--list"]:
             return ""  # no branch collision
+        if "rev-parse" in call and "--git-path" in call:
+            return str(Path("info-exclude-fake").resolve() / "exclude")
         if "rev-list" in call:
             return "3\n"  # the session committed
         if call[:3] == ["gh", "pr", "create"]:

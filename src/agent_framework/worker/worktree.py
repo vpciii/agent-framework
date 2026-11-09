@@ -16,6 +16,7 @@ from pathlib import Path
 from ..errors import WorktreeError
 from ..proc import Runner, run_command
 from .brief import branch_name
+from .session import RESULT_FILE
 from .types import TaskSpec
 
 WORKTREES_DIR = Path(".worktrees")
@@ -37,6 +38,30 @@ def derive(task: TaskSpec) -> tuple[Path, str]:
     return WORKTREES_DIR / key, branch_name(task)
 
 
+def _ignore_result_file(run: Runner) -> None:
+    """Record RESULT_FILE in the repository's exclude file, once.
+
+    The exclude file is shared by every worktree and tracked by nothing, so
+    the result file is ignored without touching any tracked file.
+    """
+    located = run(
+        ["git", "rev-parse", "--path-format=absolute", "--git-path", "info/exclude"]
+    ).strip()
+    if not located:
+        raise WorktreeError(
+            "git reported no location for the exclude file (info/exclude) — "
+            f"cannot ignore {RESULT_FILE}, so no worktree was created"
+        )
+    exclude = Path(located)
+    existing = exclude.read_text(encoding="utf-8") if exclude.exists() else ""
+    if RESULT_FILE in existing.splitlines():
+        return
+    exclude.parent.mkdir(parents=True, exist_ok=True)
+    if existing and not existing.endswith("\n"):
+        existing += "\n"
+    exclude.write_text(existing + RESULT_FILE + "\n", encoding="utf-8")
+
+
 def create_worktree(task: TaskSpec, *, run: Runner = run_command) -> tuple[Path, str]:
     """Create the task's fresh worktree + branch; loud on any collision."""
     path, branch = derive(task)
@@ -54,6 +79,7 @@ def create_worktree(task: TaskSpec, *, run: Runner = run_command) -> tuple[Path,
             f"cannot fetch {BASE_BRANCH} from {BASE_REMOTE} — refusing to cut the "
             f"worktree from a possibly stale local {BASE_BRANCH}: {e}"
         ) from None
+    _ignore_result_file(run)
     # --no-track: the branch is pushed with `-u origin <branch>` at handoff;
     # it must not track main in the meantime.
     run(["git", "worktree", "add", "--no-track", str(path), "-b", branch, BASE_REF])
