@@ -144,3 +144,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/regression-claims/` — Approved (not yet implemented).
 - `specs/validator-evidence/` — Implemented (frozen).
 - `specs/worker-confinement/` — Approved, in progress (T-1 to T-4 of 5; implements ADR 0007).
+- `specs/result-file-ignored/` — Draft (awaiting sign-off; the first task for a confined worker session).
