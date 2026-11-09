@@ -11,6 +11,7 @@ from pathlib import Path
 from ..errors import SessionResultError
 from ..proc import Runner, run_command
 from .types import SessionResult, TaskSpec
+from .worktree import BASE_REF
 
 _TITLE_RE = re.compile(r"^### \[.\] \S+ — (.+?)\s*(?:\((?:this PR|#\d+)\))?\s*$", re.MULTILINE)
 
@@ -42,7 +43,7 @@ def open_pr(
 ) -> str:
     """Push the session's commits and open the declared PR; returns its URL."""
     commits = run(
-        ["git", "-C", str(worktree), "rev-list", "--count", "main..HEAD"]
+        ["git", "-C", str(worktree), "rev-list", "--count", f"{BASE_REF}..HEAD"]
     ).strip()
     if commits == "0":
         raise SessionResultError(
@@ -133,7 +134,7 @@ opened. This worktree is preserved as it was left.
 ## Commits on the branch
 
 ```
-{git("log", "--oneline", "main..HEAD")}
+{git("log", "--oneline", f"{BASE_REF}..HEAD")}
 ```
 
 ## Uncommitted changes (`git status --short`)
