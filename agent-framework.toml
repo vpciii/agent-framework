@@ -16,3 +16,8 @@ gate_commands = [
 ]
 conventions_note = "Read CLAUDE.md and docs/glossary.md; use the glossary's terms exactly."
 ignore_checks = ["validator"]
+# How far worker sessions are widened beyond the confinement profile's
+# defaults (ADR 0007): what this repo's gate needs, and nothing else.
+session_write_paths = ["~/.cache/uv"]         # uv's cache
+session_read_paths  = ["~/.local/share/uv"]   # uv-managed Python builds
+session_network     = ["pypi.org", "files.pythonhosted.org"]

@@ -11,7 +11,7 @@ Verifies:
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 import pytest
@@ -66,12 +66,14 @@ class _GitGh:
 def _session(
     payload: object,
 ) -> tuple[
-    list[tuple[list[str], Path, float]], Callable[[Sequence[str], Path, float], None]
+    list[tuple[list[str], Path, float]], Callable[[Sequence[str], Path, float, Mapping[str, str]], None]
 ]:
     """A fake session seam that records its invocation and writes the result file."""
     record: list[tuple[list[str], Path, float]] = []
 
-    def run(args: Sequence[str], cwd: Path, timeout_s: float) -> None:
+    def run(
+        args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str]
+    ) -> None:
         record.append((list(args), cwd, timeout_s))
         cwd.mkdir(parents=True, exist_ok=True)
         (cwd / ".worker-result.json").write_text(json.dumps(payload), encoding="utf-8")
@@ -144,7 +146,9 @@ def test_sc5_budget_expiry_times_out_with_preserved_worktree(repo: Path) -> None
     """SC-5: expiry → TimedOut naming the preserved tree; no PR."""
     git = _GitGh()
 
-    def session(args: Sequence[str], cwd: Path, timeout_s: float) -> None:
+    def session(
+        args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str]
+    ) -> None:
         raise SessionTimeoutError("over budget")
 
     outcome = work("fixture", "T-1", _roster(), specs_dir=repo / "specs",

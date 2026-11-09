@@ -2,7 +2,9 @@
 
 The one place the worker invokes a coding session (ADR 0004: headless
 Claude Code; auth — Max subscription or ANTHROPIC_API_KEY — is entirely
-the session's own config, never this code's). The outcome is read from
+the session's own config, never this code's). Every session is launched
+under the confinement profile and with an allowlisted environment
+(ADR 0007, `confinement.py`); a caller supplies neither. The outcome is read from
 `.worker-result.json` in the worktree, never inferred from output: the
 contract binds to the worktree, not the tool.
 """
@@ -13,7 +15,7 @@ import json
 import os
 import signal
 import subprocess
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 from ..errors import SessionResultError, SessionTimeoutError
@@ -21,20 +23,25 @@ from .types import SessionResult
 
 RESULT_FILE = ".worker-result.json"
 
-# The session seam: (argv, cwd, timeout_s) -> None. Raises
+# The session seam: (argv, cwd, timeout_s, env) -> None. Raises
 # SessionTimeoutError on budget expiry. Injectable for tests.
-SessionRunner = Callable[[Sequence[str], Path, float], None]
+SessionRunner = Callable[[Sequence[str], Path, float, Mapping[str, str]], None]
 
 
-def run_claude(args: Sequence[str], cwd: Path, timeout_s: float) -> None:
+def run_claude(
+    args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str]
+) -> None:
     """Default seam: run the CLI in the worktree, kill on budget expiry.
 
-    The session leads its own process group, so a budget expiry stops it and
-    every child it started (MCP servers, test runs, shells) — none outlive it.
+    The process gets exactly `env` — never this process's environment — and
+    a closed standard input. The session leads its own process group, so a
+    budget expiry stops it and every child it started (test runs, shells) —
+    none outlive it.
     """
     try:
         proc = subprocess.Popen(
-            list(args), cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            list(args), cwd=cwd, env=dict(env), stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, start_new_session=True,
         )
     except FileNotFoundError:
@@ -102,10 +109,16 @@ def run_session(
     *,
     model: str,
     timeout_s: float,
-    session_args: Sequence[str] = (),
+    profile: Sequence[str],
+    env: Mapping[str, str],
     run: SessionRunner = run_claude,
 ) -> SessionResult:
-    """One headless session over the brief, then the result contract."""
-    cmd = ["claude", "-p", brief, "--model", model, *session_args]
-    run(cmd, worktree, timeout_s)
+    """One headless session over the brief, then the result contract.
+
+    `profile` is the confinement profile's argument list and `env` the
+    allowlisted environment — both computed by `confinement.py`, required,
+    and the only arguments besides the brief and the model.
+    """
+    cmd = ["claude", "-p", brief, "--model", model, *profile]
+    run(cmd, worktree, timeout_s, env)
     return read_result(worktree)

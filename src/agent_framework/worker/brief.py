@@ -33,6 +33,27 @@ edit spec/tasks files. Report status "escalated" with the blocking question
 and the spec location — a contract change is a human decision."""
 
 
+def _limits(project: ProjectConfig) -> str:
+    """What the session cannot do (ADR 0007) — stated so it escalates
+    instead of spending its budget on commands that will be refused."""
+    hosts = ", ".join(project.session_network) or "no network host"
+    writable = "".join(f" (or {p})" for p in project.session_write_paths)
+    protected = ", ".join(project.protected_paths) or "(none)"
+    return f"""\
+LIMITS (enforced by a sandbox and by a check on your commits — not requests):
+- You cannot push, open a PR, or merge.
+- Your commands cannot write outside this worktree{writable}.
+- Your commands cannot read the rest of the home directory.
+- Your commands can reach only: {hosts}.
+- Your commits may not change a spec's requirements or success criteria
+  (only its Traceability table), nor a tasks file beyond a task's checkbox.
+- Your commits may not change these protected paths: {protected}
+- Your commits may not delete a test file.
+- A diff that breaks one of the three rules above is refused: nothing is pushed.
+- If the task needs any of this, or a gate command is refused,
+  do not work around it: report status "escalated" and name what was refused."""
+
+
 def _conventions(project: ProjectConfig) -> str:
     """The conventions block, with the gate rendered from project config —
     the framework's own toolchain names never appear in fixed text (R-2)."""
@@ -56,6 +77,8 @@ CONVENTIONS (the gate your PR must pass):
 - Commit everything you want reviewed; the orchestrator pushes your branch
   and opens the PR with the `Satisfies:` declaration for you. Never merge,
   never push, never open a PR yourself.{note}
+
+{_limits(project)}
 
 {_ESCALATION}"""
 

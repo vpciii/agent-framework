@@ -135,3 +135,26 @@ def test_sc2_default_brief_carries_the_framework_gate(specs_dir: Path) -> None:
     brief = build_brief(parse_task("fixture", "T-1", specs_dir=specs_dir))
     assert "uv run mypy --strict" in brief
     assert "check_spec_coverage" in brief
+
+
+def test_sc9_brief_states_the_limits_and_says_to_escalate(specs_dir: Path) -> None:
+    """SC-9 (worker-confinement): the session is told what it cannot do, and
+    that a task needing it is an escalation, not something to work around."""
+    from agent_framework.project import ProjectConfig
+
+    project = ProjectConfig(
+        session_network=("pypi.org",), protected_paths=(".github/**", "infra/**"),
+    )
+    brief = build_brief(parse_task("fixture", "T-1", specs_dir=specs_dir), project)
+    limits = brief[brief.index("LIMITS") :]
+
+    assert "cannot push" in limits
+    assert "outside this worktree" in limits
+    assert "pypi.org" in limits  # the hosts it may reach, and so the ones it may not
+    assert "requirements or success criteria" in limits  # the contract
+    assert ".github/**" in limits and "infra/**" in limits  # protected paths
+    assert "do not work around" in limits.lower()
+    assert 'status "escalated"' in limits
+
+    no_network = build_brief(parse_task("fixture", "T-1", specs_dir=specs_dir))
+    assert "no network host" in no_network

@@ -82,8 +82,24 @@ Worker tasks come from the target's own artifacts: draft a small
 signed off, then from the target root:
 
 ```
-agent-framework-worker <slug> <task-id> --session-arg=--dangerously-skip-permissions
+agent-framework-worker <slug> <task-id>
 ```
+
+Every session runs **confined** (ADR 0007): its commands can write only
+inside the worktree, reach no network host, and read nothing under your
+home directory except the repository and git's user configuration. There
+is no flag to turn this off. What your toolchain needs beyond that, declare
+in `[project]`:
+
+```toml
+session_write_paths = ["~/.cache/uv"]         # caches the gate writes
+session_read_paths  = ["~/.local/share/uv"]   # toolchains installed under ~
+session_network     = ["pypi.org", "files.pythonhosted.org"]
+session_env         = []                      # extra variable names to pass through
+```
+
+If a gate command is refused, the session is told to escalate and name
+what was refused; add the path or host it names and dispatch again.
 
 Outcomes: exit 0 = PR opened (with its `Satisfies:` declaration, facing
 the advisory gate); 2 = the worker escalated (read
