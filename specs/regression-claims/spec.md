@@ -60,7 +60,8 @@ Use RFC 2119 keywords. Every `MUST` is reflected in a success criterion.
   `SC-` ids. A PR with a regression claim is not a zero-claim PR.
 - **R-2 (MUST)** Deterministic checks for a regression claim, before any
   model call: the bundle carries **red evidence** (the failing-before
-  run), and the PR changes at least one test file containing at least one
+  run), and the PR changes at least one test file (per the project's
+  `test_paths`, specs/validator-evidence R-6) containing at least one
   test (per the project's test-citation pattern). Either missing →
   REJECT naming it, zero model calls.
 - **R-3 (MUST)** The judgment for a regression claim is **scoped to
