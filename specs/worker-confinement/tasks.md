@@ -1,6 +1,6 @@
 # Tasks: Worker confinement
 
-- **Status:** Draft
+- **Status:** Approved
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
