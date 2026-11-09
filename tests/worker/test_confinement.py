@@ -128,6 +128,10 @@ def test_sc4_the_session_environment_is_an_allowlist(repo: Path) -> None:  # noq
         "PATH": "/usr/bin", "HOME": "/Users/x", "LANG": "en_US.UTF-8", "LC_ALL": "C",
         "TMPDIR": "/tmp/x", "ANTHROPIC_API_KEY": "session-tool-auth",
         "CLAUDE_CONFIG_DIR": "/Users/x/.claude",
+        # A dispatching Claude Code session's own variables: identifying, and
+        # its configuration — not the worker's.
+        "CLAUDE_CODE_USER_EMAIL": "x@example.com", "CLAUDE_CODE_ACCOUNT_UUID": "acct",
+        "CLAUDE_CODE_SESSION_ID": "host-session", "CLAUDE_CODE_SIMPLE": "1",
         "GH_TOKEN": "s3cret", "GEMINI_API_KEY": "s3cret", "AF_HA_WEBHOOK_URL": "https://ha/hook",
         "AWS_SECRET_ACCESS_KEY": "s3cret", "UV_INDEX_URL": "https://index", "EDITOR": "vi",
     }
@@ -139,6 +143,15 @@ def test_sc4_the_session_environment_is_an_allowlist(repo: Path) -> None:  # noq
         "CLAUDE_CONFIG_DIR": "/Users/x/.claude", "UV_INDEX_URL": "https://index",
     }
     assert "s3cret" not in env.values()
+    assert not any(name.startswith("CLAUDE_CODE_") for name in env)
+    # The session tool's own backend selection and headless credential do pass.
+    kept = session_env(ProjectConfig(), {
+        "CLAUDE_CODE_OAUTH_TOKEN": "t", "CLAUDE_CODE_USE_BEDROCK": "1",
+        "CLAUDE_CODE_USE_VERTEX": "1", "CLAUDE_CODE_ANYTHING_ELSE": "x",
+    })
+    assert sorted(kept) == [
+        "CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX",
+    ]
     assert session_env(ProjectConfig(), environ).get("UV_INDEX_URL") is None  # undeclared
 
 
