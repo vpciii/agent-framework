@@ -41,6 +41,7 @@ def test_adoption_doc_describes_the_confined_dispatch() -> None:
         "handoff refused",       # exit code 4
         "allow list",            # what a refused host looks like
         "macOS only",            # the platform limit
+        "default branch",        # the keyed CI job never runs a PR's code
     ):
         assert required in text, f"adoption doc is missing coverage of: {required}"
     assert "--dangerously-skip-permissions" not in text

@@ -67,7 +67,7 @@ dispatch through the provider adapters.
 | Shared seam | `proc.py` | The one subprocess runner both edges shell out through; failures carry stderr |
 | Project config | `project.py` + `agent-framework.toml` | Per-repo contract: gate commands, conventions note, test-citation pattern, test paths, ignore-checks, and how far worker sessions are widened (session paths, hosts, environment names; protected paths). Defaults = this repo's conventions; invalid patterns unconstructible. Adoption: `docs/adoption.md` |
 | Spec-coverage checker | `scripts/check_spec_coverage.py` | CI-enforced traceability (ADR 0003); `*(pending)*` rows allowed at `Approved`, forbidden at `Implemented` |
-| CI | `.github/workflows/ci.yml` | `uv sync --frozen` → ruff → mypy --strict → pytest → coverage check; required status check on `main`. Plus an **advisory** `validator` job: the cite-the-test gate runs on every PR (never blocking; judgment only when the `GEMINI_API_KEY` secret is set) |
+| CI | `.github/workflows/ci.yml` | `uv sync --frozen` → ruff → mypy --strict → pytest → coverage check; required status check on `main`. Plus an **advisory** `validator` job: the cite-the-test gate runs on every PR (never blocking; judgment only when the `GEMINI_API_KEY` secret is set), from the default branch's code, never the PR's |
 
 ## Execution surfaces (ADR 0004)
 
@@ -110,6 +110,18 @@ Where untrusted input enters, and what each AI agent can reach
   provider** (Google today, per the roster) — on a public repo that is
   already-public data. Advisory only (ADR 0005); fork PRs receive no
   secrets, so the job skips.
+- **CI** (`.github/workflows/ci.yml`) — the rule: **code from a pull
+  request never runs in a job that holds a secret.** The `ci` job runs the
+  PR's code (its tests, its locked dependencies) with no secret, a
+  read-only token, and no token left in the checkout. The `validator` job
+  holds `GEMINI_API_KEY` and checks out the **default branch**: the
+  validator, its dependencies and its roster come from merged code, and the
+  PR reaches it only as data through the API — so a PR that changes the
+  validator is judged by the merged validator, not by itself. *Residual:*
+  on a `pull_request` event the workflow file itself comes from the PR, so
+  a PR that edits it can undo this. A worker's commits cannot (the handoff
+  check refuses `.github/**`), fork PRs receive no secrets, and no one but
+  vpc pushes other branches.
 - **Collector / alerts / resume card** — plain code over `gh` with the
   caller's token; PR titles and bodies are parsed by regex, never executed.
 - **Roster currency workflow** — `issues: write` and `id-token: write`
@@ -126,6 +138,7 @@ carries a change to one, so update this list promptly when one changes
 |---|---|---|
 | Repository visibility | public | CI installs via `uvx --from git+https://…` in adopting repos (`docs/adoption.md`); sending PR diffs to the validator's provider is not a disclosure |
 | Ruleset `protect-main` | active, no bypass actors: changes by PR (0 approvals required), required status check `ci`, no force-push, no deletion | "the human is author of record" — nothing reaches `main` without a PR and green deterministic CI; the `validator` job is deliberately *not* required (ADR 0005) |
+| Default workflow token permissions | read-only; workflows cannot approve pull requests | the `ci` job runs a PR's code — `ci.yml` also pins `contents: read` itself, so this setting is a second layer, not the only one |
 | Actions secret `GEMINI_API_KEY` | set (vpc's AI Studio key, free tier — ADR 0004) | the advisory validator job and the Google side of the roster currency check; absent → both skip or report unchecked |
 | Actions variables `ANTHROPIC_FEDERATION_RULE_ID`, `ANTHROPIC_ORGANIZATION_ID`, `ANTHROPIC_SERVICE_ACCOUNT_ID` | set (vpc's Anthropic organization) | the roster currency check reaches Anthropic by Workload Identity Federation, with no stored Anthropic secret |
 | Plans | Claude Max (worker sessions, interactive chief); Google AI Pro / Gemini API free tier (validator) — ADR 0004 | the cost model of every role; a billing change is an ADR 0004 revisit |

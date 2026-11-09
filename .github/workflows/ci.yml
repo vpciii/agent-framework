@@ -5,11 +5,22 @@ on:
   push:
     branches: [main]
 
+# The rule this file keeps (tests/test_ci_workflow.py): code from a pull
+# request never runs in a job that holds a secret. `ci` runs the PR's code
+# and holds none; `validator` holds the key and runs only the default
+# branch's code.
+permissions:
+  contents: read  # read-only whatever the repository's default is
+
 jobs:
+  # Runs whatever the pull request contains — so: no secrets, a read-only
+  # token, and no token left behind in the checkout.
   ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.13"
@@ -29,6 +40,12 @@ jobs:
   # continue-on-error keeps the workflow green on a REJECT. Deterministic
   # REJECTs cost zero model calls; the judgment call runs only when the
   # GEMINI_API_KEY secret is configured.
+  #
+  # This job holds the key, so it never runs the pull request's code: it
+  # checks out the DEFAULT BRANCH and runs the validator (and its locked
+  # dependencies, and its roster) from there, reading the PR as data through
+  # the API. A PR that changes the validator is therefore judged by the
+  # merged validator, not by itself.
   validator:
     if: github.event_name == 'pull_request'
     needs: ci  # the gate reads CI evidence, so the required check must finish first
@@ -42,6 +59,9 @@ jobs:
       actions: read    # ...and each check's workflowRun
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.13"
