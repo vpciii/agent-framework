@@ -132,3 +132,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/orientation-and-alerts/` — Implemented (frozen).
 - `specs/regression-claims/` — Approved (not yet implemented).
 - `specs/validator-evidence/` — Implemented (frozen).
+- `specs/worker-confinement/` — Approved (not yet implemented; implements ADR 0007).
