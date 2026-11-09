@@ -27,7 +27,7 @@ from typing import Any, cast
 
 from ..artifacts import criterion_text, task_block
 from ..proc import Runner, run_command
-from ..project import DEFAULTS, is_test_path
+from ..project import DEFAULTS, path_matches
 from .bundle import CIEvidence, Contract, EvidenceBundle, TaskRef
 
 __all__ = ["Runner", "collect_bundle", "run_command"]
@@ -185,7 +185,7 @@ def collect_bundle(
     tests: dict[str, str] = {}
     for f in files:
         path = str(f.get("path", ""))
-        if is_test_path(path, test_paths):
+        if path_matches(path, test_paths):
             tests[path] = _file_at_ref(path, head, repo, run)
 
     task = TaskRef(task_id=task_id, criteria=criteria, is_fix=is_fix)

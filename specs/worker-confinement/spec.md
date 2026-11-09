@@ -243,5 +243,5 @@ answer below as drafted).
 | SC-5 | R-7 | *(pending)* |
 | SC-6 | R-8 | *(pending)* |
 | SC-7 | R-9 | *(pending)* |
-| SC-8 | R-10 | *(pending)* |
+| SC-8 | R-10 | `tests/test_project_config.py::test_sc8_confinement_fields_parse_when_well_formed`, `tests/test_project_config.py::test_sc8_absent_confinement_fields_take_their_documented_defaults`, `tests/test_project_config.py::test_sc8_malformed_confinement_field_fails_loudly_naming_it`, `tests/test_project_config.py::test_sc8_an_invalid_config_is_unconstructible_directly` |
 | SC-9 | R-11 | *(pending)* |

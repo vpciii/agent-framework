@@ -96,3 +96,96 @@ def test_invalid_pattern_is_unconstructible_even_programmatically() -> None:
         ProjectConfig(test_pattern="test_no_group")
     with pytest.raises(ProjectConfigError, match="not a valid regex"):
         ProjectConfig(test_pattern="(unclosed")
+
+
+# --- specs/worker-confinement: the confinement profile's and the handoff
+# --- check's config fields. (The criterion id is cited inside each test, not
+# --- here: the gate attributes an id to the test whose span contains it.)
+
+_CONFINEMENT_FIELDS = (
+    "session_write_paths", "session_read_paths", "session_network", "session_env",
+)
+
+
+def test_sc8_confinement_fields_parse_when_well_formed(tmp_path: Path) -> None:
+    """SC-8 (worker-confinement): each new field parses into the config value."""
+    root = _write(
+        tmp_path,
+        """
+[project]
+session_write_paths = ["~/.cache/uv", "/var/cache/build"]
+session_read_paths = ["~/.local/share/uv"]
+session_network = ["pypi.org", "files.pythonhosted.org"]
+session_env = ["UV_INDEX_URL", "CI"]
+protected_paths = [".github/**", "agent-framework.toml", "infra/**"]
+""",
+    )
+    config = load_project_config(root)
+    assert config.session_write_paths == ("~/.cache/uv", "/var/cache/build")
+    assert config.session_read_paths == ("~/.local/share/uv",)
+    assert config.session_network == ("pypi.org", "files.pythonhosted.org")
+    assert config.session_env == ("UV_INDEX_URL", "CI")
+    assert config.protected_paths == (".github/**", "agent-framework.toml", "infra/**")
+
+
+def test_sc8_absent_confinement_fields_take_their_documented_defaults(tmp_path: Path) -> None:
+    """SC-8 (worker-confinement): nothing is widened unless the project says so."""
+    config = load_project_config(_write(tmp_path, '[project]\ngate_commands = ["make test"]\n'))
+    for field in _CONFINEMENT_FIELDS:
+        assert getattr(config, field) == (), field
+    assert config.protected_paths == (".github/**", "agent-framework.toml")
+    assert DEFAULTS.protected_paths == config.protected_paths
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        # A string where a list belongs.
+        ("session_write_paths", '"~/.cache/uv"'),
+        ("session_network", '"pypi.org"'),
+        ("protected_paths", '".github/**"'),
+        # An empty entry.
+        ("session_write_paths", '["~/.cache/uv", ""]'),
+        ("session_read_paths", '[""]'),
+        ("session_network", '["pypi.org", " "]'),
+        ("session_env", '[""]'),
+        ("protected_paths", '[""]'),
+        # A path that is neither absolute nor under the home directory.
+        ("session_write_paths", '["cache/uv"]'),
+        ("session_read_paths", '["../elsewhere"]'),
+        # A host given as a URL, with a path, or with a port.
+        ("session_network", '["https://pypi.org"]'),
+        ("session_network", '["pypi.org/simple"]'),
+        ("session_network", '["pypi.org:443"]'),
+        # Not a variable name.
+        ("session_env", '["UV INDEX"]'),
+        ("session_env", '["A=b"]'),
+    ],
+)
+def test_sc8_malformed_confinement_field_fails_loudly_naming_it(
+    tmp_path: Path, field: str, value: str
+) -> None:
+    """SC-8 (worker-confinement): a malformed value is an error that names the field."""
+    with pytest.raises(ProjectConfigError, match=field):
+        load_project_config(_write(tmp_path, f"[project]\n{field} = {value}\n"))
+
+
+def test_sc8_an_invalid_config_is_unconstructible_directly() -> None:
+    """SC-8 (worker-confinement): validated in the value, not only in the loader."""
+    from agent_framework.project import ProjectConfig
+
+    with pytest.raises(ProjectConfigError, match="session_network"):
+        ProjectConfig(session_network=("https://pypi.org",))
+    with pytest.raises(ProjectConfigError, match="session_write_paths"):
+        ProjectConfig(session_write_paths=("relative/path",))
+
+
+def test_protected_paths_and_test_paths_share_one_matcher() -> None:
+    """The pattern semantics a project learns for `test_paths` hold for `protected_paths`."""
+    from agent_framework.project import path_matches
+
+    assert path_matches(".github/workflows/ci.yml", DEFAULTS.protected_paths)
+    assert path_matches("agent-framework.toml", DEFAULTS.protected_paths)
+    assert not path_matches("src/agent-framework.toml", DEFAULTS.protected_paths)
+    assert not path_matches("docs/.github.md", DEFAULTS.protected_paths)
+    assert path_matches("tests/deep/test_x.py", DEFAULTS.test_paths)
