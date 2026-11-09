@@ -98,8 +98,9 @@ def test_invalid_pattern_is_unconstructible_even_programmatically() -> None:
         ProjectConfig(test_pattern="(unclosed")
 
 
-# --- specs/worker-confinement SC-8: the confinement profile's and the
-# --- handoff check's config fields.
+# --- specs/worker-confinement: the confinement profile's and the handoff
+# --- check's config fields. (The criterion id is cited inside each test, not
+# --- here: the gate attributes an id to the test whose span contains it.)
 
 _CONFINEMENT_FIELDS = (
     "session_write_paths", "session_read_paths", "session_network", "session_env",
