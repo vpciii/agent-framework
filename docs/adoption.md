@@ -103,7 +103,11 @@ what was refused; add the path or host it names and dispatch again.
 
 Outcomes: exit 0 = PR opened (with its `Satisfies:` declaration, facing
 the advisory gate); 2 = the worker escalated (read
-`specs/<slug>/escalations/`); 3 = timeout/error (worktree preserved).
+`specs/<slug>/escalations/`); 3 = timeout/error (worktree preserved);
+4 = handoff refused — the session finished but its commits changed a
+spec's contract, a path in `protected_paths` (default `.github/**` and
+`agent-framework.toml`), or deleted a test file. Nothing was pushed; the
+outcome and a `refused` issue name each finding, and the worktree is kept.
 
 Task-brief authoring lessons (paid for in this framework's own repo):
 put **all** expected file changes in `Touches` — including the spec's

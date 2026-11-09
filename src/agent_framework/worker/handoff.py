@@ -11,7 +11,7 @@ from pathlib import Path
 from ..errors import SessionResultError
 from ..proc import Runner, run_command
 from .types import SessionResult, TaskSpec
-from .worktree import BASE_REF
+from .worktree import BASE_REF, NO_HOOKS
 
 _TITLE_RE = re.compile(r"^### \[.\] \S+ — (.+?)\s*(?:\((?:this PR|#\d+)\))?\s*$", re.MULTILINE)
 
@@ -43,13 +43,13 @@ def open_pr(
 ) -> str:
     """Push the session's commits and open the declared PR; returns its URL."""
     commits = run(
-        ["git", "-C", str(worktree), "rev-list", "--count", f"{BASE_REF}..HEAD"]
+        ["git", *NO_HOOKS, "-C", str(worktree), "rev-list", "--count", f"{BASE_REF}..HEAD"]
     ).strip()
     if commits == "0":
         raise SessionResultError(
             "session reported completed but committed nothing on its branch"
         )
-    run(["git", "-C", str(worktree), "push", "-u", "origin", branch])
+    run(["git", *NO_HOOKS, "-C", str(worktree), "push", "-u", "origin", branch])
     url = run(
         [
             "gh", "pr", "create",
@@ -111,7 +111,7 @@ def write_handoff_note(
 
     def git(*args: str) -> str:
         try:
-            return run(["git", "-C", str(worktree), *args]).strip() or "(none)"
+            return run(["git", *NO_HOOKS, "-C", str(worktree), *args]).strip() or "(none)"
         except Exception as e:  # noqa: BLE001 — a partial note beats no note
             return f"(unavailable: {e})"
 

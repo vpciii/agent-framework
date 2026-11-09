@@ -16,7 +16,7 @@ from pathlib import Path
 from ..proc import Runner
 
 TERMINAL = frozenset({"Implemented", "Retired", "Superseded", "Withdrawn"})
-ALERT_LABELS = ("escalation", "timeout")
+ALERT_LABELS = ("escalation", "timeout", "refused")
 
 _STATUS_RE = re.compile(r"^\s*-\s*\*\*Status:\*\*\s*(.+?)\s*$", re.MULTILINE)
 _OPEN_TASK_RE = re.compile(r"^### \[ \] (\S+) — (.+?)\s*(?:\((?:this PR|#\d+)\))?\s*$", re.MULTILINE)
@@ -61,7 +61,7 @@ class GitHubItem:
 @dataclass(frozen=True)
 class GitHubSnapshot:
     open_prs: tuple[GitHubItem, ...]
-    open_alerts: tuple[GitHubItem, ...]  # open issues labelled escalation / timeout
+    open_alerts: tuple[GitHubItem, ...]  # open issues labelled escalation / timeout / refused
 
 
 def _status(text: str) -> str:
@@ -102,7 +102,7 @@ def read_repo(root: Path) -> RepoState:
 
 
 def github_snapshot(run: Runner) -> GitHubSnapshot:
-    """Open PRs and open escalation/timeout issues; raises if `gh` fails."""
+    """Open PRs and open escalation/timeout/refused issues; raises if `gh` fails."""
     fields = ["--json", "number,title,url", "--limit", "100"]
 
     def items(raw: str) -> list[GitHubItem]:
@@ -171,5 +171,5 @@ def render(state: RepoState, github: GitHubSnapshot | None, github_error: str | 
     else:
         lines += [f"- PR #{p.number} — {p.title}" for p in github.open_prs] or ["- no open PRs"]
         lines += [f"- Issue #{i.number} — {i.title}" for i in github.open_alerts] or [
-            "- no open escalation or timeout issues"]
+            "- no open escalation, timeout or refused issues"]
     return "\n".join(lines) + "\n"

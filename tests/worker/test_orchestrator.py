@@ -62,6 +62,11 @@ class _GitGh:
     def named(self, *prefix: str) -> list[list[str]]:
         return [c for c in self.calls if c[: len(prefix)] == list(prefix)]
 
+    def having(self, *words: str) -> list[list[str]]:
+        """Calls containing all `words` — for git commands, whose leading
+        options (`-c …`, `-C …`) are not what a test is about."""
+        return [c for c in self.calls if all(w in c for w in words)]
+
 
 def _session(
     payload: object,
@@ -109,13 +114,13 @@ def test_sc3_completed_session_becomes_declared_pr_and_never_merges(repo: Path) 
     assert outcome == PrOpened(
         url="https://github.com/x/y/pull/99", branch="feat/fixture-t-1", task_id="T-1"
     )
-    assert git.named("git", "-C", ".worktrees/fixture-t-1", "push")
+    assert git.having("git", ".worktrees/fixture-t-1", "push")
     [create] = git.named("gh", "pr", "create")
     body = create[create.index("--body") + 1]
     assert "Satisfies: SC-1, SC-2" in body  # exactly the task's criteria
     assert "T-1" in create[create.index("--title") + 1]
     assert not [c for c in git.calls if "merge" in c]  # never merges
-    assert git.named("git", "worktree", "remove")  # cleaned up on success
+    assert git.having("git", "worktree", "remove")  # cleaned up on success
 
 
 def test_sc4_escalation_writes_artifact_and_opens_no_pr(repo: Path) -> None:
@@ -136,10 +141,8 @@ def test_sc4_escalation_writes_artifact_and_opens_no_pr(repo: Path) -> None:
     text = artifact.read_text(encoding="utf-8")
     assert "T-1" in text and "cannot both spin and stop" in text
     assert "spec.md#success-criteria" in text
-    assert not git.named("gh", "pr", "create") and not git.named(
-        "git", "-C", ".worktrees/fixture-t-1", "push"
-    )
-    assert not git.named("git", "worktree", "remove")  # preserved
+    assert not git.named("gh", "pr", "create") and not git.having("git", "push")
+    assert not git.having("git", "worktree", "remove")  # preserved
 
 
 def test_sc5_budget_expiry_times_out_with_preserved_worktree(repo: Path) -> None:
@@ -156,4 +159,4 @@ def test_sc5_budget_expiry_times_out_with_preserved_worktree(repo: Path) -> None
 
     assert outcome == TimedOut(worktree_path=".worktrees/fixture-t-1")
     assert not git.named("gh", "pr", "create")
-    assert not git.named("git", "worktree", "remove")  # preserved for inspection
+    assert not git.having("git", "worktree", "remove")  # preserved for inspection

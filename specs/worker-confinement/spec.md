@@ -243,7 +243,7 @@ answer below as drafted).
 | SC-3 | R-5 | `tests/worker/test_confinement.py::test_sc3_no_caller_can_pass_arguments_to_the_session` |
 | SC-4 | R-6 | `tests/worker/test_confinement.py::test_sc4_the_session_environment_is_an_allowlist` |
 | SC-5 | R-7 | `tests/worker/test_handoff_check.py::test_sc5_each_forbidden_change_is_refused_naming_the_path`, `tests/worker/test_handoff_check.py::test_sc5_ordinary_task_work_passes`, `tests/worker/test_handoff_check.py::test_sc5_several_violations_are_all_reported` |
-| SC-6 | R-8 | *(pending)* |
-| SC-7 | R-9 | *(pending)* |
+| SC-6 | R-8 | `tests/worker/test_handoff_refused.py::test_sc6_a_refused_handoff_pushes_nothing_keeps_the_tree_and_alerts`, `tests/worker/test_handoff_refused.py::test_sc6_the_refusal_names_every_finding_to_the_human` |
+| SC-7 | R-9 | `tests/worker/test_handoff_refused.py::test_sc7_a_planted_hook_does_not_run_when_the_orchestrator_pushes` |
 | SC-8 | R-10 | `tests/test_project_config.py::test_sc8_confinement_fields_parse_when_well_formed`, `tests/test_project_config.py::test_sc8_absent_confinement_fields_take_their_documented_defaults`, `tests/test_project_config.py::test_sc8_malformed_confinement_field_fails_loudly_naming_it`, `tests/test_project_config.py::test_sc8_an_invalid_config_is_unconstructible_directly` |
 | SC-9 | R-11 | `tests/worker/test_brief.py::test_sc9_brief_states_the_limits_and_says_to_escalate` |
