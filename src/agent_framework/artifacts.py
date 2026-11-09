@@ -38,3 +38,23 @@ def criterion_text(spec_text: str, sc_id: str) -> str | None:
         re.MULTILINE | re.DOTALL,
     )
     return f"**{sc_id}**{m.group(1).rstrip()}" if m else None
+
+
+def without_section(text: str, title: str) -> str:
+    """`text` with its `## <title>` section (heading and body) removed — for
+    comparing two versions of a spec everywhere but that section."""
+    matches = list(re.finditer(r"^##\s+(.+?)\s*$", text, re.MULTILINE))
+    for i, m in enumerate(matches):
+        if m.group(1).strip().lower() == title.lower():
+            end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+            return text[: m.start()] + text[end:]
+    return text
+
+
+def normalize_checkboxes(text: str) -> str:
+    """`text` with every list-item or heading checkbox mark (`[ ]`, `[~]`,
+    `[x]`) made the same — for comparing two versions of a tasks file in
+    everything but which tasks are ticked."""
+    return re.sub(
+        r"^(\s*(?:[-*]|#{1,6})\s+)\[[ ~xX]\]", r"\1[ ]", text, flags=re.MULTILINE
+    )
