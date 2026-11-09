@@ -1,6 +1,6 @@
 # Plan: Worker confinement
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
 - **Spec:** ./spec.md

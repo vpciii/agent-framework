@@ -1,6 +1,6 @@
 # Spec: The worker's result file never lands in a pull request
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0004 (the worker is a headless session), ADR 0007

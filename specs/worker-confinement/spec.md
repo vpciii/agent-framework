@@ -1,6 +1,6 @@
 # Spec: Worker confinement — a confined session, an allowlisted environment, a checked handoff
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0007 (worker session confinement — this spec

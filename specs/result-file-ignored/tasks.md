@@ -1,6 +1,6 @@
 # Tasks: The worker's result file never lands in a pull request
 
-- **Status:** Approved
+- **Status:** Done
 - **Spec:** ./spec.md
 
 One task, one PR. It is the first task dispatched to a worker session
@@ -8,7 +8,7 @@ under the confinement profile (specs/worker-confinement R-12).
 
 ---
 
-### [ ] T-1 — Ignore the result file in every session's worktree
+### [x] T-1 — Ignore the result file in every session's worktree (#73)
 - **Satisfies:** SC-1, SC-2, SC-3
 - **Depends on:** —
 - **Touches:** `src/agent_framework/worker/worktree.py`,
