@@ -32,7 +32,7 @@ DEFAULT_TEST_PATHS = ("tests/**/*.py",)
 
 
 def _path_regex(pattern: str) -> re.Pattern[str]:
-    """A `test_paths` pattern as a regex over a repo-relative POSIX path:
+    """A path pattern as a regex over a repo-relative POSIX path:
     `**/` spans zero or more directories, `*` and `?` stay within one."""
     out, i = "", 0
     while i < len(pattern):
@@ -49,9 +49,23 @@ def _path_regex(pattern: str) -> re.Pattern[str]:
     return re.compile(out)
 
 
-def is_test_path(path: str, patterns: tuple[str, ...]) -> bool:
-    """Whether a changed file is a test file under the project's `test_paths`."""
+def path_matches(path: str, patterns: tuple[str, ...]) -> bool:
+    """Whether a repo-relative path matches any of a project's path patterns
+    (`test_paths`, `protected_paths`)."""
     return any(_path_regex(p).fullmatch(path) for p in patterns)
+
+
+DEFAULT_PROTECTED_PATHS = (".github/**", "agent-framework.toml")
+
+_HOST_LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
+_HOST_RE = re.compile(rf"{_HOST_LABEL}(?:\.{_HOST_LABEL})*")
+_ENV_NAME_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+
+
+def _is_session_path(entry: str) -> bool:
+    """Absolute or under the home directory, with no `..` — a path the
+    sandbox can be told about without depending on where it is launched."""
+    return entry.startswith(("/", "~/")) and ".." not in entry.split("/")
 
 
 @dataclass(frozen=True)
@@ -69,12 +83,40 @@ class ProjectConfig:
     ignore_checks: tuple[str, ...] = ("validator",)
     # Which changed files the validator collects as tests (path patterns).
     test_paths: tuple[str, ...] = DEFAULT_TEST_PATHS
+    # How far the worker session's confinement profile is widened (ADR 0007):
+    # nothing beyond the worktree, the repository and no network unless named.
+    session_write_paths: tuple[str, ...] = ()
+    session_read_paths: tuple[str, ...] = ()
+    session_network: tuple[str, ...] = ()  # host names a command may reach
+    session_env: tuple[str, ...] = ()  # variable names passed to the session
+    # Paths a session's diff may not change (the handoff check; path patterns).
+    protected_paths: tuple[str, ...] = DEFAULT_PROTECTED_PATHS
 
     def __post_init__(self) -> None:
-        if not all(isinstance(p, str) and p.strip() for p in self.test_paths):
-            raise ProjectConfigError(
-                f"test_paths must be non-empty path patterns, got {self.test_paths!r}"
-            )
+        for field in ("test_paths", "protected_paths"):
+            value = getattr(self, field)
+            if not all(isinstance(p, str) and p.strip() for p in value):
+                raise ProjectConfigError(
+                    f"{field} must be non-empty path patterns, got {value!r}"
+                )
+        for field in ("session_write_paths", "session_read_paths"):
+            for entry in getattr(self, field):
+                if not _is_session_path(entry):
+                    raise ProjectConfigError(
+                        f"{field} entries must be absolute or start with ~/ "
+                        f"(and contain no ..), got {entry!r}"
+                    )
+        for entry in self.session_network:
+            if not _HOST_RE.fullmatch(entry):
+                raise ProjectConfigError(
+                    "session_network entries must be bare host names "
+                    f"(no scheme, path or port), got {entry!r}"
+                )
+        for entry in self.session_env:
+            if not _ENV_NAME_RE.fullmatch(entry):
+                raise ProjectConfigError(
+                    f"session_env entries must be variable names, got {entry!r}"
+                )
         try:
             groups = re.compile(self.test_pattern).groups
         except re.error as e:
@@ -110,7 +152,11 @@ def load_project_config(root: Path = Path(".")) -> ProjectConfig:
     if not isinstance(table, dict):
         raise ProjectConfigError(f"{path}: [project] must be a table, got {table!r}")
 
-    known = {"gate_commands", "conventions_note", "test_pattern", "ignore_checks", "test_paths"}
+    list_fields = (
+        "gate_commands", "ignore_checks", "test_paths", "session_write_paths",
+        "session_read_paths", "session_network", "session_env", "protected_paths",
+    )
+    known = {"conventions_note", "test_pattern", *list_fields}
     unknown = set(table) - known
     if unknown:
         raise ProjectConfigError(
@@ -118,24 +164,13 @@ def load_project_config(root: Path = Path(".")) -> ProjectConfig:
         )
 
     try:
+        lists = {
+            field: _string_tuple(table[field], field) for field in list_fields if field in table
+        }
         config = ProjectConfig(
-            gate_commands=(
-            _string_tuple(table["gate_commands"], "gate_commands")
-                if "gate_commands" in table
-                else DEFAULTS.gate_commands
-            ),
             conventions_note=_as_str(table, "conventions_note", path),
             test_pattern=_as_str(table, "test_pattern", path) or DEFAULTS.test_pattern,
-            ignore_checks=(
-                _string_tuple(table["ignore_checks"], "ignore_checks")
-                if "ignore_checks" in table
-                else DEFAULTS.ignore_checks
-            ),
-            test_paths=(
-                _string_tuple(table["test_paths"], "test_paths")
-                if "test_paths" in table
-                else DEFAULTS.test_paths
-            ),
+            **lists,
         )
     except ProjectConfigError as e:
         raise ProjectConfigError(f"{path}: {e}") from None
