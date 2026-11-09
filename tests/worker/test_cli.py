@@ -37,12 +37,7 @@ def _run(
             raise outcome
         return outcome
 
-    # Session args starting with "-" require the "=" form (argparse):
-    # e.g. --session-arg=--dangerously-skip-permissions
-    code = main(
-        ["fixture", "T-1", "--roster", str(roster), "--session-arg=--verbose"],
-        work_fn=work_fn,
-    )
+    code = main(["fixture", "T-1", "--roster", str(roster)], work_fn=work_fn)
     return code, json.loads(capsys.readouterr().out)
 
 

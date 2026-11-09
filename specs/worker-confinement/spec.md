@@ -236,12 +236,12 @@ answer below as drafted).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
-| SC-2 | R-2, R-3, R-4 | *(pending)* |
-| SC-3 | R-5 | *(pending)* |
-| SC-4 | R-6 | *(pending)* |
+| SC-1 | R-1 | `tests/worker/test_confinement.py::test_sc1_every_launch_carries_the_whole_profile` |
+| SC-2 | R-2, R-3, R-4 | `tests/worker/test_confinement.py::test_sc2_nothing_is_widened_unless_the_project_declares_it`, `tests/worker/test_confinement.py::test_sc2_exactly_the_declared_paths_and_hosts_are_added` |
+| SC-3 | R-5 | `tests/worker/test_confinement.py::test_sc3_no_caller_can_pass_arguments_to_the_session` |
+| SC-4 | R-6 | `tests/worker/test_confinement.py::test_sc4_the_session_environment_is_an_allowlist` |
 | SC-5 | R-7 | *(pending)* |
 | SC-6 | R-8 | *(pending)* |
 | SC-7 | R-9 | *(pending)* |
 | SC-8 | R-10 | `tests/test_project_config.py::test_sc8_confinement_fields_parse_when_well_formed`, `tests/test_project_config.py::test_sc8_absent_confinement_fields_take_their_documented_defaults`, `tests/test_project_config.py::test_sc8_malformed_confinement_field_fails_loudly_naming_it`, `tests/test_project_config.py::test_sc8_an_invalid_config_is_unconstructible_directly` |
-| SC-9 | R-11 | *(pending)* |
+| SC-9 | R-11 | `tests/worker/test_brief.py::test_sc9_brief_states_the_limits_and_says_to_escalate` |

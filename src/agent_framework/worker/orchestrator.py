@@ -8,8 +8,9 @@ chief territory; this slice fails loudly once.
 from __future__ import annotations
 
 import logging
+import os
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from ..alerts import GhIssueTracker, IssueTracker, Push, notify, push_from_env
@@ -18,12 +19,28 @@ from ..proc import Runner, run_command
 from ..project import DEFAULTS, ProjectConfig
 from ..roster import Roster
 from .brief import build_brief, parse_task
+from .confinement import profile_args, session_env
 from .handoff import open_pr, write_escalation, write_handoff_note
 from .session import SessionRunner, run_claude, run_session
 from .types import Escalated, PrOpened, TimedOut, WorkerOutcome
 from .worktree import create_worktree, remove_worktree
 
 logger = logging.getLogger(__name__)
+
+
+def _read_roots(run: Runner) -> tuple[str, ...]:
+    """The repository's own directories: its root, and its git directory when
+    that lies outside the root (the dispatching checkout is itself a linked
+    worktree). The only home-directory paths a session reads undeclared."""
+    root = Path.cwd().resolve()
+    roots = [str(root)]
+    try:
+        common = run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"]).strip()
+    except RuntimeError:
+        common = ""
+    if common and not Path(common).is_relative_to(root):
+        roots.append(common)
+    return tuple(roots)
 
 
 def work(
@@ -34,7 +51,7 @@ def work(
     timeout_s: float = 1800,
     specs_dir: Path = Path("specs"),
     project: ProjectConfig = DEFAULTS,
-    session_args: tuple[str, ...] = (),
+    environ: Mapping[str, str] = os.environ,
     run: Runner = run_command,
     session_run: SessionRunner = run_claude,
     tracker: IssueTracker | None = None,
@@ -49,8 +66,17 @@ def work(
     logger.info("worker %s/%s: worktree %s on %s", spec_slug, task_id, worktree, branch)
 
     model = roster.resolve("worker").model
-    logger.info("worker %s/%s: session start (model=%s, timeout=%ss)",
-                spec_slug, task_id, model, timeout_s)
+    # The confinement profile (ADR 0007): computed here from project config,
+    # never taken from the caller.
+    profile = profile_args(project, _read_roots(run))
+    env = session_env(project, environ)
+    logger.info(
+        "worker %s/%s: session start (model=%s, timeout=%ss; confined: "
+        "%d network host(s), %d extra writable path(s), %d extra readable path(s), "
+        "%d environment variable(s))",
+        spec_slug, task_id, model, timeout_s, len(project.session_network),
+        len(project.session_write_paths), len(project.session_read_paths), len(env),
+    )
     def alert(kind: str, title: str, body: str) -> tuple[str, ...]:
         # A failed notification never changes the outcome (R-7): notify never raises.
         report = notify(
@@ -65,7 +91,7 @@ def work(
         result = run_session(
             brief, worktree,
             model=model, timeout_s=timeout_s,
-            session_args=session_args, run=session_run,
+            profile=profile, env=env, run=session_run,
         )
     except SessionTimeoutError:
         note = write_handoff_note(task, worktree, budget_s=timeout_s,

@@ -1,11 +1,15 @@
 """Dispatch one task to a worker session from the command line.
 
     python -m agent_framework.worker <spec-slug> <task-id>
-        [--timeout SECONDS] [--roster PATH] [--session-arg ARG ...]
+        [--timeout SECONDS] [--roster PATH]
 
 Prints the outcome JSON on stdout. Exit codes compose with the validator's
 (0/1) for a future chief: 0 = PR opened, 2 = escalated, 3 = timeout or
 worker error.
+
+There is no way to pass arguments to the session: every session runs under
+the confinement profile (ADR 0007), widened only by the project's
+`agent-framework.toml`.
 """
 
 from __future__ import annotations
@@ -37,13 +41,6 @@ def main(argv: list[str] | None = None, *, work_fn: WorkFn = work) -> int:
     ap.add_argument("task_id", help="task id from that spec's tasks.md (e.g. T-2)")
     ap.add_argument("--timeout", type=float, default=1800, metavar="SECONDS")
     ap.add_argument("--roster", type=Path, default=Path("agent-framework.toml"))
-    ap.add_argument(
-        "--session-arg",
-        action="append",
-        default=[],
-        metavar="ARG",
-        help="extra argument passed to the claude session (repeatable)",
-    )
     args = ap.parse_args(argv)
 
     roster = Roster.from_file(args.roster)
@@ -54,7 +51,6 @@ def main(argv: list[str] | None = None, *, work_fn: WorkFn = work) -> int:
             args.task_id,
             roster,
             timeout_s=args.timeout,
-            session_args=tuple(args.session_arg),
             project=project,
         )
     except WorkerError as e:

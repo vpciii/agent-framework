@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 import pytest
@@ -20,8 +20,10 @@ from agent_framework.worker.session import run_claude, run_session
 
 def _noop_runner(
     record: list[tuple[list[str], Path, float]],
-) -> Callable[[Sequence[str], Path, float], None]:
-    def run(args: Sequence[str], cwd: Path, timeout_s: float) -> None:
+) -> Callable[[Sequence[str], Path, float, Mapping[str, str]], None]:
+    def run(
+        args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str]
+    ) -> None:
         record.append((list(args), cwd, timeout_s))
 
     return run
@@ -36,7 +38,8 @@ def test_completed_result_round_trips(tmp_path: Path) -> None:
     record: list[tuple[list[str], Path, float]] = []
 
     result = run_session(
-        "the brief", tmp_path, model="worker-model", timeout_s=60, run=_noop_runner(record)
+        "the brief", tmp_path, model="worker-model", timeout_s=60,
+        profile=("--restricted",), env={"PATH": "/usr/bin"}, run=_noop_runner(record),
     )
 
     assert result.status == "completed" and result.detail == "done the thing"
@@ -52,7 +55,8 @@ def test_escalated_result_carries_spec_location(tmp_path: Path) -> None:
         {"status": "escalated", "detail": "SC text contradicts R text",
          "spec_location": "spec.md#requirements"},
     )
-    result = run_session("b", tmp_path, model="m", timeout_s=60, run=_noop_runner([]))
+    result = run_session("b", tmp_path, model="m", timeout_s=60, profile=(), env={},
+                             run=_noop_runner([]))
     assert result.status == "escalated"
     assert result.spec_location == "spec.md#requirements"
 
@@ -80,7 +84,8 @@ def test_result_contract_deviations_are_loud(
     elif payload is not None:
         _write_result(tmp_path, payload)
     with pytest.raises(SessionResultError, match=match):
-        run_session("b", tmp_path, model="m", timeout_s=60, run=_noop_runner([]))
+        run_session("b", tmp_path, model="m", timeout_s=60, profile=(), env={},
+                             run=_noop_runner([]))
 
 
 def test_default_seam_kills_on_budget_expiry(tmp_path: Path) -> None:
@@ -88,10 +93,10 @@ def test_default_seam_kills_on_budget_expiry(tmp_path: Path) -> None:
     typed timeout — the enforcement mechanism itself, not a fake."""
     with pytest.raises(SessionTimeoutError, match="budget"):
         run_claude(
-            [sys.executable, "-c", "import time; time.sleep(30)"], tmp_path, 0.2
+            [sys.executable, "-c", "import time; time.sleep(30)"], tmp_path, 0.2, {}
         )
 
 
 def test_default_seam_missing_cli_is_loud(tmp_path: Path) -> None:
     with pytest.raises(SessionResultError, match="not installed"):
-        run_claude(["definitely-not-a-real-binary-xyz"], tmp_path, 5)
+        run_claude(["definitely-not-a-real-binary-xyz"], tmp_path, 5, {})

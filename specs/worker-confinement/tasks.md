@@ -23,7 +23,7 @@ worker that would run them is the unconfined one they replace.
 
 ---
 
-### [ ] T-1 — Config fields for the profile and the handoff check
+### [x] T-1 — Config fields for the profile and the handoff check (#68)
 - **Satisfies:** SC-8
 - **Depends on:** —
 - **Touches:** `src/agent_framework/project.py`,
