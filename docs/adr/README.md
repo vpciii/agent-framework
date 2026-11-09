@@ -7,6 +7,7 @@ See `$METHODOLOGY_HOME/methodology.md` §1 for when an ADR is required, and
 Newest first when browsing. Never edit an accepted ADR — supersede it with a
 new one and mark the old one `Superseded by NNNN`.
 
+- **0007** — The worker session is confined; the orchestrator holds the credentials and checks what comes back. *(Proposed)*
 - **0006** — License the framework under the MIT License.
 - **0005** — One per-PR gate: conformance and refutation in a single validator.
 - **0004** — Role execution surfaces (subscription-backed interactive roles, API-backed programmatic roles).
