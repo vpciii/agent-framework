@@ -43,7 +43,7 @@ worker that would run them is the unconfined one they replace.
   field for a non-list, an empty entry, a relative path, and a host given
   as a URL. Existing config tests pass unmodified.
 
-### [ ] T-2 — Launch every session under the confinement profile
+### [x] T-2 — Launch every session under the confinement profile (#69)
 - **Satisfies:** SC-1, SC-2, SC-3, SC-4, SC-9
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/worker/confinement.py` (new),
@@ -67,7 +67,7 @@ worker that would run them is the unconfined one they replace.
   the seam without them. Existing worker tests are updated only where the
   seam's signature changed.
 
-### [ ] T-3 — The handoff check
+### [x] T-3 — The handoff check (#70)
 - **Satisfies:** SC-5
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/worker/handoff_check.py` (new),
@@ -89,7 +89,7 @@ worker that would run them is the unconfined one they replace.
   each refused naming the path; a diff that fills a Traceability row,
   ticks a checkbox and changes source and tests yields no finding.
 
-### [ ] T-4 — Refuse the handoff, alert, and never run hooks
+### [x] T-4 — Refuse the handoff, alert, and never run hooks (#71)
 - **Satisfies:** SC-6, SC-7
 - **Depends on:** T-3
 - **Touches:** `src/agent_framework/worker/{types,orchestrator,handoff,worktree,__main__}.py`,
@@ -111,7 +111,7 @@ worker that would run them is the unconfined one they replace.
   with a `pre-push` hook planted in a real repository, a successful
   handoff's push leaves no trace of the hook having run.
 
-### [ ] T-5 — Delivery: docs, glossary, the live run
+### [~] T-5 — Delivery: docs, glossary, the live run
 - **Satisfies:** —
 - **Depends on:** T-2, T-4
 - **Touches:** `docs/glossary.md`, `docs/adoption.md`,

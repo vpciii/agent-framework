@@ -28,3 +28,20 @@ def test_sc5_adoption_doc_covers_every_pilot_required_step() -> None:
         "Touches",                # bookkeeping-in-the-brief lesson
     ):
         assert required in text, f"adoption doc is missing coverage of: {required}"
+
+
+def test_adoption_doc_describes_the_confined_dispatch() -> None:
+    """specs/worker-confinement R-13: the doc carries the confined dispatch
+    command and every field that widens the profile — and no longer tells
+    anyone to bypass permissions."""
+    text = _DOC.read_text(encoding="utf-8")
+    for required in (
+        "session_write_paths", "session_read_paths", "session_network", "session_env",
+        "protected_paths",
+        "handoff refused",       # exit code 4
+        "allow list",            # what a refused host looks like
+        "macOS only",            # the platform limit
+    ):
+        assert required in text, f"adoption doc is missing coverage of: {required}"
+    assert "--dangerously-skip-permissions" not in text
+    assert "--session-arg" not in text
