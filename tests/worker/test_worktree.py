@@ -57,8 +57,8 @@ def test_create_worktree_invokes_git_with_derived_pair(tmp_path: Path) -> None:
     path, branch = create_worktree(task, run=run)
 
     assert (path, branch) == (expected_path, expected_branch)
-    # Cut from main explicitly (plan): a worker PR contains only its own work.
-    assert ["git", "worktree", "add", str(expected_path), "-b", expected_branch, "main"] in calls
+    # Cut from the fetched remote main: a worker PR contains only its own work.
+    assert ["git", "worktree", "add", "--no-track", str(expected_path), "-b", expected_branch, "origin/main"] in calls
     assert wt.WORKTREES_DIR.name == ".worktrees"
 
 
@@ -95,3 +95,73 @@ def test_remove_worktree_forces_past_the_result_file() -> None:
 
     remove_worktree(Path(".worktrees/x"), run=run)
     assert calls == [["git", "worktree", "remove", "--force", ".worktrees/x"]]
+
+
+def _git(cwd: Path, *args: str) -> str:
+    import subprocess
+
+    return subprocess.run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@example.com", *args],
+        cwd=cwd, check=True, capture_output=True, text=True,
+    ).stdout.strip()
+
+
+@pytest.fixture
+def stale_clone(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, str]:
+    """A clone whose local `main` is one commit behind `origin/main` — the
+    state of any checkout that has not pulled since the last merge."""
+    origin = tmp_path / "origin.git"
+    _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(origin))
+    seed = tmp_path / "seed"
+    _git(tmp_path, "clone", "-q", str(origin), str(seed))
+    _git(seed, "commit", "-q", "--allow-empty", "-m", "first")
+    _git(seed, "push", "-q", "origin", "HEAD:main")
+    clone = tmp_path / "clone"
+    _git(tmp_path, "clone", "-q", str(origin), str(clone))
+    _git(seed, "commit", "-q", "--allow-empty", "-m", "merged upstream later")
+    _git(seed, "push", "-q", "origin", "HEAD:main")
+    monkeypatch.chdir(clone)
+    return clone, _git(seed, "rev-parse", "HEAD")
+
+
+def test_worktree_is_cut_from_the_remote_main_not_a_stale_local_one(
+    stale_clone: tuple[Path, str],
+) -> None:
+    """Regression: the tree was cut from local `main`, so a checkout that had
+    not pulled gave the worker stale code (found 2026-11-09 with this repo's
+    own `main` 4 commits behind origin)."""
+    clone, upstream_head = stale_clone
+    assert _git(clone, "rev-parse", "main") != upstream_head  # the precondition
+
+    path, _ = create_worktree(_task())
+
+    assert _git(clone / path, "rev-parse", "HEAD") == upstream_head
+
+
+def test_a_session_that_commits_nothing_is_caught_even_when_local_main_is_stale(
+    stale_clone: tuple[Path, str],
+) -> None:
+    """Regression: "committed nothing" must be counted against the ref the
+    tree was cut from; against a stale local `main` the upstream commits
+    would pass for the session's own work."""
+    from agent_framework.errors import SessionResultError
+    from agent_framework.worker.handoff import open_pr
+    from agent_framework.worker.types import SessionResult
+
+    path, branch = create_worktree(_task())
+
+    with pytest.raises(SessionResultError, match="committed nothing"):
+        open_pr(_task(), SessionResult("completed", "did nothing"), path, branch)
+
+
+def test_an_unreachable_remote_fails_loudly_before_any_tree_exists(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """No silent fallback to a possibly stale local `main`."""
+    _git(tmp_path, "init", "-q", "-b", "main")
+    _git(tmp_path, "commit", "-q", "--allow-empty", "-m", "first")
+    monkeypatch.chdir(tmp_path)
+
+    with pytest.raises(WorktreeError, match="origin"):
+        create_worktree(_task())
+    assert not derive(_task())[0].exists()
