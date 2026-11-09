@@ -1,6 +1,6 @@
 # Spec: Citations come from the spec's Traceability table
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0005 (one per-PR gate — its deterministic-before-
