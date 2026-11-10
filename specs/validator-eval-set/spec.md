@@ -1,6 +1,6 @@
 # Spec: An eval set for the validator's judgment
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-10
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0005 (one per-PR gate; its judgment is one model
@@ -222,6 +222,28 @@ answers).
   reviewed edit, not argued with.
 - [x] **No planning stage first.** The problem is already shown by two
   live runs and three deferred decisions, and the appetite is a few PRs.
+
+Recorded at sign-off, 2026-11-10 — what the implementation found:
+
+- **The set holds 27 accepted cases, not the 18 estimated above**, and
+  about 1.16 million characters. Five older task pull requests that
+  predate the `Satisfies:` line also pass the deterministic stage, and
+  four more merged during the work. Three that pass were left out: #41
+  (it declares `Satisfies: —`; the id the collector reads is in its
+  explanation), #85 (a sign-off, not a task; its ids are prose mentions)
+  and #92 (its diff is the set itself).
+- **Freezing a pull request that already has a case** rebuilds the
+  bundle and keeps the expected answer in the file, so rebuilding the
+  set never resets an answer a human corrected (R-8).
+- **The first baseline** (R-12) is
+  `evals/validator/results/2026-11-10-gemini-3.8-flash.json`: 23 of 27
+  accepted cases passed and 4 were wrongly rejected (`pr-18`, `pr-37`,
+  `pr-59`, `pr-89`); 9 of 9 seeded defects were caught under the seeded
+  item; nothing could not be judged. The four are not yet decided, and
+  no expected answer has been changed.
+- **Two defects the first runs showed**, each fixed in its own pull
+  request: a run did not say why a case could not be judged (#94), and
+  `compare` listed a case only one result had judged as changed (#96).
 
 ## Out of scope (for now)
 
