@@ -3,13 +3,17 @@
     agent-framework-eval run [--cases DIR] [--roster FILE] [--runs N]
                              [--only ID ...] [--pause SECONDS] [--out FILE]
     agent-framework-eval compare <result> <result>
+    agent-framework-eval freeze <pr> [--repo OWNER/NAME] [--cases DIR]
 
 `run` judges every case exactly as the gate does, prints the scorecard on
 stdout and writes the result file; it exits 0 when the run completed,
 whatever the score, and 2 when it could not start. `compare` prints the
 cases whose class changed between two results, and exits 2 when their case
-sets differ. This is run by a human with a provider key in their shell —
-never by CI (specs/validator-eval-set).
+sets differ. `freeze` writes a merged pull request into the set as an
+accepted case, reading GitHub through `gh`; it exits 2, writing nothing,
+for one that is not merged or that the deterministic stage rejects. `run`
+is run by a human with a provider key in their shell — never by CI
+(specs/validator-eval-set).
 """
 
 from __future__ import annotations
@@ -23,11 +27,13 @@ import sys
 from pathlib import Path
 
 from ..errors import AgentFrameworkError, EvalResultError
+from ..project import load_project_config
 from ..providers.anthropic import AnthropicProvider
 from ..providers.google import GoogleProvider
 from ..providers.registry import register_provider
 from ..roster import Roster
 from .case import load_set, set_fingerprint
+from .freeze import freeze
 from .run import run_eval
 from .scorecard import (
     JudgmentRecord,
@@ -139,6 +145,18 @@ def _compare(args: argparse.Namespace) -> int:
     return 0 if compare(before, after).comparable else CANNOT_START
 
 
+def _freeze(args: argparse.Namespace) -> int:
+    try:
+        written = freeze(
+            args.pr, args.cases, repo=args.repo,
+            project=load_project_config(), today=_today(),
+        )
+    except AgentFrameworkError as e:
+        return _refuse(str(e))
+    print(f"wrote {written}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="agent-framework-eval",
@@ -163,6 +181,13 @@ def main(argv: list[str] | None = None) -> int:
     cmp_.add_argument("before", type=Path)
     cmp_.add_argument("after", type=Path)
     cmp_.set_defaults(handler=_compare)
+
+    frz = commands.add_parser("freeze", help="write a merged pull request as an accepted case")
+    frz.add_argument("pr", type=int, help="pull request number")
+    frz.add_argument("--repo", default=None, metavar="OWNER/NAME",
+                     help="the repository (default: the current one)")
+    frz.add_argument("--cases", type=Path, default=DEFAULT_CASES, metavar="DIR")
+    frz.set_defaults(handler=_freeze)
 
     args = ap.parse_args(argv)
     handler = args.handler
