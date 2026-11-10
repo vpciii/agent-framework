@@ -161,6 +161,31 @@ def test_sc5_a_provider_failure_is_no_verdict_not_a_reject(
     assert "429" in json.loads(out)["detail"] and "Traceback" not in err
 
 
+def test_sc5_no_api_key_for_the_real_adapter_is_no_verdict_not_a_traceback(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """SC-5 here, regression (found 2026-11-10): the real Google adapter
+    with no key in the environment is "could not judge" — exit 3 and the
+    reason on stdout — where the SDK's ValueError used to escape as a
+    traceback. Nothing is stubbed below the collector; no call is made,
+    because without a key the SDK builds no client to make one."""
+    for name in ("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_USE_VERTEXAI",
+                 "GOOGLE_GENAI_USE_ENTERPRISE"):
+        monkeypatch.delenv(name, raising=False)
+    (tmp_path / "agent-framework.toml").write_text(
+        '[roles]\nvalidator = { provider = "google", model = "gemini-any" }\n', encoding="utf-8"
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(gate_cli, "collect_bundle", lambda *a, **k: _bundle())
+
+    code = gate_cli.main(["7"])
+
+    out, err = capsys.readouterr()
+    assert code == 3
+    assert json.loads(out)["reason"] == "provider-error"
+    assert "GEMINI_API_KEY" in json.loads(out)["detail"] and "Traceback" not in err
+
+
 def test_sc5_pass_and_reject_keep_their_codes_and_their_json(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

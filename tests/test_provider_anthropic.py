@@ -9,11 +9,15 @@ normalizes its objects. No live calls.
 from __future__ import annotations
 
 import json
+import os
+from pathlib import Path
 from typing import Any
 
 import httpx
-from anthropic import AsyncAnthropic
+import pytest
+from anthropic import AnthropicError, AsyncAnthropic
 
+from agent_framework.errors import ProviderError
 from agent_framework.providers.anthropic import AnthropicProvider
 from agent_framework.providers.base import Request, Response, ToolCall, ToolDef
 
@@ -60,3 +64,39 @@ async def test_sc3_anthropic_adapter_round_trips_to_normalized_response() -> Non
     assert captured["body"]["messages"] == [{"role": "user", "content": "hi"}]
     assert captured["body"]["tools"][0]["name"] == "noop"
     assert captured["body"]["tools"][0]["input_schema"] == {}
+
+
+@pytest.fixture
+def no_credentials(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Nothing in the environment, and no profile on disk, for the SDK to
+    find a credential in."""
+    for name in [n for n in os.environ if n.startswith("ANTHROPIC_")]:
+        monkeypatch.delenv(name)
+    monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path))
+
+
+async def test_missing_credentials_are_a_provider_error(no_credentials: None) -> None:
+    """Regression (found 2026-11-10): with no credentials anywhere the SDK
+    raises a bare TypeError as it builds the request, which escaped `invoke`
+    — a traceback from the gate's CLI instead of "could not judge". The
+    adapter reports it as the typed error, the SDK's own chained. No call
+    is made: the SDK stops before it sends anything."""
+    with pytest.raises(ProviderError, match="api_key") as raised:
+        await AnthropicProvider().invoke(Request(prompt="x"), model="any")
+
+    assert isinstance(raised.value.__cause__, TypeError)
+
+
+async def test_credentials_that_cannot_be_loaded_are_a_provider_error(
+    no_credentials: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression (found 2026-11-10): pointed at a profile that does not
+    exist, the SDK refuses to build a client, and its own error escaped
+    `invoke` the same way. No call is made: there is no client to make one."""
+    monkeypatch.setenv("ANTHROPIC_PROFILE", "no-such-profile")
+
+    with pytest.raises(ProviderError, match="no Anthropic client") as raised:
+        await AnthropicProvider().invoke(Request(prompt="x"), model="any")
+
+    assert isinstance(raised.value.__cause__, AnthropicError)
