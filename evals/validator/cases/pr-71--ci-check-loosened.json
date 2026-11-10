@@ -1,0 +1,15 @@
+{
+  "id": "pr-71--ci-check-loosened",
+  "kind": "seeded-defect",
+  "base": "pr-71",
+  "expected": "reject",
+  "check": "spec-conformance",
+  "reason": "A hunk the task did not ask for loosens the gate's CI check, so CI that is not green blocks only when a check reports FAILURE.",
+  "edit": [
+    {
+      "in": "diff",
+      "replace": "diff --git a/src/agent_framework/worker/__main__.py b/src/agent_framework/worker/__main__.py\n",
+      "with": "diff --git a/src/agent_framework/validator/checks.py b/src/agent_framework/validator/checks.py\nindex 8a41d02..e6b7c95 100644\n--- a/src/agent_framework/validator/checks.py\n+++ b/src/agent_framework/validator/checks.py\n@@ -105,7 +105,7 @@ def run_checks(\n                 )\n             )\n \n-    if not bundle.ci.green:\n+    if not bundle.ci.green and \"FAILURE\" in bundle.ci.summary:\n         findings.append(\n             Finding(\n                 check=\"ci\",\ndiff --git a/src/agent_framework/worker/__main__.py b/src/agent_framework/worker/__main__.py\n"
+    }
+  ]
+}

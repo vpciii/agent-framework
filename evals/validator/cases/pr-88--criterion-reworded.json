@@ -1,0 +1,15 @@
+{
+  "id": "pr-88--criterion-reworded",
+  "kind": "seeded-defect",
+  "base": "pr-88",
+  "expected": "reject",
+  "check": "criteria-integrity",
+  "reason": "A hunk rewords SC-7 in spec.md: a seeded-defect case rejected under a different checklist item now counts as caught.",
+  "edit": [
+    {
+      "in": "diff",
+      "replace": "+++ b/specs/validator-eval-set/spec.md\n",
+      "with": "+++ b/specs/validator-eval-set/spec.md\n@@ -152,8 +152,8 @@ bundle that passes the deterministic stage with today's code\n   and the remaining cases still run. (R-6)\n - **SC-7** — The scorecard's counts are right for a run that contains\n   one of each outcome for each kind of case; a seeded-defect case\n-  rejected under a different checklist item is counted as \"another\n-  reason\", not as caught; could-not-judge appears in neither the right\n+  rejected under any checklist item is counted as caught, whichever\n+  item was seeded; could-not-judge appears in neither the right\n   nor the wrong count. (R-7)\n - **SC-8** — The result lists each wrongly rejected, missed and\n   other-reason case with the model's findings. (R-8)\n"
+    }
+  ]
+}

@@ -59,3 +59,17 @@ def test_sc3_a_case_the_stage_would_reject_is_named_with_its_check(tmp_path: Pat
         (tmp_path / f"{item.id}.json").write_text(dump_case(item), encoding="utf-8")
 
     assert _rejected(load_set(tmp_path)) == ["pr-2: ci — deterministic CI is not green"]
+
+
+def test_sc11_the_set_has_enough_cases_of_each_kind() -> None:
+    """SC-11: at least 12 accepted cases, #77 among them, and at least 9
+    seeded-defect cases — at least 3 for each of test honesty, spec
+    conformance and criteria integrity."""
+    cases = load_set(CASES)
+    accepted = [c.id for c in cases if c.kind == "accepted"]
+    seeded = [c for c in cases if c.kind == "seeded-defect"]
+
+    assert len(accepted) >= 12 and "pr-77" in accepted
+    assert len(seeded) >= 9
+    for check in ("test-honesty", "spec-conformance", "criteria-integrity"):
+        assert len([c for c in seeded if c.check == check]) >= 3, check

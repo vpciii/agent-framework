@@ -1,0 +1,20 @@
+{
+  "id": "pr-25--tautology",
+  "kind": "seeded-defect",
+  "base": "pr-25",
+  "expected": "reject",
+  "check": "test-honesty",
+  "reason": "SC-7's test compares the claimed criteria with themselves, so it passes whatever the collector returns.",
+  "edit": [
+    {
+      "in": "diff",
+      "replace": "+    assert bundle.task.criteria == (\"SC-1\", \"SC-3\")",
+      "with": "+    assert bundle.task.criteria == bundle.task.criteria"
+    },
+    {
+      "in": "tests/validator/test_collector.py",
+      "replace": "    assert bundle.task.criteria == (\"SC-1\", \"SC-3\")",
+      "with": "    assert bundle.task.criteria == bundle.task.criteria"
+    }
+  ]
+}
