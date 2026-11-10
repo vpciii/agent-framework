@@ -202,3 +202,27 @@ async def test_sc6_a_failed_judgment_is_logged_before_it_raises(
         await judge(_bundle(), roster, registry=registry)
 
     assert any("refused" in r.getMessage() and "SAFETY" in r.getMessage() for r in caplog.records)
+
+
+def test_sc6_the_cli_shows_the_judgments_log_line_and_keeps_stdout_pure_json(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """SC-6 here: run from the command line, the line reaches standard
+    error — and standard output is still nothing but the verdict JSON."""
+    from agent_framework.providers.registry import register_provider
+
+    (tmp_path / "agent-framework.toml").write_text(
+        '[roles]\nvalidator = { provider = "fake-cli", model = "judge-9" }\n', encoding="utf-8"
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(gate_cli, "collect_bundle", lambda *a, **k: _bundle())
+    register_provider("fake-cli", _Fake(_CLEAN))
+
+    code = gate_cli.main(["7"])
+
+    out, err = capsys.readouterr()
+    assert code == 0
+    assert json.loads(out)["verdict"] == "pass"  # stdout parses as JSON, whole
+    assert "judge-9" in err and "stop=complete" in err and "1234" in err
+    # The handler is the CLI's own and is gone when it returns.
+    assert not logging.getLogger("agent_framework").handlers

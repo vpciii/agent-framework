@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import logging
 import sys
 from pathlib import Path
 
@@ -60,6 +61,14 @@ def main(argv: list[str] | None = None) -> int:
         ignore_checks=frozenset(project.ignore_checks) | set(args.ignore_check),
         test_paths=project.test_paths,
     )
+    # Show the gate's log lines (which stage decided; the judgment's model,
+    # stop reason and token counts) on stderr. stdout stays the verdict JSON.
+    log = logging.getLogger("agent_framework")
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    previous_level = log.level
+    log.addHandler(handler)
+    log.setLevel(logging.INFO)
     try:
         verdict = asyncio.run(validate(bundle, roster, project=project))
     except (JudgmentFormatError, ProviderError) as e:
@@ -72,6 +81,9 @@ def main(argv: list[str] | None = None) -> int:
             reason = "malformed"
         print(json.dumps({"verdict": "none", "reason": reason, "detail": str(e)}, indent=2))
         return NO_VERDICT_EXIT
+    finally:
+        log.removeHandler(handler)
+        log.setLevel(previous_level)
 
     print(verdict_to_json(verdict))
     return 0 if isinstance(verdict, Pass) else 1
