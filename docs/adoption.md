@@ -215,6 +215,9 @@ uv run agent-framework-eval compare <before>.json <after>.json
 
 It prints the cases whose class changed. Two results are comparable only
 when they were run on the same case set; otherwise it says so and exits 2.
+A run made with `--only` judged some of the set: only the cases both
+results judged are compared, and the rest are listed as judged in one
+result only.
 
 **Build your own set.** The cases in this repository are its own pull
 requests; a target repository freezes its own:

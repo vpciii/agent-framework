@@ -296,3 +296,38 @@ def test_sc9_comparable_results_show_the_cases_whose_class_changed() -> None:
     text = render_comparison(before, after)
     assert "pr-2: wrongly-rejected → passed" in text
     assert "bbbbbbbbbbbb" in text and "dddddddddddd" in text  # what changed between the runs
+
+
+def test_sc9_a_case_judged_in_only_one_result_is_not_a_change() -> None:
+    """SC-9 here: a run of some cases (`--only`) carries the whole set's
+    fingerprint. Compared with a full run, the cases both judged are
+    compared and the rest are named as judged in one result only — never
+    as changed. (Regression, 2026-11-10: a one-case run compared with the
+    36-case baseline reported 35 changes.)"""
+    part = _result((_rec(_accepted("pr-2"), Passed()),))
+    full = _result()
+
+    comparison = compare(part, full)
+
+    assert comparison.comparable is True
+    assert [(c.case, c.before, c.after) for c in comparison.changed] == [
+        ("pr-2", ("passed",), ("wrongly-rejected",)),
+    ]
+    assert comparison.only_before == ()
+    assert comparison.only_after == ("pr-1", "pr-1--a", "pr-1--b", "pr-1--c", "pr-1--d", "pr-3")
+
+    text = render_comparison(part, full)
+    assert "pr-2: passed → wrongly-rejected" in text
+    assert "(not run)" not in text
+    assert "Judged only in the after result (6), not compared: pr-1, pr-1--a" in text
+    assert "Judged only in the before result" not in text
+
+    # The other way round, and a rerun of one case that did not change.
+    same = _result((_rec(_accepted("pr-1"), Passed()),))
+    assert compare(full, same).changed == ()
+    assert compare(full, same).only_before == (
+        "pr-1--a", "pr-1--b", "pr-1--c", "pr-1--d", "pr-2", "pr-3",
+    )
+    text = render_comparison(full, same)
+    assert "No case judged in both results changed class." in text
+    assert "Judged only in the before result (6), not compared: pr-1--a" in text
