@@ -86,7 +86,7 @@ those is for dispatch.
   the tool schema is changed (monkeypatched) and not when the bundle
   is; comparing results with different case sets says so.
 
-### [ ] T-3 — The run, and the command
+### [x] T-3 — The run, and the command (#89)
 - **Satisfies:** SC-5, SC-6, SC-10
 - **Depends on:** T-2
 - **Touches:** `src/agent_framework/evals/run.py` (new),
