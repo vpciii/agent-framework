@@ -80,3 +80,7 @@ class WorktreeError(WorkerError):
 class EvalCaseError(AgentFrameworkError):
     """An eval case file is malformed, or its seeded edit does not apply
     exactly once. The message names the file (specs/validator-eval-set)."""
+
+
+class EvalResultError(AgentFrameworkError):
+    """A file given as an eval result cannot be read as one."""
