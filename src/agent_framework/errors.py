@@ -28,11 +28,14 @@ class JudgmentFormatError(ValidationError):
 
 
 class NoVerdictError(JudgmentFormatError):
-    """The judgment could not be made: nothing was found wrong with the pull
-    request — the model's answer was cut off, declined, or absent.
+    """The judgment could not be made: nothing was shown to be wrong with the
+    pull request — the model's answer was cut off, declined or absent, or it
+    reported a defect without one finding whose quoted evidence is in the
+    data it was sent.
 
-    `reason` is one of "truncated", "refused", "no-answer". Never a verdict,
-    and never a REJECT (specs/judgment-reliability).
+    `reason` is one of "truncated", "refused", "no-answer"
+    (specs/judgment-reliability) or "unsupported-finding"
+    (specs/finding-evidence). Never a verdict, and never a REJECT.
     """
 
     def __init__(self, reason: str, message: str) -> None:

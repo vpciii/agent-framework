@@ -71,6 +71,8 @@ async def test_sc4_defect_from_return_verdict_is_carried_verbatim() -> None:
                 "check": "test-honesty",
                 "finding": "test_a asserts nothing about f()",
                 "evidence": "tests/test_x.py::test_a has no assert",
+                # Admits the finding (specs/finding-evidence); not carried.
+                "quotes": ["def test_a(): ..."],
             }
         ],
     }

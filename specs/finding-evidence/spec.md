@@ -199,10 +199,10 @@ All resolved 2026-11-10 (human sign-off).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1, R-7 | *(pending)* |
-| SC-2 | R-2 | *(pending)* |
-| SC-3 | R-3, R-4 | *(pending)* |
-| SC-4 | R-3, R-4 | *(pending)* |
-| SC-5 | R-5 | *(pending)* |
-| SC-6 | R-6 | *(pending)* |
-| SC-7 | R-8 | *(pending)* |
+| SC-1 | R-1, R-7 | `tests/validator/test_finding_evidence.py::test_sc1_the_schema_requires_quotes_and_fixes_the_check_names`, `tests/validator/test_finding_evidence.py::test_sc1_a_finding_without_quotes_is_malformed`, `tests/validator/test_finding_evidence.py::test_sc1_a_check_outside_the_four_names_is_malformed` |
+| SC-2 | R-2 | `tests/validator/test_finding_evidence.py::test_sc2_an_excerpt_of_what_was_sent_is_found`, `tests/validator/test_finding_evidence.py::test_sc2_an_excerpt_that_was_not_sent_is_not_found`, `tests/validator/test_finding_evidence.py::test_sc2_an_excerpt_below_the_minimum_length_is_not_accepted`, `tests/validator/test_finding_evidence.py::test_sc2_the_data_searched_is_exactly_the_data_sent` |
+| SC-3 | R-3, R-4 | `tests/validator/test_finding_evidence.py::test_sc3_the_false_finding_is_unsupported_and_there_is_no_verdict`, `tests/validator/test_finding_evidence.py::test_sc3_the_cli_reports_could_not_judge_and_exits_three` |
+| SC-4 | R-3, R-4 | `tests/validator/test_finding_evidence.py::test_sc4_a_reject_carries_only_the_supported_finding`, `tests/validator/test_finding_evidence.py::test_sc4_a_finding_with_one_short_quote_is_unsupported` |
+| SC-5 | R-5 | `tests/validator/test_finding_evidence.py::test_sc5_an_unsupported_finding_is_logged_with_the_quote_not_found`, `tests/validator/test_finding_evidence.py::test_sc5_it_is_logged_before_could_not_judge_is_raised` |
+| SC-6 | R-6 | `tests/validator/test_finding_evidence.py::test_sc6_the_instructions_state_the_quote_rule` |
+| SC-7 | R-8 | `tests/validator/test_finding_evidence.py::test_sc7_a_no_defect_judgment_is_the_same_pass`, `tests/validator/test_finding_evidence.py::test_sc7_pass_and_reject_keep_their_codes_and_a_reject_its_keys` |
