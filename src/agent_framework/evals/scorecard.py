@@ -323,7 +323,9 @@ class Change:
 @dataclass(frozen=True)
 class Comparison:
     comparable: bool
-    changed: tuple[Change, ...]
+    changed: tuple[Change, ...]  # among the cases both results judged
+    only_before: tuple[str, ...] = ()  # judged in one result only: not compared
+    only_after: tuple[str, ...] = ()
 
 
 def _by_case(result: Result) -> dict[str, tuple[Class, ...]]:
@@ -336,17 +338,24 @@ def _by_case(result: Result) -> dict[str, tuple[Class, ...]]:
 def compare(before: Result, after: Result) -> Comparison:
     """The cases whose class changed between two results on the same case
     set. Results on different case sets are not comparable, and no
-    difference between them is offered."""
+    difference between them is offered.
+
+    A run of some cases (`--only`) carries the whole set's fingerprint, so
+    two results on one set need not have judged the same cases. Only a case
+    both judged can have changed; one judged in a single result is named as
+    such and never counted as a change."""
     if before.case_set != after.case_set:
         return Comparison(comparable=False, changed=())
     was, now = _by_case(before), _by_case(after)
     return Comparison(
         comparable=True,
         changed=tuple(
-            Change(case=case, before=was.get(case, ()), after=now.get(case, ()))
-            for case in sorted(was.keys() | now.keys())
-            if was.get(case) != now.get(case)
+            Change(case=case, before=was[case], after=now[case])
+            for case in sorted(was.keys() & now.keys())
+            if was[case] != now[case]
         ),
+        only_before=tuple(sorted(was.keys() - now.keys())),
+        only_after=tuple(sorted(now.keys() - was.keys())),
     )
 
 
@@ -364,11 +373,18 @@ def render_comparison(before: Result, after: Result) -> str:
         lines += _counts(f"{label} — accepted work (expected PASS)", card.accepted)
         lines += _counts(f"{label} — defects (expected REJECT)", card.seeded)
     lines.append("")
+    partial = bool(comparison.only_before or comparison.only_after)
     if not comparison.changed:
-        lines.append("No case changed class.")
-    for change in comparison.changed:
         lines.append(
-            f"{change.case}: {', '.join(change.before) or '(not run)'} → "
-            f"{', '.join(change.after) or '(not run)'}"
+            "No case judged in both results changed class." if partial
+            else "No case changed class."
         )
+    for change in comparison.changed:
+        lines.append(f"{change.case}: {', '.join(change.before)} → {', '.join(change.after)}")
+    for label, only in (("before", comparison.only_before), ("after", comparison.only_after)):
+        if only:
+            lines.append(
+                f"Judged only in the {label} result ({len(only)}), not compared: "
+                f"{', '.join(only)}"
+            )
     return "\n".join(lines) + "\n"
