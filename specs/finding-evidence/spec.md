@@ -154,6 +154,13 @@ One PR, in the judgment and nowhere else.
 ### Decisions
 
 - *2026-11-10* — vpc accepted all five open questions as drafted.
+- *2026-11-10* — **Two notes from implementing, for vpc's sign-off.**
+  Neither changes a requirement or a criterion. (1) R-7 says the four
+  names are enforced by the tool's schema; the parser refuses any other
+  `check` as malformed too, so the rule also holds for a provider that
+  does not enforce a schema. (2) The instructions' second sentence ends
+  by telling the model what to do instead of guessing: where a defect
+  would depend on code it was not shown, say so in the finding (goal 3).
 
 ## Rollout and undo
 
