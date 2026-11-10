@@ -162,4 +162,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/result-file-ignored/` — Implemented (frozen).
 - `specs/citation-from-traceability/` — Implemented (frozen).
 - `specs/judgment-reliability/` — Implemented (frozen).
-- `specs/finding-evidence/` — Approved (not yet implemented).
+- `specs/finding-evidence/` — Implemented (frozen).
