@@ -54,6 +54,10 @@ there.
    required check name, and the install line. Keep `continue-on-error:
    true` and do **not** add it to required checks until its judgment has
    earned trust on your PRs.
+   The validator exits 0 on PASS, 1 on REJECT, and **3 when it could not
+   judge** — the model's answer was cut off or declined, or the provider
+   was rate-limited or down. Exit 3 says nothing about the pull request;
+   its output names the reason. On the free tier, expect it occasionally.
    The job holds a secret, so it must not run the pull request's code:
    keep its checkout on your **default branch** (`ref:` as in this repo's
    job), so `agent-framework.toml` — the roster and the gate's settings —

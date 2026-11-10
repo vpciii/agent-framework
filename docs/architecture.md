@@ -43,7 +43,8 @@ dispatch through the provider adapters.
         │                                    ▼
   collector.py (edge: gh pr view/diff,   __main__.py (CLI:
   contents API — one runner seam)        python -m agent_framework.validator <pr>,
-                                         exit 0 PASS / 1 REJECT)
+                                         exit 0 PASS / 1 REJECT /
+                                         3 could not judge)
 ```
 
 ## Components
@@ -51,11 +52,11 @@ dispatch through the provider adapters.
 | Component | Where | Role |
 |---|---|---|
 | Roster | `roster.py` | Binds roles (chief/worker/validator) to `{provider, model}`; rejects secrets in config (ADR 0001) |
-| Provider interface | `providers/base.py` | `Request`/`Response`/`ToolDef`/`ToolCall` + `Provider` Protocol — one shape across vendors; optional `ModelCatalog` / `ModelProbe` protocols for listing served models and reporting routing |
-| Adapters | `providers/anthropic.py`, `providers/google.py` | The only vendor-SDK imports; thin normalization |
+| Provider interface | `providers/base.py` | `Request`/`Response`/`ToolDef`/`ToolCall` + `Provider` Protocol — one shape across vendors. A request may name one of its tools as its **required answer** and set an output limit; a response says why it stopped (`complete` / `truncated` / `refused` / `other`, plus the provider's own word) and what it used in tokens. The interface carries intent, never a provider's option name; optional `ModelCatalog` / `ModelProbe` protocols for listing served models and reporting routing |
+| Adapters | `providers/anthropic.py`, `providers/google.py` | The only vendor-SDK imports; thin normalization. Each enforces a required answer its provider's way (Google: must-call mode restricted to the one tool; Anthropic: structured output with the tool's schema, returned as the call), maps the provider's stop reasons and usage, and raises one typed `ProviderError` for a rate limit, outage or rejected call |
 | Registry + dispatch | `providers/registry.py`, `dispatch.py` | Role → adapter → invoke; typed errors, no silent fallback |
-| Validator core | `validator/{bundle,checks,judgment,gate,verdict}.py` | The cite-the-test gate (ADR 0005): deterministic before model; verdicts cite, never assert. A citation is a test the spec's Traceability table names, confirmed by code (it exists and its own text contains the criterion's id) — never a test found by scanning for the id |
-| Validator edges | `validator/{collector,__main__}.py` | Bundle assembly from a PR via `gh` (one fakeable seam; `Satisfies:` declaration is the claim channel; the claimed criteria's text and the task block are read from `specs/<slug>/` at the PR's base commit, and each criterion's cited tests from the spec's Traceability table at the PR's head; test files are the changed files matching the project's `test_paths` plus every file the table names); CLI for the human consumer |
+| Validator core | `validator/{bundle,checks,judgment,gate,verdict}.py` | The cite-the-test gate (ADR 0005): deterministic before model; verdicts cite, never assert. The judgment names its verdict tool as the required answer; a cut-off, declined or unanswered judgment is a typed `NoVerdictError`, never a verdict; each judgment logs its model, stop reason and token counts. A citation is a test the spec's Traceability table names, confirmed by code (it exists and its own text contains the criterion's id) — never a test found by scanning for the id |
+| Validator edges | `validator/{collector,__main__}.py` | Bundle assembly from a PR via `gh` (one fakeable seam; `Satisfies:` declaration is the claim channel; the claimed criteria's text and the task block are read from `specs/<slug>/` at the PR's base commit, and each criterion's cited tests from the spec's Traceability table at the PR's head; test files are the changed files matching the project's `test_paths` plus every file the table names); CLI for the human consumer — exit 0 PASS, 1 REJECT, 3 when the judgment could not be made (stdout then carries `{"verdict": "none", "reason": …}`) |
 | Worker core | `worker/{types,brief,worktree,confinement,session,orchestrator,handoff}.py` | One task → one gated PR: self-contained brief, isolated worktree cut from a freshly fetched `origin/main`, headless `claude -p` session under the confinement profile (roster's worker model, hard timeout, allowlisted environment), `.worker-result.json` contract (the file is recorded in the repository's `info/exclude` when a worktree is created, so no session can commit it), PR with the Satisfies declaration / escalation artifact / preserved-tree timeout. Never merges; a timeout kills the session's whole process group, writes a handoff note and raises a `timeout` alert; an escalation also raises an `escalation` alert; a refused handoff raises a `refused` alert |
 | Handoff check | `worker/handoff_check.py` | What a session may not hand back, checked over git: a spec's text outside its Traceability table, a tasks file beyond a checkbox, a protected path, a deleted test file (ADR 0007). Returns findings; the orchestrator runs it on every completed session before pushing, and any finding refuses the handoff |
 | Worker edge | `worker/__main__.py` | CLI: `python -m agent_framework.worker <slug> <task>` — exit 0 PR / 2 escalated / 3 timeout-error / 4 handoff refused, composable with the validator's 0/1 |
@@ -159,4 +160,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/worker-confinement/` — Implemented (frozen).
 - `specs/result-file-ignored/` — Implemented (frozen).
 - `specs/citation-from-traceability/` — Implemented (frozen).
-- `specs/judgment-reliability/` — Approved (not yet implemented).
+- `specs/judgment-reliability/` — Approved; implemented, awaiting the human's `Implemented` sign-off.

@@ -2,7 +2,11 @@
 
     python -m agent_framework.validator <pr-number> [--roster PATH] [--repo OWNER/NAME]
 
-Prints the verdict JSON on stdout; exits 0 on PASS, 1 on REJECT. The
+Prints the verdict JSON on stdout; exits 0 on PASS, 1 on REJECT, and 3 when
+the judgment could not be made (cut off, declined, unanswered, malformed,
+or the provider failed)
+— then stdout carries `{"verdict": "none", "reason": …, "detail": …}`:
+nothing was found wrong with the pull request, so it is not a REJECT. The
 production adapters are registered here — the only place outside tests
 that wires providers to the registry (ADR 0004: validator on Gemini via
 the roster; keys from the environment).
@@ -12,9 +16,11 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import sys
 from pathlib import Path
 
+from ..errors import JudgmentFormatError, NoVerdictError, ProviderError
 from ..project import load_project_config
 from ..providers.anthropic import AnthropicProvider
 from ..providers.google import GoogleProvider
@@ -23,6 +29,8 @@ from ..roster import Roster
 from .collector import collect_bundle
 from .gate import validate
 from .verdict import Pass, verdict_to_json
+
+NO_VERDICT_EXIT = 3
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -52,7 +60,18 @@ def main(argv: list[str] | None = None) -> int:
         ignore_checks=frozenset(project.ignore_checks) | set(args.ignore_check),
         test_paths=project.test_paths,
     )
-    verdict = asyncio.run(validate(bundle, roster, project=project))
+    try:
+        verdict = asyncio.run(validate(bundle, roster, project=project))
+    except (JudgmentFormatError, ProviderError) as e:
+        # Could not judge — distinct from REJECT in both output and exit code.
+        if isinstance(e, NoVerdictError):
+            reason = e.reason
+        elif isinstance(e, ProviderError):
+            reason = "provider-error"
+        else:
+            reason = "malformed"
+        print(json.dumps({"verdict": "none", "reason": reason, "detail": str(e)}, indent=2))
+        return NO_VERDICT_EXIT
 
     print(verdict_to_json(verdict))
     return 0 if isinstance(verdict, Pass) else 1

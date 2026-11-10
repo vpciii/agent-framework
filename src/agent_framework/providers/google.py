@@ -10,9 +10,15 @@ from __future__ import annotations
 import os
 
 from google import genai
-from google.genai.types import GenerateContentConfigDict, GenerateContentResponse
+from google.genai import errors as genai_errors
+from google.genai.types import (
+    FunctionCallingConfigMode,
+    GenerateContentConfigDict,
+    GenerateContentResponse,
+)
 
-from .base import Request, Response, ToolCall
+from ..errors import ProviderError
+from .base import Request, Response, StopReason, ToolCall, Usage
 
 
 class GoogleProvider:
@@ -30,25 +36,37 @@ class GoogleProvider:
 
     async def invoke(self, request: Request, *, model: str) -> Response:
         client = self._client_or_default()
-        config: GenerateContentConfigDict | None = None
+        config: GenerateContentConfigDict = {}
         if request.tools:
-            config = {
-                "tools": [
-                    {
-                        "function_declarations": [
-                            {
-                                "name": t.name,
-                                "description": t.description,
-                                "parameters_json_schema": t.parameters,
-                            }
-                            for t in request.tools
-                        ]
-                    }
-                ]
+            config["tools"] = [
+                {
+                    "function_declarations": [
+                        {
+                            "name": t.name,
+                            "description": t.description,
+                            "parameters_json_schema": t.parameters,
+                        }
+                        for t in request.tools
+                    ]
+                }
+            ]
+        if request.require_tool is not None:
+            # The provider enforces the required answer: it must call a
+            # function, and only this one is allowed.
+            config["tool_config"] = {
+                "function_calling_config": {
+                    "mode": FunctionCallingConfigMode.ANY,
+                    "allowed_function_names": [request.require_tool],
+                }
             }
-        response = await client.aio.models.generate_content(
-            model=model, contents=request.prompt, config=config
-        )
+        if request.max_output_tokens is not None:
+            config["max_output_tokens"] = request.max_output_tokens
+        try:
+            response = await client.aio.models.generate_content(
+                model=model, contents=request.prompt, config=config or None
+            )
+        except genai_errors.APIError as e:
+            raise ProviderError(f"{type(e).__name__}: {e}") from e
         return self._normalize(response)
 
     async def list_models(self) -> tuple[str, ...]:
@@ -79,4 +97,41 @@ class GoogleProvider:
                 tool_calls.append(
                     ToolCall(name=call.name or "", arguments=dict(call.args or {}))
                 )
-        return Response(text="".join(text_parts), tool_calls=tuple(tool_calls))
+
+        finish = candidates[0].finish_reason if candidates else None
+        detail = finish.name if finish is not None else ""
+        if not candidates:
+            # No candidate at all: the prompt itself was blocked.
+            block = response.prompt_feedback.block_reason if response.prompt_feedback else None
+            detail = block.name if block is not None else "NO_CANDIDATES"
+            stop: StopReason = "refused" if block is not None else "other"
+        else:
+            stop = _STOP.get(detail, "other") if detail else "complete"
+
+        meta = response.usage_metadata
+        usage = (
+            Usage(
+                input_tokens=meta.prompt_token_count or 0,
+                # Thinking is output the provider bills for, counted separately.
+                output_tokens=(meta.candidates_token_count or 0) + (meta.thoughts_token_count or 0),
+            )
+            if meta is not None
+            else None
+        )
+        return Response(
+            text="".join(text_parts), tool_calls=tuple(tool_calls),
+            stop=stop, stop_detail=detail, usage=usage,
+        )
+
+
+# The provider's finish reasons, in the interface's vocabulary. Anything not
+# listed is "other".
+_STOP: dict[str, StopReason] = {
+    "STOP": "complete",
+    "MAX_TOKENS": "truncated",
+    "SAFETY": "refused",
+    "RECITATION": "refused",
+    "BLOCKLIST": "refused",
+    "PROHIBITED_CONTENT": "refused",
+    "SPII": "refused",
+}

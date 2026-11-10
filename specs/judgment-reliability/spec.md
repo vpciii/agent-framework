@@ -249,10 +249,10 @@ All resolved 2026-11-09 (human sign-off).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-2, R-3, R-4, R-5 | *(pending)* |
-| SC-2 | R-2, R-3, R-4, R-5 | *(pending)* |
-| SC-3 | R-1 | *(pending)* |
-| SC-4 | R-6 | *(pending)* |
-| SC-5 | R-7, R-9 | *(pending)* |
-| SC-6 | R-8 | *(pending)* |
-| SC-7 | R-9 | *(pending)* |
+| SC-1 | R-2, R-3, R-4, R-5 | `tests/test_required_answer.py::test_sc1_google_enforces_the_required_answer_and_reports_stop_and_usage`, `tests/test_required_answer.py::test_sc1_google_stop_reasons_are_normalized`, `tests/test_required_answer.py::test_sc1_google_without_the_new_fields_sends_neither` |
+| SC-2 | R-2, R-3, R-4, R-5 | `tests/test_required_answer.py::test_sc2_anthropic_enforces_the_required_answer_as_structured_output`, `tests/test_required_answer.py::test_sc2_anthropic_truncated_and_refused_carry_no_answer`, `tests/test_required_answer.py::test_sc2_anthropic_output_limit_is_the_default_or_the_callers`, `tests/test_required_answer.py::test_sc2_anthropic_without_a_required_answer_offers_tools_as_before` |
+| SC-3 | R-1 | `tests/test_required_answer.py::test_sc3_a_required_answer_that_is_not_offered_is_unconstructible` |
+| SC-4 | R-6 | `tests/validator/test_no_verdict.py::test_sc4_the_judgment_requires_its_verdict_tool`, `tests/validator/test_no_verdict.py::test_sc4_truncated_refused_and_unanswered_are_each_named_never_a_verdict`, `tests/validator/test_no_verdict.py::test_sc4_a_truncated_response_is_not_trusted_even_with_a_call` |
+| SC-5 | R-7, R-9 | `tests/validator/test_no_verdict.py::test_sc5_could_not_judge_prints_its_reason_and_exits_three`, `tests/validator/test_no_verdict.py::test_sc5_a_malformed_judgment_is_also_no_verdict`, `tests/validator/test_no_verdict.py::test_sc5_a_provider_failure_is_no_verdict_not_a_reject`, `tests/validator/test_no_verdict.py::test_sc5_pass_and_reject_keep_their_codes_and_their_json` |
+| SC-6 | R-8 | `tests/validator/test_no_verdict.py::test_sc6_each_judgment_logs_model_stop_reason_and_token_counts`, `tests/validator/test_no_verdict.py::test_sc6_a_failed_judgment_is_logged_before_it_raises` |
+| SC-7 | R-9 | `tests/test_required_answer.py::test_sc7_old_shaped_requests_and_responses_still_work` |
