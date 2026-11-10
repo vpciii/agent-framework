@@ -15,7 +15,8 @@ Conventions the collector reads from a PR (the worker/task contract):
   and the task's block are read at the PR's base commit (head if new);
 - citations: the spec's Traceability table at the PR's head names each
   claimed criterion's tests (`path::test_name`);
-- test files: the changed files matching the project's `test_paths`, plus
+- test files: the changed files matching the project's `test_paths` (a
+  file the PR deletes has no content at its head and is left out), plus
   every file the table names for a claimed criterion;
 - fix: a Conventional-Commits `fix` type in the title;
 - red evidence (fixes): the body paragraph describing the failing-before
@@ -205,9 +206,13 @@ def collect_bundle(
         else Contract(spec_slug=None, problem="the PR claims no success criteria")
     )
 
+    # A file the PR deletes is among its changed files but does not exist at
+    # the head: it is absent from the tests, not fetched. `gh` marks it, so
+    # any other failure to read a changed test file still raises.
+    deleted = {str(f.get("path", "")) for f in files if f.get("changeType") == "DELETED"}
     tests: dict[str, str] = {}
     for path in changed:
-        if path_matches(path, test_paths):
+        if path_matches(path, test_paths) and path not in deleted:
             tests[path] = _file_at_ref(path, head, repo, run)
     # A test file the Traceability table names is evidence whether or not the
     # PR changed it. One that cannot be read is simply absent — the

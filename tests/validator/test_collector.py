@@ -9,6 +9,8 @@ from __future__ import annotations
 import json
 from collections.abc import Callable, Sequence
 
+import pytest
+
 from agent_framework.validator.collector import collect_bundle
 
 _VIEW = {
@@ -98,8 +100,6 @@ def test_run_command_failure_surfaces_stderr() -> None:
     stderr, not a bare exit status — the CI log showed 'exit status 1' and
     nothing else, hiding the actual gh permission error."""
     import sys
-
-    import pytest
 
     from agent_framework.validator.collector import run_command
 
@@ -195,3 +195,50 @@ def test_skipped_or_neutral_checks_do_not_block_ci_evidence() -> None:
     )
     _, run = _fake_runner(view)
     assert collect_bundle(1, run=run).ci.green is False
+
+
+def _runner_without(
+    view: dict[str, object], missing: str
+) -> tuple[list[Sequence[str]], Callable[[Sequence[str]], str]]:
+    """The faked runner, with one path that does not exist at the PR's head:
+    fetching it fails the way `gh api` does (exit 1, HTTP 404)."""
+    calls, base = _fake_runner(view)
+
+    def run(args: Sequence[str]) -> str:
+        if list(args[:2]) == ["gh", "api"] and f"/contents/{missing}?" in args[-1]:
+            calls.append(args)
+            raise RuntimeError(f"command failed (1): {' '.join(args)}\ngh: Not Found (HTTP 404)")
+        return base(args)
+
+    return calls, run
+
+
+def test_deleted_test_file_is_absent_from_the_bundle() -> None:
+    """Regression (validator eval baseline 2026-11-10): a PR that deletes a
+    test file lists it among its changed files, but the file does not exist
+    at the head commit — fetching it raised and collection crashed. `gh`
+    marks the deletion (`changeType`), so the file is not fetched at all."""
+    view = dict(
+        _VIEW,
+        files=[
+            {"path": "src/agent_framework/x.py", "changeType": "MODIFIED"},
+            {"path": "tests/test_x.py", "changeType": "MODIFIED"},
+            {"path": "tests/test_gone.py", "changeType": "DELETED"},
+        ],
+    )
+    calls, run = _runner_without(view, "tests/test_gone.py")
+
+    bundle = collect_bundle(42, run=run)
+
+    assert bundle.tests == {"tests/test_x.py": _TEST_SOURCE}
+    assert not any("tests/test_gone.py" in a[-1] for a in calls)
+
+
+def test_unreadable_changed_test_file_still_fails_loudly() -> None:
+    """Only a deletion is skipped: any other failure to read a changed test
+    file (auth, rate limit, a bad ref) is not evidence of absence."""
+    view = dict(_VIEW, files=[{"path": "tests/test_x.py", "changeType": "MODIFIED"}])
+    _, run = _runner_without(view, "tests/test_x.py")
+
+    with pytest.raises(RuntimeError, match="HTTP 404"):
+        collect_bundle(42, run=run)

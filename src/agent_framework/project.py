@@ -169,7 +169,13 @@ def load_project_config(root: Path = Path(".")) -> ProjectConfig:
         }
         config = ProjectConfig(
             conventions_note=_as_str(table, "conventions_note", path),
-            test_pattern=_as_str(table, "test_pattern", path) or DEFAULTS.test_pattern,
+            # Only an absent field means the default: an explicit value, the
+            # empty string included, is validated as given.
+            test_pattern=(
+                _as_str(table, "test_pattern", path)
+                if "test_pattern" in table
+                else DEFAULTS.test_pattern
+            ),
             **lists,
         )
     except ProjectConfigError as e:

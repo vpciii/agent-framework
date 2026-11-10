@@ -98,6 +98,17 @@ def test_invalid_pattern_is_unconstructible_even_programmatically() -> None:
         ProjectConfig(test_pattern="(unclosed")
 
 
+def test_explicit_empty_test_pattern_is_refused_not_defaulted(tmp_path: Path) -> None:
+    """Regression (validator eval baseline 2026-11-10, a finding on case
+    pr-37): `test_pattern = ""` was falsy, so the loader swapped in the
+    default instead of refusing a pattern with no capture group. Only an
+    absent field means the default."""
+    with pytest.raises(ProjectConfigError, match="test_pattern must have exactly one"):
+        load_project_config(_write(tmp_path, '[project]\ntest_pattern = ""\n'))
+    absent = load_project_config(_write(tmp_path, '[project]\nconventions_note = ""\n'))
+    assert absent.test_pattern == DEFAULTS.test_pattern
+
+
 # --- specs/worker-confinement: the confinement profile's and the handoff
 # --- check's config fields. (The criterion id is cited inside each test, not
 # --- here: the gate attributes an id to the test whose span contains it.)
