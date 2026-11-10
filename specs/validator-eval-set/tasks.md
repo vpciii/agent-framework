@@ -142,7 +142,7 @@ those is for dispatch.
   `evals/validator/cases/` loads and passes `run_checks`, the test
   naming the case and the check when one does not.
 
-### [ ] T-5 — The seeded-defect cases
+### [x] T-5 — The seeded-defect cases (#93)
 - **Satisfies:** SC-11
 - **Depends on:** T-4
 - **Touches:** `evals/validator/cases/*--*.json` (new),

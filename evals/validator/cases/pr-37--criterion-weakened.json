@@ -1,0 +1,15 @@
+{
+  "id": "pr-37--criterion-weakened",
+  "kind": "seeded-defect",
+  "base": "pr-37",
+  "expected": "reject",
+  "check": "criteria-integrity",
+  "reason": "A hunk rewords SC-1 in spec.md: a malformed config file no longer has to raise a typed error naming the problem.",
+  "edit": [
+    {
+      "in": "diff",
+      "replace": "+++ b/specs/project-portability/spec.md\n",
+      "with": "+++ b/specs/project-portability/spec.md\n@@ -98,8 +98,8 @@ outcome, not a unit test).\n - **SC-1** — Config loading: a target-root config declaring gate commands,\n   a conventions note, a citation pattern, and ignore-checks parses into\n   the framework's project-config value; a missing file yields the\n-  documented defaults; a malformed file raises a typed error naming the\n-  problem. (R-1)\n+  documented defaults; a malformed file should, where practical, be\n+  reported. (R-1)\n - **SC-2** — Config-driven brief: with a config declaring a custom gate\n   (e.g. `uv run pytest` + `docker build`), the brief contains exactly\n   those commands and the conventions note, and contains none of the\n"
+    }
+  ]
+}

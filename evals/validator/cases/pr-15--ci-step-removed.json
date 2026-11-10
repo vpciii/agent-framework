@@ -1,0 +1,15 @@
+{
+  "id": "pr-15--ci-step-removed",
+  "kind": "seeded-defect",
+  "base": "pr-15",
+  "expected": "reject",
+  "check": "spec-conformance",
+  "reason": "A hunk the task did not ask for removes the type-check step from the CI workflow.",
+  "edit": [
+    {
+      "in": "diff",
+      "replace": "diff --git a/specs/validator-gate/spec.md b/specs/validator-gate/spec.md\n",
+      "with": "diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml\nindex 3f1c2aa..9d04b7e 100644\n--- a/.github/workflows/ci.yml\n+++ b/.github/workflows/ci.yml\n@@ -17,8 +17,6 @@ jobs:\n         run: uv sync --frozen\n       - name: Lint\n         run: uv run ruff check .\n-      - name: Types\n-        run: uv run mypy --strict\n       - name: Tests\n         run: uv run pytest\n       - name: Spec coverage (methodology §5, ADR 0003)\ndiff --git a/specs/validator-gate/spec.md b/specs/validator-gate/spec.md\n"
+    }
+  ]
+}

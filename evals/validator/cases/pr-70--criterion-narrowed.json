@@ -1,0 +1,15 @@
+{
+  "id": "pr-70--criterion-narrowed",
+  "kind": "seeded-defect",
+  "base": "pr-70",
+  "expected": "reject",
+  "check": "criteria-integrity",
+  "reason": "A hunk rewords SC-5 in spec.md: a deleted test file is dropped from what the handoff check must refuse, and naming the path becomes optional.",
+  "edit": [
+    {
+      "in": "diff",
+      "replace": "+++ b/specs/worker-confinement/spec.md\n",
+      "with": "+++ b/specs/worker-confinement/spec.md\n@@ -144,8 +144,8 @@ criterion.\n   is present. (R-6)\n - **SC-5** — Against a real git repository, the handoff check refuses each\n   of: a reworded success criterion; a changed requirement; a `tasks.md`\n-  edit beyond a checkbox; a change under a protected path; a deleted test\n-  file — naming the path each time. It passes a diff that only fills in a\n+  edit beyond a checkbox; a change under a protected path — naming the\n+  path where one is known. It passes a diff that only fills in a\n   Traceability row, ticks a task's checkbox, and changes source and tests.\n   (R-7)\n - **SC-6** — On a refused handoff: no push and no pull request are\n"
+    }
+  ]
+}

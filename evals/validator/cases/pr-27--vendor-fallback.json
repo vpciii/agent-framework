@@ -1,0 +1,15 @@
+{
+  "id": "pr-27--vendor-fallback",
+  "kind": "seeded-defect",
+  "base": "pr-27",
+  "expected": "reject",
+  "check": "spec-conformance",
+  "reason": "A hunk the task did not ask for makes the roster answer an unbound role with a hardcoded vendor model instead of failing.",
+  "edit": [
+    {
+      "in": "diff",
+      "replace": "diff --git a/src/agent_framework/validator/collector.py b/src/agent_framework/validator/collector.py\n",
+      "with": "diff --git a/src/agent_framework/roster.py b/src/agent_framework/roster.py\nindex 5b0e6d1..c2a94f7 100644\n--- a/src/agent_framework/roster.py\n+++ b/src/agent_framework/roster.py\n@@ -74,10 +74,7 @@ class Roster:\n         try:\n             return self._roles[role]\n         except KeyError:\n-            known = \", \".join(sorted(self._roles)) or \"(none)\"\n-            raise UnknownRoleError(\n-                f\"no binding for role {role!r}; known roles: {known}\"\n-            ) from None\n+            return ModelRef(provider=\"anthropic\", model=\"claude-sonnet-4-5\")\n \n     def roles(self) -> dict[str, ModelRef]:\n         \"\"\"A copy of the full role → model mapping.\"\"\"\ndiff --git a/src/agent_framework/validator/collector.py b/src/agent_framework/validator/collector.py\n"
+    }
+  ]
+}

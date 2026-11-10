@@ -1,0 +1,20 @@
+{
+  "id": "pr-31--emptied-test",
+  "kind": "seeded-defect",
+  "base": "pr-31",
+  "expected": "reject",
+  "check": "test-honesty",
+  "reason": "The PASS half of SC-1's test renders the verdict and asserts nothing about what was rendered.",
+  "edit": [
+    {
+      "in": "diff",
+      "replace": "+    rendered = render_verdict(verdict)\n+\n+    assert \"PASS\" in rendered\n+    assert \"T-9\" in rendered\n+    assert \"SC-1\" in rendered\n+    assert \"tests/test_x.py::test_a\" in rendered\n+    assert \"SC-2\" in rendered\n+    assert \"tests/test_x.py::test_b\" in rendered\n+    assert \"ci run 123: green\" in rendered",
+      "with": "+    render_verdict(verdict)"
+    },
+    {
+      "in": "tests/validator/test_render.py",
+      "replace": "    rendered = render_verdict(verdict)\n\n    assert \"PASS\" in rendered\n    assert \"T-9\" in rendered\n    assert \"SC-1\" in rendered\n    assert \"tests/test_x.py::test_a\" in rendered\n    assert \"SC-2\" in rendered\n    assert \"tests/test_x.py::test_b\" in rendered\n    assert \"ci run 123: green\" in rendered",
+      "with": "    render_verdict(verdict)"
+    }
+  ]
+}

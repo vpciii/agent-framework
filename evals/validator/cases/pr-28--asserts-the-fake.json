@@ -1,0 +1,20 @@
+{
+  "id": "pr-28--asserts-the-fake",
+  "kind": "seeded-defect",
+  "base": "pr-28",
+  "expected": "reject",
+  "check": "test-honesty",
+  "reason": "SC-5's test no longer checks the outcome, the missing pull request or the kept worktree; it only asserts that the fake git was called.",
+  "edit": [
+    {
+      "in": "diff",
+      "replace": "+    assert outcome == TimedOut(worktree_path=\".worktrees/fixture-t-1\")\n+    assert not git.named(\"gh\", \"pr\", \"create\")\n+    assert not git.named(\"git\", \"worktree\", \"remove\")  # preserved for inspection",
+      "with": "+    assert git.calls  # the fake git was driven"
+    },
+    {
+      "in": "tests/worker/test_orchestrator.py",
+      "replace": "    assert outcome == TimedOut(worktree_path=\".worktrees/fixture-t-1\")\n    assert not git.named(\"gh\", \"pr\", \"create\")\n    assert not git.named(\"git\", \"worktree\", \"remove\")  # preserved for inspection",
+      "with": "    assert git.calls  # the fake git was driven"
+    }
+  ]
+}
