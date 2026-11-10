@@ -1,6 +1,6 @@
 # Spec: A judgment that cannot be mistaken — a required answer, a stop reason, usage
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0001 (model-agnostic roles; the provider interface
