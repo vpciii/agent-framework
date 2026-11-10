@@ -55,9 +55,15 @@ there.
    true` and do **not** add it to required checks until its judgment has
    earned trust on your PRs.
    The validator exits 0 on PASS, 1 on REJECT, and **3 when it could not
-   judge** — the model's answer was cut off or declined, or the provider
-   was rate-limited or down. Exit 3 says nothing about the pull request;
-   its output names the reason. On the free tier, expect it occasionally.
+   judge** — the model's answer was cut off or declined, the provider
+   was rate-limited or down, or the model reported a defect but every
+   finding quoted something that is not in what it was sent (each dropped
+   finding is in the log, with the quote that was not found). Exit 3 is
+   not a verdict on the pull request; its output names the reason. On the
+   free tier, expect it occasionally. A REJECT's findings are the ones
+   whose quoted evidence was found; `check` is one of `test-honesty`,
+   `spec-conformance`, `criteria-integrity`, `edge-case` for a judgment
+   finding.
    The job holds a secret, so it must not run the pull request's code:
    keep its checkout on your **default branch** (`ref:` as in this repo's
    job), so `agent-framework.toml` — the roster and the gate's settings —
