@@ -116,7 +116,7 @@ those is for dispatch.
   `ANTHROPIC_API_KEY` unset; and no job in `.github/workflows/` runs the
   eval.
 
-### [ ] T-4 — Freeze a merged pull request; the accepted cases
+### [x] T-4 — Freeze a merged pull request; the accepted cases (#90, #92)
 - **Satisfies:** SC-3, SC-4
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/evals/freeze.py` (new),

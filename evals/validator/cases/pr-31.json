@@ -1,0 +1,46 @@
+{
+  "id": "pr-31",
+  "kind": "accepted",
+  "expected": "pass",
+  "reason": "Merged 2026-07-12; accepted by vpciii.",
+  "provenance": {
+    "repo": "vpciii/agent-framework",
+    "pr": 31,
+    "head": "bd46532d68313e29119f90f04f012ef59ca02346",
+    "frozen": "2026-11-10"
+  },
+  "bundle": {
+    "task": {
+      "task_id": "T-1",
+      "criteria": [
+        "SC-1"
+      ],
+      "is_fix": false
+    },
+    "diff": "diff --git a/specs/verdict-rendering/spec.md b/specs/verdict-rendering/spec.md\nindex 0106fdd..5d8bb49 100644\n--- a/specs/verdict-rendering/spec.md\n+++ b/specs/verdict-rendering/spec.md\n@@ -45,4 +45,4 @@ value — never a second source of truth.\n \n | Criterion | Requirement(s) | Verified by (test) |\n |---|---|---|\n-| SC-1 | R-1, R-2 | *(pending)* |\n+| SC-1 | R-1, R-2 | `tests/validator/test_render.py::test_sc1_pass_renders_task_id_citations_and_ci`, `tests/validator/test_render.py::test_sc1_reject_renders_task_id_and_every_finding_field` |\ndiff --git a/src/agent_framework/validator/render.py b/src/agent_framework/validator/render.py\nnew file mode 100644\nindex 0000000..ca3d3da\n--- /dev/null\n+++ b/src/agent_framework/validator/render.py\n@@ -0,0 +1,28 @@\n+\"\"\"Render a verdict to human-readable markdown (spec verdict-rendering R-1, R-2).\n+\n+Derived purely from the verdict value — no I/O, no second representation to\n+keep in sync with the JSON form in `verdict.py`.\n+\"\"\"\n+\n+from __future__ import annotations\n+\n+from .verdict import Pass, Reject, Verdict\n+\n+\n+def render_verdict(verdict: Verdict) -> str:\n+    \"\"\"Render a `Pass` or `Reject` verdict to markdown.\"\"\"\n+    if isinstance(verdict, Pass):\n+        lines = [f\"# PASS — {verdict.task_id}\", \"\"]\n+        for citation in verdict.citations:\n+            lines.append(f\"- {citation.criterion}: `{citation.test}`\")\n+        lines.append(\"\")\n+        lines.append(f\"CI: {verdict.ci}\")\n+        return \"\\n\".join(lines)\n+\n+    assert isinstance(verdict, Reject)\n+    lines = [f\"# REJECT — {verdict.task_id}\", \"\"]\n+    for finding in verdict.findings:\n+        lines.append(f\"- check: {finding.check}\")\n+        lines.append(f\"  finding: {finding.finding}\")\n+        lines.append(f\"  evidence: {finding.evidence}\")\n+    return \"\\n\".join(lines)\ndiff --git a/tests/validator/test_render.py b/tests/validator/test_render.py\nnew file mode 100644\nindex 0000000..59f8f16\n--- /dev/null\n+++ b/tests/validator/test_render.py\n@@ -0,0 +1,61 @@\n+\"\"\"Rendering a verdict to markdown.\n+\n+Verifies SC-1: a rendered PASS contains the task id, every citation's\n+criterion and `path::test`, and the CI evidence; a rendered REJECT contains\n+the task id and every finding's check, finding, and evidence.\n+\"\"\"\n+\n+from __future__ import annotations\n+\n+from agent_framework.validator.render import render_verdict\n+from agent_framework.validator.verdict import Citation, Finding, Pass, Reject\n+\n+\n+def test_sc1_pass_renders_task_id_citations_and_ci() -> None:\n+    \"\"\"SC-1 (PASS half): task id, every citation, and the CI evidence appear.\"\"\"\n+    verdict = Pass(\n+        task_id=\"T-9\",\n+        citations=(\n+            Citation(\"SC-1\", \"tests/test_x.py::test_a\"),\n+            Citation(\"SC-2\", \"tests/test_x.py::test_b\"),\n+        ),\n+        ci=\"ci run 123: green\",\n+    )\n+\n+    rendered = render_verdict(verdict)\n+\n+    assert \"PASS\" in rendered\n+    assert \"T-9\" in rendered\n+    assert \"SC-1\" in rendered\n+    assert \"tests/test_x.py::test_a\" in rendered\n+    assert \"SC-2\" in rendered\n+    assert \"tests/test_x.py::test_b\" in rendered\n+    assert \"ci run 123: green\" in rendered\n+\n+\n+def test_sc1_reject_renders_task_id_and_every_finding_field() -> None:\n+    \"\"\"SC-1 (REJECT half): task id and each finding's check/finding/evidence appear.\"\"\"\n+    verdict = Reject(\n+        task_id=\"T-9\",\n+        findings=(\n+            Finding(\n+                check=\"test-honesty\",\n+                finding=\"test_b asserts nothing about the new behavior\",\n+                evidence=\"tests/test_x.py::test_b body has no assert on result\",\n+            ),\n+            Finding(\n+                check=\"style\",\n+                finding=\"mypy --strict fails\",\n+                evidence=\"render.py:12: error: Missing return statement\",\n+            ),\n+        ),\n+    )\n+\n+    rendered = render_verdict(verdict)\n+\n+    assert \"REJECT\" in rendered\n+    assert \"T-9\" in rendered\n+    for finding in verdict.findings:\n+        assert finding.check in rendered\n+        assert finding.finding in rendered\n+        assert finding.evidence in rendered\n",
+    "tests": {
+      "tests/validator/test_render.py": "\"\"\"Rendering a verdict to markdown.\n\nVerifies SC-1: a rendered PASS contains the task id, every citation's\ncriterion and `path::test`, and the CI evidence; a rendered REJECT contains\nthe task id and every finding's check, finding, and evidence.\n\"\"\"\n\nfrom __future__ import annotations\n\nfrom agent_framework.validator.render import render_verdict\nfrom agent_framework.validator.verdict import Citation, Finding, Pass, Reject\n\n\ndef test_sc1_pass_renders_task_id_citations_and_ci() -> None:\n    \"\"\"SC-1 (PASS half): task id, every citation, and the CI evidence appear.\"\"\"\n    verdict = Pass(\n        task_id=\"T-9\",\n        citations=(\n            Citation(\"SC-1\", \"tests/test_x.py::test_a\"),\n            Citation(\"SC-2\", \"tests/test_x.py::test_b\"),\n        ),\n        ci=\"ci run 123: green\",\n    )\n\n    rendered = render_verdict(verdict)\n\n    assert \"PASS\" in rendered\n    assert \"T-9\" in rendered\n    assert \"SC-1\" in rendered\n    assert \"tests/test_x.py::test_a\" in rendered\n    assert \"SC-2\" in rendered\n    assert \"tests/test_x.py::test_b\" in rendered\n    assert \"ci run 123: green\" in rendered\n\n\ndef test_sc1_reject_renders_task_id_and_every_finding_field() -> None:\n    \"\"\"SC-1 (REJECT half): task id and each finding's check/finding/evidence appear.\"\"\"\n    verdict = Reject(\n        task_id=\"T-9\",\n        findings=(\n            Finding(\n                check=\"test-honesty\",\n                finding=\"test_b asserts nothing about the new behavior\",\n                evidence=\"tests/test_x.py::test_b body has no assert on result\",\n            ),\n            Finding(\n                check=\"style\",\n                finding=\"mypy --strict fails\",\n                evidence=\"render.py:12: error: Missing return statement\",\n            ),\n        ),\n    )\n\n    rendered = render_verdict(verdict)\n\n    assert \"REJECT\" in rendered\n    assert \"T-9\" in rendered\n    for finding in verdict.findings:\n        assert finding.check in rendered\n        assert finding.finding in rendered\n        assert finding.evidence in rendered\n"
+    },
+    "ci": {
+      "green": true,
+      "summary": "ci: SUCCESS"
+    },
+    "red_evidence": null,
+    "contract": {
+      "spec_slug": "verdict-rendering",
+      "criterion_texts": {
+        "SC-1": "**SC-1** — Rendering a `Pass` yields markdown containing the task id,\n  every citation's criterion and `path::test`, and the CI evidence;\n  rendering a `Reject` yields markdown containing the task id and every\n  finding's check, finding, and evidence. Verified by tests citing SC-1.\n  (R-1, R-2)"
+      },
+      "task_block": "### [ ] T-1 — Render verdicts to markdown\n- **Satisfies:** SC-1\n- **Depends on:** —\n- **Touches:** `src/agent_framework/validator/render.py` (new),\n  `tests/validator/test_render.py` (new), `specs/verdict-rendering/spec.md`\n  (Traceability row)\n- **Brief:** Add `render_verdict(verdict: Pass | Reject) -> str` in a new\n  `src/agent_framework/validator/render.py`. Input types come from\n  `agent_framework.validator.verdict` (`Pass`, `Reject`, `Citation`,\n  `Finding`) — import them; do not modify them or any existing file except\n  the spec's Traceability row. A `Pass` renders as markdown with a\n  `PASS — <task_id>` heading, one line per citation (`SC-n` and its\n  `path::test`), and the CI evidence. A `Reject` renders with a\n  `REJECT — <task_id>` heading and, per finding, its check, finding, and\n  evidence. Pure function: no I/O, no printing, no new dependencies.\n  Follow repo style: `ruff` and `mypy --strict` clean, frozen values in,\n  string out. Update the spec's Traceability table: replace `*(pending)*`\n  in the SC-1 row with your citing tests (full `path::test_name`, no\n  shorthand).\n- **Done when:** tests in `tests/validator/test_render.py` citing SC-1\n  pass — a rendered `Pass` contains the task id, every criterion with its\n  cited test, and the CI evidence; a rendered `Reject` contains the task\n  id and every finding's three fields; `ruff` + `mypy --strict` clean.",
+      "cited_tests": {
+        "SC-1": [
+          "tests/validator/test_render.py::test_sc1_pass_renders_task_id_citations_and_ci",
+          "tests/validator/test_render.py::test_sc1_reject_renders_task_id_and_every_finding_field"
+        ]
+      },
+      "read_from": "base",
+      "ref": "96cd3146be15a4847dc2ebd20bb7d806569f2cc8",
+      "problem": ""
+    }
+  }
+}

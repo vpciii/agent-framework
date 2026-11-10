@@ -1,0 +1,5 @@
+# An accepted eval case is a frozen copy of a merged pull request, written by
+# `agent-framework-eval freeze`: collapsed in review. A seeded-defect case
+# (`pr-<n>--<name>.json`) is a hand-written edit: shown in full.
+evals/validator/cases/pr-*.json linguist-generated=true
+evals/validator/cases/pr-*--*.json linguist-generated=false
