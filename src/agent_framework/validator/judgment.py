@@ -3,23 +3,28 @@
 Runs only after the deterministic stage passes (ADR 0005 — code before
 model). The refutation-mindset checklist rides in the prompt; the bundle's
 diff and tests ride as clearly delimited *data*, never instructions. The
-model must answer through the single `return_verdict` tool — a response
-without that tool call is a typed `JudgmentFormatError`, never a guess
-parsed out of free text.
+model must answer through the single `return_verdict` tool, which the
+request names as its required answer so the provider enforces it. A
+response that was cut off, was declined, or carries no verdict call is a
+typed `NoVerdictError` saying which — never a guess parsed out of free
+text, and never a verdict (specs/judgment-reliability).
 """
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any
 
 from ..dispatch import dispatch
-from ..errors import JudgmentFormatError
+from ..errors import JudgmentFormatError, NoVerdictError
 from ..providers.base import Request, ToolDef
 from ..providers.registry import ProviderRegistry
 from ..roster import Roster
 from .bundle import EvidenceBundle
 from .verdict import Finding
+
+logger = logging.getLogger(__name__)
 
 # Versioned here so tests can pin its presence in the prompt (SC-5).
 REFUTATION_CHECKLIST = """\
@@ -47,6 +52,8 @@ VERDICT_TOOL = ToolDef(
         "item is clean; otherwise report each defect as a finding with "
         "specific cited evidence."
     ),
+    # A closed schema at both levels: a provider that enforces the answer as
+    # structured output requires it.
     parameters={
         "type": "object",
         "properties": {
@@ -61,10 +68,12 @@ VERDICT_TOOL = ToolDef(
                         "evidence": {"type": "string"},
                     },
                     "required": ["check", "finding", "evidence"],
+                    "additionalProperties": False,
                 },
             },
         },
         "required": ["defect_found", "findings"],
+        "additionalProperties": False,
     },
 )
 
@@ -132,7 +141,7 @@ success criteria: {", ".join(bundle.task.criteria)}.
 ===== END DATA =====
 
 Answer by calling return_verdict exactly once."""
-    return Request(prompt=prompt, tools=(VERDICT_TOOL,))
+    return Request(prompt=prompt, tools=(VERDICT_TOOL,), require_tool=VERDICT_TOOL.name)
 
 
 def _parse_findings(raw: Any) -> tuple[Finding, ...]:
@@ -163,17 +172,41 @@ async def judge(
 ) -> Judgment:
     """Dispatch the judgment through the roster's validator role and parse it.
 
-    Raises `JudgmentFormatError` if the model does not answer via the
-    return_verdict tool, or claims a defect without a single finding
-    (an unevidenced defect violates cite-don't-assert as much as an
-    unevidenced PASS).
+    Raises `NoVerdictError` (reason "truncated", "refused" or "no-answer")
+    when the response was cut off, was declined, or carries no call to
+    return_verdict; and `JudgmentFormatError` when the call is malformed or
+    claims a defect without a single finding (an unevidenced defect violates
+    cite-don't-assert as much as an unevidenced PASS).
     """
     response = await dispatch(roster, "validator", build_request(bundle), registry=registry)
+    task_id = bundle.task.task_id
+    said = f"provider said {response.stop_detail or 'nothing'}"
+    logger.info(
+        "judgment %s: model=%s stop=%s (%s) input_tokens=%s output_tokens=%s",
+        task_id,
+        roster.resolve("validator").model,
+        response.stop,
+        response.stop_detail or "-",
+        response.usage.input_tokens if response.usage else "unknown",
+        response.usage.output_tokens if response.usage else "unknown",
+    )
+
+    # A cut-off or declined response is no answer, whatever it contains.
+    if response.stop == "truncated":
+        raise NoVerdictError(
+            "truncated",
+            f"the judgment for {task_id} was truncated at the output limit ({said})",
+        )
+    if response.stop == "refused":
+        raise NoVerdictError(
+            "refused", f"the judgment for {task_id} was refused by the provider ({said})"
+        )
     call = next((c for c in response.tool_calls if c.name == VERDICT_TOOL.name), None)
     if call is None:
-        raise JudgmentFormatError(
-            f"validator model did not call {VERDICT_TOOL.name}; text was: "
-            f"{response.text[:200]!r}"
+        raise NoVerdictError(
+            "no-answer",
+            f"no-answer: validator model did not call {VERDICT_TOOL.name} ({said}); "
+            f"text was: {response.text[:200]!r}",
         )
     args = call.arguments
     if "defect_found" not in args:

@@ -27,6 +27,29 @@ class JudgmentFormatError(ValidationError):
     """The judgment model did not answer with the required verdict tool call."""
 
 
+class NoVerdictError(JudgmentFormatError):
+    """The judgment could not be made: nothing was found wrong with the pull
+    request — the model's answer was cut off, declined, or absent.
+
+    `reason` is one of "truncated", "refused", "no-answer". Never a verdict,
+    and never a REJECT (specs/judgment-reliability).
+    """
+
+    def __init__(self, reason: str, message: str) -> None:
+        super().__init__(message)
+        self.reason = reason
+
+
+class ProviderError(AgentFrameworkError):
+    """A provider could not serve a request (rate limit, outage, rejected
+    call). Raised by the adapters with the vendor's own error chained, so
+    nothing above them needs to know a vendor's exception types."""
+
+
+class RequestError(AgentFrameworkError):
+    """A provider request is inconsistent (e.g. it requires a tool it does not offer)."""
+
+
 class ProjectConfigError(AgentFrameworkError):
     """agent-framework.toml's [project] table is malformed."""
 
