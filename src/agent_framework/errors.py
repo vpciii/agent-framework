@@ -75,3 +75,8 @@ class SessionTimeoutError(WorkerError):
 
 class WorktreeError(WorkerError):
     """The worktree or branch could not be created (collision or git failure)."""
+
+
+class EvalCaseError(AgentFrameworkError):
+    """An eval case file is malformed, or its seeded edit does not apply
+    exactly once. The message names the file (specs/validator-eval-set)."""
