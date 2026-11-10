@@ -1,6 +1,6 @@
 # Spec: A finding's evidence is checked against what was sent
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0005 (one per-PR gate; "cite, never assert"),
@@ -153,7 +153,7 @@ One PR, in the judgment and nowhere else.
 
 ### Decisions
 
-- *2026-11-09* — (none yet).
+- *2026-11-10* — vpc accepted all five open questions as drafted.
 
 ## Rollout and undo
 
@@ -170,21 +170,22 @@ one judgment with a key, before merge.
 
 ## Open questions
 
-- [ ] **Every quote must be found, or most of them?** Drafted: every one
-  (R-3). In the case that prompted this, two of three quotes were real
-  and the finding was still false — the invented one was the one that
-  mattered.
-- [ ] **All findings unsupported: "could not judge", or PASS?** Drafted:
-  "could not judge" (R-4). The model said there is a defect; that it
-  could not show one is not evidence there is none.
-- [ ] **Keep the unsupported findings anywhere but the log?** Drafted:
-  log only (R-5), so the verdict's JSON shape is untouched.
-- [ ] **Fix `check` to four names in the same change?** Drafted: yes
-  (R-7). The live run put a whole checklist sentence in that field; the
-  schema is being edited anyway.
-- [ ] **Show the model whole changed files, not only hunks?** Drafted:
-  not here (non-goal). This spec makes invented evidence harmless; that
-  change would make it rarer, at a token cost that should be measured.
+All resolved 2026-11-10 (human sign-off).
+
+- [x] **Every quote must be found** (R-3), not most of them. In the case
+  that prompted this, two of three quotes were real and the finding was
+  still false — the invented one was the one that mattered.
+- [x] **All findings unsupported: "could not judge"** (R-4), not PASS.
+  The model said there is a defect; that it could not show one is not
+  evidence there is none.
+- [x] **Unsupported findings go to the log only** (R-5), so the
+  verdict's JSON shape is untouched.
+- [x] **`check` is fixed to four names in the same change** (R-7). The
+  live run put a whole checklist sentence in that field; the schema is
+  being edited anyway.
+- [x] **Whole changed files instead of hunks: not here** (non-goal).
+  This spec makes invented evidence harmless; that change would make it
+  rarer, at a token cost that should be measured.
 
 ## Out of scope (for now)
 
