@@ -1,8 +1,9 @@
 {
   "id": "pr-37",
   "kind": "accepted",
-  "expected": "pass",
-  "reason": "Merged 2026-07-12; accepted by vpciii.",
+  "expected": "reject",
+  "check": "edge-case",
+  "reason": "Merged 2026-07-12; accepted by vpciii. Answer corrected 2026-11-10 by vpc: an empty `test_pattern` was silently replaced by the default instead of being refused (fixed in #98).",
   "provenance": {
     "repo": "vpciii/agent-framework",
     "pr": 37,

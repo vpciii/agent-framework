@@ -1,8 +1,9 @@
 {
   "id": "pr-89",
   "kind": "accepted",
-  "expected": "pass",
-  "reason": "Merged 2026-11-10; accepted by vpciii.",
+  "expected": "reject",
+  "check": "spec-conformance",
+  "reason": "Merged 2026-11-10; accepted by vpciii. Answer corrected 2026-11-10 by vpc: the diff changes a file under `validator/`, which T-3's brief ruled out.",
   "provenance": {
     "repo": "vpciii/agent-framework",
     "pr": 89,

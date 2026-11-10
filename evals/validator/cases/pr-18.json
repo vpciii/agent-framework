@@ -1,8 +1,9 @@
 {
   "id": "pr-18",
   "kind": "accepted",
-  "expected": "pass",
-  "reason": "Merged 2026-07-12; accepted by vpciii.",
+  "expected": "reject",
+  "check": "edge-case",
+  "reason": "Merged 2026-07-12; accepted by vpciii. Answer corrected 2026-11-10 by vpc: the collector crashed on a pull request that deletes a test file (fixed in #98).",
   "provenance": {
     "repo": "vpciii/agent-framework",
     "pr": 18,
