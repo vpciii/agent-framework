@@ -1,6 +1,6 @@
 # Spec: A judgment that cannot be mistaken — a required answer, a stop reason, usage
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0001 (model-agnostic roles; the provider interface
@@ -183,7 +183,7 @@ One PR.
 
 ### Decisions
 
-- *2026-11-09* — (none yet).
+- *2026-11-09* — vpc accepted all five open questions as drafted.
 
 ## Rollout and undo
 
@@ -201,27 +201,25 @@ therefore run by hand, with a key, before merge.
 
 ## Open questions
 
-- [ ] **How the Anthropic adapter enforces a required answer.** Drafted:
-  structured output with the tool's schema, returned as a tool call —
-  enforced by the API on every current Claude model. The alternative —
-  offer the tool with a strict schema, leave tool choice automatic, and
-  re-prompt once when no call comes back — is closer to "tool use" but is
-  not a guarantee and adds a second call.
-- [ ] **A judgment that could not be made: exit 3, or leave it a crash?**
-  Drafted: exit 3 with a JSON reason (R-7). A refused or truncated
-  judgment is *not* counted as a REJECT: nothing was found wrong with the
-  PR.
-- [ ] **The Anthropic adapter's default output limit.** Drafted: 16,000.
-  It is a default for when the caller sets none; the judgment sets none.
-- [ ] **A per-role thinking / effort setting in the roster.** Drafted:
-  not in this spec. It is a tuning knob, and the eval set it should be
-  tuned against does not exist yet. The interface change here does not
-  close it off.
-- [ ] **Verified without a live Anthropic call.** There is no Anthropic
-  API key in this project (workers run on the Max plan through the
-  session tool; the roster currency check uses federation in CI only).
-  Drafted: accept transport-level tests for that adapter and say so in
-  the PR.
+All resolved 2026-11-09 (human sign-off).
+
+- [x] **How the Anthropic adapter enforces a required answer.**
+  Structured output with the tool's schema, returned as a tool call —
+  enforced by the API on every current Claude model. Rejected: offering
+  the tool with a strict schema, leaving tool choice automatic and
+  re-prompting once, which is not a guarantee and adds a second call.
+- [x] **A judgment that could not be made: exit 3** with a JSON reason
+  (R-7). A refused or truncated judgment is *not* counted as a REJECT:
+  nothing was found wrong with the PR.
+- [x] **The Anthropic adapter's default output limit: 16,000.** A default
+  for when the caller sets none; the judgment sets none.
+- [x] **A per-role thinking / effort setting in the roster: not in this
+  spec.** It is a tuning knob, and the eval set it should be tuned
+  against does not exist yet. The interface change here does not close it
+  off.
+- [x] **Verified without a live Anthropic call.** There is no Anthropic
+  API key in this project. Transport-level tests are accepted for that
+  adapter, and the PR says so.
 
 ## Out of scope (for now)
 
