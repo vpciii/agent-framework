@@ -72,6 +72,16 @@ dispatch through the provider adapters.
 | Spec-coverage checker | `scripts/check_spec_coverage.py` | CI-enforced traceability (ADR 0003); `*(pending)*` rows allowed at `Approved`, forbidden at `Implemented` |
 | CI | `.github/workflows/ci.yml` | `uv sync --frozen` → ruff → mypy --strict → pytest → coverage check; required status check on `main`. Plus an **advisory** `validator` job: the cite-the-test gate runs on every PR (never blocking; judgment only when the `GEMINI_API_KEY` secret is set), from the default branch's code, never the PR's |
 
+**Changing the judgment: cite a run from before and after.** The eval
+measures the validator's judgment on a fixed set of cases
+(`agent-framework-eval run`, results under `evals/validator/results/`).
+A change to the judgment's instructions, its tool schema, what it is sent
+or the validator's model cites a run from before the change and one from
+after, compared with `agent-framework-eval compare`. This is a rule for
+the author and the reviewer; no code enforces it
+(specs/validator-eval-set, R-13). The first baseline is
+`evals/validator/results/2026-11-10-gemini-3.8-flash.json`.
+
 ## Execution surfaces (ADR 0004)
 
 Chief + adversarial plan review: interactive sessions (Claude Code / Max,
@@ -114,6 +124,15 @@ Where untrusted input enters, and what each AI agent can reach
   provider** (Google today, per the roster) — on a public repo that is
   already-public data. Advisory only (ADR 0005); fork PRs receive no
   secrets, so the job skips.
+- **Eval run** (`agent-framework-eval run`) — *reads* the eval set in
+  `evals/validator/cases/`: frozen bundles of this repository's merged pull
+  requests, some with a seeded edit. Each case is **sent to the validator's
+  provider** exactly as the gate would send that bundle — the same request,
+  the same single `return_verdict` tool, no token. It runs **from a human's
+  shell, with the key in that shell, and never from CI**: no workflow names
+  the command, and a test checks that. *Output*: a scorecard on stdout and a
+  result file a human commits. `freeze` reads a merged pull request through
+  `gh` with the caller's token, as the collector does.
 - **CI** (`.github/workflows/ci.yml`) — the rule: **code from a pull
   request never runs in a job that holds a secret.** The `ci` job runs the
   PR's code (its tests, its locked dependencies) with no secret, a
@@ -165,4 +184,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/citation-from-traceability/` — Implemented (frozen).
 - `specs/judgment-reliability/` — Implemented (frozen).
 - `specs/finding-evidence/` — Implemented (frozen).
-- `specs/validator-eval-set/` — Approved; in progress (T-5 of 6).
+- `specs/validator-eval-set/` — Approved; in progress (T-6 of 6).

@@ -162,7 +162,7 @@ those is for dispatch.
   for each of the three checklist items — and T-4's test over the set
   still passes with the new cases in it.
 
-### [ ] T-6 — Delivery: docs and the first baseline
+### [x] T-6 — Delivery: docs and the first baseline (#95)
 - **Satisfies:** —
 - **Depends on:** T-3, T-5
 - **Touches:** `docs/architecture.md`, `docs/adoption.md`,

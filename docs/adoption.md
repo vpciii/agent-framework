@@ -174,6 +174,71 @@ Traceability row — or the worker won't make them; name the test-harness
 pattern to follow; state what must NOT be modified; for tests-only
 tasks, say that behavioral surprises are escalation material, not fixes.
 
+## Measuring the validator's judgment (the eval)
+
+The gate's judgment is a model call. The eval measures how well it
+judges on a fixed set of cases with known answers, so a change to its
+instructions or its model can be compared before and after. It is run by
+hand, with a provider key in your shell; no CI job runs it and its tests
+need no key.
+
+**Run it.** From the repository root, with the validator's key set in the
+shell only (never in `agent-framework.toml`):
+
+```bash
+uv run agent-framework-eval run --pause 5
+```
+
+It judges every case in `evals/validator/cases/` through the roster's
+validator role, prints one line per judgment on stderr and the scorecard
+on stdout, and writes `evals/validator/results/<date>-<model>.json`. It
+never writes over an existing result; name another file with `--out`.
+`--only <id> ...` judges just the named cases, `--runs N` judges each
+case N times, and `--pause SECONDS` spaces the calls to stay under a
+rate limit. A provider error or an unreadable answer on one case is
+recorded as could-not-judge and the run goes on. Exit 0 means the run
+completed, whatever the score; 2 means it could not start.
+
+**Read the scorecard.** Accepted cases should pass; seeded-defect cases
+should be rejected with a finding under the checklist item that was
+seeded. The scorecard counts each, lists every case judged wrongly with
+the model's findings, and never counts could-not-judge as right or wrong.
+A wrongly judged case is for a human to decide: either the judgment was
+wrong, or the case's expected answer is, and that answer changes only in
+its own reviewed change.
+
+**Compare two runs.**
+
+```bash
+uv run agent-framework-eval compare <before>.json <after>.json
+```
+
+It prints the cases whose class changed. Two results are comparable only
+when they were run on the same case set; otherwise it says so and exits 2.
+
+**Build your own set.** The cases in this repository are its own pull
+requests; a target repository freezes its own:
+
+```bash
+uv run agent-framework-eval freeze <pr>
+```
+
+This writes `evals/validator/cases/pr-<n>.json` — an accepted case — from
+a merged pull request, collected as the gate collects it. It refuses a
+pull request that is not merged, that claims no criteria, or that the
+deterministic stage rejects, naming the check. Freezing a pull request
+again rebuilds its bundle and keeps the expected answer already in the
+file.
+
+A seeded-defect case is a small hand-written file beside its accepted
+case, `pr-<n>--<name>.json`: the accepted case's id, the checklist item
+(`test-honesty`, `spec-conformance`, `criteria-integrity` or
+`edge-case`), a one-line reason, and an edit of exact replacements in
+the diff or in a test file. Each replacement must match exactly once.
+Copy one of this repository's as a pattern, and keep a test like
+`tests/evals/test_set.py`, which loads every case and puts it through the
+deterministic stage with no model call.
+
 ## What stays framework-side
 
 The framework repo owns the gate semantics (its ADR 0005), the brief
