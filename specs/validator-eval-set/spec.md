@@ -244,8 +244,8 @@ answers).
 | SC-4 | R-4 | *(pending)* |
 | SC-5 | R-5 | *(pending)* |
 | SC-6 | R-6 | *(pending)* |
-| SC-7 | R-7 | *(pending)* |
-| SC-8 | R-8 | *(pending)* |
-| SC-9 | R-9 | *(pending)* |
+| SC-7 | R-7 | `tests/evals/test_scorecard.py::test_sc7_each_outcome_of_each_kind_of_case_has_its_class`, `tests/evals/test_scorecard.py::test_sc7_an_accepted_case_with_a_corrected_answer_is_scored_as_a_defect`, `tests/evals/test_scorecard.py::test_sc7_the_scorecard_counts_one_of_each`, `tests/evals/test_scorecard.py::test_sc7_dropped_findings_and_tokens_are_summed`, `tests/evals/test_scorecard.py::test_sc7_a_case_whose_runs_disagree_is_marked_unstable` |
+| SC-8 | R-8 | `tests/evals/test_scorecard.py::test_sc8_the_rendering_lists_each_wrong_case_with_its_findings`, `tests/evals/test_scorecard.py::test_sc8_the_rendering_puts_the_case_count_beside_every_rate`, `tests/evals/test_scorecard.py::test_sc8_a_run_with_nothing_judged_shows_no_rate` |
+| SC-9 | R-9 | `tests/evals/test_scorecard.py::test_sc9_a_result_round_trips_with_what_was_measured`, `tests/evals/test_scorecard.py::test_sc9_a_malformed_result_file_is_a_typed_error`, `tests/evals/test_scorecard.py::test_sc9_the_instructions_fingerprint_moves_with_the_instructions_and_the_schema`, `tests/evals/test_scorecard.py::test_sc9_the_instructions_fingerprint_does_not_move_with_the_data`, `tests/evals/test_scorecard.py::test_sc9_results_on_different_case_sets_are_not_comparable`, `tests/evals/test_scorecard.py::test_sc9_comparable_results_show_the_cases_whose_class_changed`, `tests/evals/test_case.py::test_the_case_sets_fingerprint_moves_only_when_a_case_does` |
 | SC-10 | R-10 | *(pending)* |
 | SC-11 | R-11 | *(pending)* |

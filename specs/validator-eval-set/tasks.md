@@ -55,7 +55,7 @@ those is for dispatch.
   the fingerprint changes when a case is added, removed or edited and is
   stable otherwise.
 
-### [ ] T-2 — Scoring: the classes, the scorecard, a comparable result
+### [x] T-2 — Scoring: the classes, the scorecard, a comparable result (#88)
 - **Satisfies:** SC-7, SC-8, SC-9
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/evals/scorecard.py` (new),
