@@ -1,6 +1,6 @@
 # Plan: An eval set for the validator's judgment
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-10
 - **Author:** Claude (draft) — vpc is author of record
 - **Spec:** ./spec.md
@@ -50,6 +50,8 @@ to change both or the case contradicts itself. So one edit is a short
 list of replacements, each naming where it applies (`diff`, or a test
 file's path), the exact text to find and the text to put there — and
 each must match exactly once in its target (spec SC-2).
+
+*Signed off by vpc, 2026-11-10, with the plan.*
 
 ### The classes
 

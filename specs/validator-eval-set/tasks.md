@@ -1,6 +1,6 @@
 # Tasks: An eval set for the validator's judgment
 
-- **Status:** Draft
+- **Status:** Approved
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
