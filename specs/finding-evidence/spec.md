@@ -154,13 +154,23 @@ One PR, in the judgment and nowhere else.
 ### Decisions
 
 - *2026-11-10* — vpc accepted all five open questions as drafted.
-- *2026-11-10* — **Two notes from implementing, for vpc's sign-off.**
+- *2026-11-10* — **Two notes from implementing (signed off by vpc,
+  2026-11-10).**
   Neither changes a requirement or a criterion. (1) R-7 says the four
   names are enforced by the tool's schema; the parser refuses any other
   `check` as malformed too, so the rule also holds for a provider that
   does not enforce a schema. (2) The instructions' second sentence ends
   by telling the model what to do instead of guessing: where a defect
   would depend on code it was not shown, say so in the finding (goal 3).
+- *2026-11-10* — **Live check (Rollout), run by vpc.** One judgment
+  through the Google adapter on the roster's validator model, of the
+  merged PR #77 — the pull request the false finding of 2026-11-09 was
+  about: the schema with `quotes` and the four `check` names was
+  accepted, and the model answered through the required call
+  (`stop=complete (STOP) input_tokens=18185 output_tokens=6193`). The
+  verdict was PASS, so no finding came back and the quote check itself
+  was not exercised live; it rests on the tests and on the replay of the
+  2026-11-09 quotes against that pull request's real data.
 
 ## Rollout and undo
 
