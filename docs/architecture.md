@@ -160,4 +160,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/worker-confinement/` — Implemented (frozen).
 - `specs/result-file-ignored/` — Implemented (frozen).
 - `specs/citation-from-traceability/` — Implemented (frozen).
-- `specs/judgment-reliability/` — Approved; implemented, awaiting the human's `Implemented` sign-off.
+- `specs/judgment-reliability/` — Implemented (frozen).
