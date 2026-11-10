@@ -100,8 +100,9 @@ it the way its provider can.
   called, the normalized stop reason, and the input and output token
   counts.
 - **R-9 (MUST NOT)** The verdict's JSON shape and the CLI's exit codes for
-  PASS (0) and REJECT (1) MUST NOT change. No vendor or model name
-  appears outside the adapters. Code that builds a `Request` or returns a
+  PASS (0) and REJECT (1) MUST NOT change. The provider interface,
+  dispatch, the judgment and the gate name no vendor and no model. Code
+  that builds a `Request` or returns a
   `Response` without the new fields — including every existing test fake
   — keeps working unchanged.
 - **R-10 (SHOULD)** The delivery PR cites one live judgment through the
@@ -139,8 +140,8 @@ it the way its provider can.
   and both token counts. (R-8)
 - **SC-7** — A provider fake that returns a response with only text and
   tool calls, and a request built with only a prompt and tools, behave as
-  before through dispatch and the gate; no file outside the adapters
-  names a vendor or a model. (R-9)
+  before through dispatch and the gate; the provider interface, dispatch,
+  the judgment and the gate modules name no vendor and no model. (R-9)
 
 ## Approach
 
@@ -184,6 +185,22 @@ One PR.
 ### Decisions
 
 - *2026-11-09* — vpc accepted all five open questions as drafted.
+- *2026-11-09* — **Correction to R-9 and SC-7, found implementing
+  (awaiting vpc's sign-off).** They said no vendor or model name appears
+  "outside the adapters". That was never true of the code and cannot be:
+  the gate's CLI is the one place that registers the adapters by name
+  (ADR 0004), and the roster currency check and the worker's session
+  profile name providers by design. The requirement meant the modules
+  this spec touches, and now says so: the provider interface, dispatch,
+  the judgment and the gate. No behavior is weakened.
+- *2026-11-09* — **Provider failures are "could not judge" too (awaiting
+  vpc's sign-off).** The most likely reason a judgment cannot be made is
+  not a cut-off answer but a rate limit or an outage — and that still
+  ended the process with a traceback and exit code 1. Each adapter now
+  raises one typed provider error with the vendor's own error chained,
+  and the CLI reports it as `"reason": "provider-error"`, exit 3. This
+  extends R-7's "a judgment that could not be made" to its commonest
+  cause; it adds no retry.
 
 ## Rollout and undo
 
