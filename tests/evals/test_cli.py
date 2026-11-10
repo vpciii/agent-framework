@@ -14,6 +14,7 @@ from typing import Any
 
 import pytest
 
+from agent_framework.errors import ProviderError
 from agent_framework.evals import __main__ as eval_cli
 from agent_framework.evals.case import EvalCase, Provenance, dump_case, set_fingerprint
 from agent_framework.evals.scorecard import instructions_fingerprint, result_from_json
@@ -186,6 +187,26 @@ def test_sc5_a_recorded_result_is_never_overwritten(
     code = _run(setup)
 
     assert code == 2 and "--out" in capsys.readouterr().err and not fake.requests
+
+
+def test_sc6_the_command_shows_why_a_case_could_not_be_judged(
+    setup: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """SC-6 here: on stderr, beside the could-not-judge line, the provider's
+    own message — and the run still completes and writes its result."""
+
+    class _Refusing:
+        async def invoke(self, request: Request, *, model: str) -> Response:
+            raise ProviderError("ClientError: 400 API_KEY_INVALID")
+
+    register_provider("fake-eval", _Refusing())
+
+    code = _run(setup)
+
+    err = capsys.readouterr().err
+    assert code == 0
+    assert "judgment pr-1: provider error — ClientError: 400 API_KEY_INVALID" in err
+    assert "could-not-judge (provider-error)" in err
 
 
 def test_sc9_compare_names_what_changed_and_refuses_different_case_sets(
