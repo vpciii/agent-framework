@@ -186,15 +186,19 @@ One PR.
 
 - *2026-11-09* — vpc accepted all five open questions as drafted.
 - *2026-11-09* — **Correction to R-9 and SC-7, found implementing
-  (awaiting vpc's sign-off).** They said no vendor or model name appears
+  (signed off by vpc, 2026-11-09).** They said no vendor or model name appears
   "outside the adapters". That was never true of the code and cannot be:
   the gate's CLI is the one place that registers the adapters by name
   (ADR 0004), and the roster currency check and the worker's session
   profile name providers by design. The requirement meant the modules
   this spec touches, and now says so: the provider interface, dispatch,
   the judgment and the gate. No behavior is weakened.
-- *2026-11-09* — **Provider failures are "could not judge" too (awaiting
-  vpc's sign-off).** The most likely reason a judgment cannot be made is
+- *2026-11-09* — **Live check (R-10), run by vpc.** One judgment through
+  the Google adapter on the roster's validator model: the closed verdict
+  schema was accepted, the answer came back as the required tool call,
+  and stop reason and usage were reported. Recorded in the delivery PR.
+- *2026-11-09* — **Provider failures are "could not judge" too (signed off
+  by vpc, 2026-11-09).** The most likely reason a judgment cannot be made is
   not a cut-off answer but a rate limit or an outage — and that still
   ended the process with a traceback and exit code 1. Each adapter now
   raises one typed provider error with the vendor's own error chained,
