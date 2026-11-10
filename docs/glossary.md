@@ -62,6 +62,15 @@ and agent prompts. Add a term here before inventing a name for a concept.
   elapsed time, git state and any progress notes, so the next human or
   run can pick up without guessing. Written by the orchestrator because a
   killed session can't write its own.
+- **Eval set** — the fixed collection of eval cases the validator's
+  judgment is measured on (specs/validator-eval-set).
+- **Eval case** — one frozen evidence bundle with the outcome a human
+  expects of the judgment, `pass` or `reject`. Either an **accepted
+  case** (a merged pull request as it was) or a **seeded-defect case**
+  (an accepted case with one deliberate defect).
+- **Scorecard** — the result of running the judgment over the eval set:
+  how many accepted cases it passed or wrongly rejected, how many seeded
+  defects it caught or missed, and how many it could not judge.
 - **Regression claim** — the token `regression` in a PR's Satisfies
   declaration: the author's explicit claim that the PR fixes a bug with a
   cited red→green regression test. The gate verifies the evidence

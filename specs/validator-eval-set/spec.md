@@ -238,8 +238,8 @@ answers).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
-| SC-2 | R-2 | *(pending)* |
+| SC-1 | R-1 | `tests/evals/test_case.py::test_sc1_an_accepted_case_round_trips_to_an_equal_bundle`, `tests/evals/test_case.py::test_sc1_an_accepted_case_can_carry_a_corrected_answer`, `tests/evals/test_case.py::test_sc1_a_malformed_case_fails_to_load_naming_the_file`, `tests/evals/test_case.py::test_sc1_a_file_that_is_not_json_fails_naming_the_file` |
+| SC-2 | R-2 | `tests/evals/test_case.py::test_sc2_a_seeded_case_is_its_base_with_exactly_the_edit_applied`, `tests/evals/test_case.py::test_sc2_an_edit_that_does_not_apply_exactly_once_fails_to_load`, `tests/evals/test_case.py::test_sc2_a_seeded_case_needs_an_accepted_base_and_a_reject`, `tests/evals/test_case.py::test_sc2_the_set_loads_every_case_of_both_kinds` |
 | SC-3 | R-3 | *(pending)* |
 | SC-4 | R-4 | *(pending)* |
 | SC-5 | R-5 | *(pending)* |
