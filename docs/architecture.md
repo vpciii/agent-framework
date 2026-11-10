@@ -163,3 +163,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/citation-from-traceability/` — Implemented (frozen).
 - `specs/judgment-reliability/` — Implemented (frozen).
 - `specs/finding-evidence/` — Implemented (frozen).
+- `specs/validator-eval-set/` — Draft (awaiting sign-off).
