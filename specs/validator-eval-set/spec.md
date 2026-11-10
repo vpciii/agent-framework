@@ -1,6 +1,6 @@
 # Spec: An eval set for the validator's judgment
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-10
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0005 (one per-PR gate; its judgment is one model
@@ -197,30 +197,31 @@ one sitting has not been measured.
 
 ## Open questions
 
-- [ ] **What counts as catching a seeded defect?** Drafted: a REJECT with
-  a finding under the seeded checklist item (R-7); a REJECT under another
-  item is shown separately. Stricter alternative: the finding's quotes
-  must overlap the seeded text — more exact, and it needs the judgment to
-  hand its quotes to the eval, which it does not do today.
-- [ ] **How many runs per case?** Drafted: one by default, more on
-  request (R-5). A model's answer varies between runs; three runs per
-  case triples the cost and shows which cases are unstable.
-- [ ] **Which accepted cases?** Drafted: every merged task pull request
-  that still passes the deterministic stage — 18 today — rather than a
-  hand-picked dozen. More cases, about 770,000 characters of frozen data
-  in the repository.
-- [ ] **No seeded cases for the fourth checklist item** (the unstated
-  edge case)? Drafted: none at first. An edge case nobody stated has no
-  mechanical ground truth; that item is measured only by how often it
-  wrongly rejects accepted work — which is exactly what it did to #77.
-- [ ] **Is "accepted by the human" a good enough answer key?** Drafted:
-  yes, with R-8 as the correction path. An accepted pull request can hold
-  a real defect; when the judgment finds one, the case's expected answer
-  is changed by a reviewed edit, not argued with.
-- [ ] **Planning first?** The methodology asks for planning ahead of an
-  uncertain or expensive bet. Drafted: not needed — the problem is
-  already shown by two live runs and three deferred decisions, and the
-  appetite is a few PRs. Say so if you would rather size it as a bet.
+All resolved 2026-11-10 (human sign-off: vpc accepted the six drafted
+answers).
+
+- [x] **Catching a seeded defect** is a REJECT with a finding under the
+  seeded checklist item (R-7); a REJECT under another item is shown
+  separately. Not chosen: requiring the finding's quotes to overlap the
+  seeded text — more exact, and it needs the judgment to hand its quotes
+  to the eval, which it does not do today.
+- [x] **Runs per case: one by default, more on request** (R-5). A
+  model's answer varies between runs; three runs per case triples the
+  cost and shows which cases are unstable.
+- [x] **Accepted cases: every merged task pull request that still passes
+  the deterministic stage** — 18 on 2026-11-10 — rather than a
+  hand-picked dozen. About 770,000 characters of frozen data in the
+  repository.
+- [x] **No seeded cases for the fourth checklist item** (the unstated
+  edge case) at first. An edge case nobody stated has no mechanical
+  ground truth; that item is measured only by how often it wrongly
+  rejects accepted work — which is exactly what it did to #77.
+- [x] **"Accepted by the human" is the answer key**, with R-8 as the
+  correction path. An accepted pull request can hold a real defect; when
+  the judgment finds one, the case's expected answer is changed by a
+  reviewed edit, not argued with.
+- [x] **No planning stage first.** The problem is already shown by two
+  live runs and three deferred decisions, and the appetite is a few PRs.
 
 ## Out of scope (for now)
 
