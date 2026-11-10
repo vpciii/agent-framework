@@ -14,6 +14,7 @@ dependencies = [
 agent-framework-worker = "agent_framework.worker.__main__:main"
 agent-framework-validate = "agent_framework.validator.__main__:main"
 agent-framework-currency = "agent_framework.currency.__main__:main"
+agent-framework-eval = "agent_framework.evals.__main__:main"
 
 [dependency-groups]
 dev = [

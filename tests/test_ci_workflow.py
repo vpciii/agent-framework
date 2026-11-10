@@ -88,3 +88,15 @@ def test_no_pull_request_text_is_interpolated_into_a_script() -> None:
         for step in _steps(job):
             for expr in re.findall(r"\$\{\{\s*(.+?)\s*\}\}", str(step.get("run", ""))):
                 assert expr == "github.event.pull_request.number", (job, expr)
+
+
+def test_sc10_no_workflow_runs_the_eval() -> None:
+    """SC-10 (specs/validator-eval-set): the eval needs a provider key and
+    is run by a human — no job in any workflow invokes it."""
+    workflows = sorted(_WORKFLOW.parent.glob("*.yml")) + sorted(_WORKFLOW.parent.glob("*.yaml"))
+    assert _WORKFLOW in workflows
+
+    for workflow in workflows:
+        text = workflow.read_text(encoding="utf-8")
+        assert "agent-framework-eval" not in text, workflow.name
+        assert "agent_framework.evals" not in text, workflow.name

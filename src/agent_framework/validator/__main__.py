@@ -7,9 +7,10 @@ the judgment could not be made (cut off, declined, unanswered, malformed,
 or the provider failed)
 — then stdout carries `{"verdict": "none", "reason": …, "detail": …}`:
 nothing was found wrong with the pull request, so it is not a REJECT. The
-production adapters are registered here — the only place outside tests
-that wires providers to the registry (ADR 0004: validator on Gemini via
-the roster; keys from the environment).
+production adapters are registered here and in the eval's command
+(`evals/__main__.py`) — the only places outside tests that wire providers
+to the registry (ADR 0004: validator on Gemini via the roster; keys from
+the environment).
 """
 
 from __future__ import annotations
