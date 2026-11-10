@@ -12,6 +12,7 @@ of the run's own. No line of the gate changes (specs/validator-eval-set).
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Awaitable, Callable
 
 from ..errors import JudgmentFormatError, NoVerdictError, ProviderError
@@ -21,6 +22,8 @@ from ..roster import Roster
 from ..validator.judgment import VERDICT_TOOL, judge
 from .case import EvalCase
 from .scorecard import JudgmentRecord, NotJudged, Outcome, Passed, Rejected, record
+
+log = logging.getLogger(__name__)
 
 
 class _Recorder:
@@ -48,14 +51,19 @@ def _reported(response: Response | None) -> int:
 
 
 async def _judge(case: EvalCase, roster: Roster, registry: ProviderRegistry) -> Outcome:
-    """One judgment; every way it cannot be made is named as the gate's CLI names it."""
+    """One judgment; every way it cannot be made is named as the gate's CLI
+    names it. The record keeps the name; the cause — the provider's own
+    message, or what was wrong with the answer — is logged with the case,
+    so a run that cannot judge says why as it goes."""
     try:
         judgment = await judge(case.bundle, roster, registry=registry)
     except NoVerdictError as e:
         return NotJudged(e.reason)
-    except JudgmentFormatError:
+    except JudgmentFormatError as e:
+        log.warning("judgment %s: unreadable answer — %s", case.id, e)
         return NotJudged("malformed")
-    except ProviderError:
+    except ProviderError as e:
+        log.warning("judgment %s: provider error — %s", case.id, e)
         return NotJudged("provider-error")
     return Rejected(judgment.findings) if judgment.defect_found else Passed()
 

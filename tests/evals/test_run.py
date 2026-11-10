@@ -6,6 +6,7 @@ called: the validator's adapter is a fake.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import pytest
@@ -223,3 +224,26 @@ async def test_sc6_the_pause_falls_between_judgments_and_not_after_the_last() ->
                    registry=registry, pause=7.5, sleep=sleep)
 
     assert slept == [7.5, 7.5]
+
+
+async def test_sc6_a_case_that_could_not_be_judged_says_why(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """SC-6 here: the provider's own message is logged, naming the case —
+    so a human watching a run can tell a bad key from a rate limit. (A
+    baseline run on 2026-11-10 showed "provider-error" 36 times and no cause.)"""
+    _, registry, roster = _wire(
+        ProviderError("ClientError: 429 RESOURCE_EXHAUSTED: quota exceeded"),
+        _answer(True, {"check": "test-honesty"}),
+    )
+
+    with caplog.at_level(logging.WARNING, logger="agent_framework"):
+        first, second = await run_eval(
+            (_accepted("pr-1"), _accepted("pr-2")), roster, registry=registry
+        )
+
+    assert (first.reason, second.reason) == ("provider-error", "malformed")
+    said = [r.getMessage() for r in caplog.records if r.name == "agent_framework.evals.run"]
+    assert len(said) == 2
+    assert "pr-1" in said[0] and "429 RESOURCE_EXHAUSTED: quota exceeded" in said[0]
+    assert "pr-2" in said[1] and "finding" in said[1]
