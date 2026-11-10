@@ -1,6 +1,6 @@
 # Spec: A finding's evidence is checked against what was sent
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-09
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0005 (one per-PR gate; "cite, never assert"),
