@@ -31,7 +31,15 @@ class GoogleProvider:
     def _client_or_default(self) -> genai.Client:
         if self._client is None:
             # Key from the environment, never config (ADR 0001 / secrets rule).
-            self._client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+            try:
+                self._client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+            except ValueError as e:
+                # The SDK refuses to build a client it has no credentials
+                # for. That is a request the provider cannot serve, not a
+                # bug to show as a traceback.
+                raise ProviderError(
+                    f"no Google client (is GEMINI_API_KEY set?): {type(e).__name__}: {e}"
+                ) from e
         return self._client
 
     async def invoke(self, request: Request, *, model: str) -> Response:

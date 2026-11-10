@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from typing import Any, cast
 
-from anthropic import APIError, AsyncAnthropic
+from anthropic import AnthropicError, APIError, AsyncAnthropic
 from anthropic.types import Message, TextBlock, ToolUseBlock
 
 from ..errors import ProviderError
@@ -42,7 +42,13 @@ class AnthropicProvider:
 
     def _client_or_default(self) -> AsyncAnthropic:
         if self._client is None:
-            self._client = AsyncAnthropic()  # API key or federation, from env
+            try:
+                self._client = AsyncAnthropic()  # API key or federation, from env
+            except AnthropicError as e:
+                # The SDK refuses to build a client from credentials it was
+                # pointed at and cannot load: a request the provider cannot
+                # serve, not a bug to show as a traceback.
+                raise ProviderError(f"no Anthropic client: {type(e).__name__}: {e}") from e
         return self._client
 
     async def invoke(self, request: Request, *, model: str) -> Response:
@@ -70,7 +76,9 @@ class AnthropicProvider:
             ]
         try:
             message = await client.messages.create(**kwargs)
-        except APIError as e:
+        except (APIError, TypeError) as e:
+            # TypeError is how the SDK says it found no credentials: it is
+            # raised as the request is built, before anything is sent.
             raise ProviderError(f"{type(e).__name__}: {e}") from e
         return self._normalize(message, required)
 

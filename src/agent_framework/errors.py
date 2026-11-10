@@ -45,8 +45,9 @@ class NoVerdictError(JudgmentFormatError):
 
 class ProviderError(AgentFrameworkError):
     """A provider could not serve a request (rate limit, outage, rejected
-    call). Raised by the adapters with the vendor's own error chained, so
-    nothing above them needs to know a vendor's exception types."""
+    call, no usable credentials). Raised by the adapters with the vendor's
+    own error chained, so nothing above them needs to know a vendor's
+    exception types."""
 
 
 class RequestError(AgentFrameworkError):
