@@ -79,7 +79,8 @@ A change to the judgment's instructions, its tool schema, what it is sent
 or the validator's model cites a run from before the change and one from
 after, compared with `agent-framework-eval compare`. This is a rule for
 the author and the reviewer; no code enforces it
-(specs/validator-eval-set, R-13).
+(specs/validator-eval-set, R-13). The first baseline is
+`evals/validator/results/2026-11-10-gemini-3.8-flash.json`.
 
 ## Execution surfaces (ADR 0004)
 
@@ -183,4 +184,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/citation-from-traceability/` — Implemented (frozen).
 - `specs/judgment-reliability/` — Implemented (frozen).
 - `specs/finding-evidence/` — Implemented (frozen).
-- `specs/validator-eval-set/` — Approved; in progress (T-5 of 6).
+- `specs/validator-eval-set/` — Approved; in progress (T-6 of 6).
