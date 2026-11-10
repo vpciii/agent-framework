@@ -92,6 +92,24 @@ def test_sc2_next_action_precedence(tmp_path: Path) -> None:
     assert next_action(read_repo(root), None) == "Answer the escalation in specs/tasked/escalations/t-4-1.md"
 
 
+def test_sc2_approved_spec_with_an_open_task_names_that_task(tmp_path: Path) -> None:
+    """SC-2, rule 3 on its own: in the precedence test above a compact spec
+    sorts first, so that test never shows this branch's action. It names the
+    first unchecked task, outranks an open PR, and yields to a sign-off."""
+    root = tmp_path / "p"
+    _spec(root, "tasked", "Approved", "### [x] T-3 — done (#5)\n\n### [ ] T-4 — do it\n\n### [ ] T-5 — later\n")
+    pr = GitHubSnapshot((GitHubItem(7, "a PR", "u/7"),), ())
+    assert next_action(read_repo(root), _EMPTY_GH) == "Next task T-4 of tasked: do it"
+    assert next_action(read_repo(root), pr) == "Next task T-4 of tasked: do it"
+
+    # Slug order decides between two Approved specs, whichever kind sorts first.
+    _spec(root, "zz-compact", "Approved")  # no tasks.md
+    assert next_action(read_repo(root), pr) == "Next task T-4 of tasked: do it"
+
+    _spec(root, "draft", "Draft")
+    assert next_action(read_repo(root), pr) == "Sign off spec draft (Draft)"
+
+
 def test_sc2_bet_with_a_spec_is_not_pending(tmp_path: Path) -> None:
     """SC-2: a Placed bet whose spec names its planning folder needs no spec."""
     root = tmp_path / "p"
