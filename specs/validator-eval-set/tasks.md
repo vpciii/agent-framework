@@ -1,6 +1,6 @@
 # Tasks: An eval set for the validator's judgment
 
-- **Status:** Approved
+- **Status:** In progress
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
@@ -24,7 +24,7 @@ those is for dispatch.
 
 ---
 
-### [ ] T-1 — Eval cases: the file format, the loader, seeded edits
+### [x] T-1 — Eval cases: the file format, the loader, seeded edits (#87)
 - **Satisfies:** SC-1, SC-2
 - **Depends on:** —
 - **Touches:** `src/agent_framework/evals/__init__.py` (new),
