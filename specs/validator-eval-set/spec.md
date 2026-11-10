@@ -1,6 +1,6 @@
 # Spec: An eval set for the validator's judgment
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-10
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0005 (one per-PR gate; its judgment is one model
