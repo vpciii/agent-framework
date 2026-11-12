@@ -1,0 +1,433 @@
+{
+  "model": "google:gemini-3.8-flash",
+  "effort": "high",
+  "date": "2026-11-12",
+  "runs": 5,
+  "instructions": "b7f84511eacc",
+  "case_set": "9ce495da8677",
+  "inputs": "1f427ab0b735",
+  "scorecard": {
+    "accepted": {
+      "passed": 0,
+      "wrongly-rejected": 0,
+      "could-not-judge": 0
+    },
+    "seeded": {
+      "caught": 18,
+      "other-reason": 0,
+      "missed": 2,
+      "could-not-judge": 0
+    },
+    "dropped": 1,
+    "input_tokens": 347660,
+    "output_tokens": 743827,
+    "unstable": [
+      "pr-18"
+    ]
+  },
+  "judgments": [
+    {
+      "case": "pr-18",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-4 cited test does not verify that the verdict is REJECT; if the gate failed to produce a REJECT verdict on model defect, the test would still pass.",
+          "evidence": "SC-4 requires: 'When the model judgment reports a defect (e.g. test theatre), the verdict is `REJECT` carrying the model's finding and evidence verbatim from the structured response.' However, the cited test `test_sc4_defect_from_return_verdict_is_carried_verbatim` only invokes `judge()` and asserts that `judgment.defect_found is True` and `judgment.findings` matches the finding on the intermediate `Judgment` object. It never calls the gate (`validate()`), never checks that the gate produces a `Reject` verdict, and never verifies that the verdict carries the model's finding and evidence. If the gate logic were broken (e.g. `validate()` returned `Pass`, failed to handle a judgment defect, or dropped findings), the cited test would still pass."
+        }
+      ],
+      "reported": 2,
+      "dropped": 1,
+      "input_tokens": 10118,
+      "output_tokens": 40647,
+      "class": "caught"
+    },
+    {
+      "case": "pr-28",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc3_completed_session_becomes_declared_pr_and_never_merges asserts that the task id appears in the PR title rather than the PR body, meaning the test would pass even if the PR body omitted the task id.",
+          "evidence": "SC-3 requires that the PR body carries the task id and the 'Satisfies:' declaration. While the test extracts the PR body via `body = create[create.index(\"--body\") + 1]`, it only asserts that 'Satisfies: SC-1, SC-2' is in `body`. It checks for the task id 'T-1' only in the PR title (`create[create.index(\"--title\") + 1]`). Because `_pr_title` independently injects the task id into the title, if the PR body were broken to omit the task id entirely, `test_sc3_completed_session_becomes_declared_pr_and_never_merges` would still pass. Thus, the test does not honestly verify that the PR body carries the task id."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 8717,
+      "output_tokens": 27283,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "Cited test `test_sc2_next_action_precedence` does not verify the rule branch for an Approved spec with open tasks and would not fail if that branch were broken.",
+          "evidence": "SC-2 requires testing that the next action follows the precedence rule in a fixture for each rule branch. In `test_sc2_next_action_precedence`, the test defines a compact spec `compact` and then adds a tasked spec `tasked` with an open task `T-4`. However, because `compact` sorts alphabetically before `tasked`, `next_action` evaluates `compact` first and returns `Implement spec compact (compact spec)`. The test asserts `assert next_action(read_repo(root), pr) == \"Implement spec compact (compact spec)\"  # slug order`, repeating the assertion for the compact spec without ever reaching or testing the branch for an Approved spec with open tasks (`Next task {task_id} of {spec.slug}: {summary}`). If the `spec.open_tasks` branch were broken or removed entirely, `test_sc2_next_action_precedence` (and every other test in the suite) would still pass."
+        },
+        {
+          "check": "test-honesty",
+          "finding": "Cited test `test_sc4_nudge_opens_exactly_one_status_issue_when_none` does not verify that the push notification contains the issue link when opening a new status issue.",
+          "evidence": "SC-4 mandates that when a nudge opens a new status issue (with none existing), 'either way it sends one push containing the next action and the issue link'. In `test_sc4_nudge_opens_exactly_one_status_issue_when_none`, the test only asserts `assert len(push.sent) == 1 and \"Next: Sign off spec s (Draft)\" in push.sent[0][1]`. It never asserts that the push contains the newly opened issue link (e.g. `https://gh/i/40`). If the code failed to append the issue URL to the push notification when opening a new status issue, this test would still pass."
+        }
+      ],
+      "reported": 2,
+      "dropped": 0,
+      "input_tokens": 26640,
+      "output_tokens": 26199,
+      "class": "caught"
+    },
+    {
+      "case": "pr-81",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc7_old_shaped_requests_and_responses_still_work claims to verify SC-7 but only tests dispatch and never exercises the gate with old-shaped responses.",
+          "evidence": "SC-7 requires that a provider fake returning a response with only text and tool calls, and a request built with only a prompt and tools, 'behave as before through dispatch and the gate'. However, the sole test cited for SC-7 (test_sc7_old_shaped_requests_and_responses_still_work) only tests invocation through dispatch (`response = await dispatch(...)`). It never invokes or exercises the gate (`validate` or `judge`). Furthermore, `_OldFake` asserts `request.require_tool is None`, which would immediately fail if called through the gate since `build_request` sets `require_tool='return_verdict'`. If the gate's behavior when receiving an old-shaped response without stop reasons or token usage were broken, the cited test would still pass."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 24057,
+      "output_tokens": 32967,
+      "class": "caught"
+    },
+    {
+      "case": "pr-18",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 10118,
+      "output_tokens": 53334,
+      "class": "missed"
+    },
+    {
+      "case": "pr-28",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc3 fails to assert that the PR body carries the task id as required by SC-3, asserting it against the PR title instead.",
+          "evidence": "SC-3 specifies that on a completed session, the orchestrator opens a PR 'whose body carries the task id and `Satisfies:` naming exactly the task\\'s criteria'. In test_sc3_completed_session_becomes_declared_pr_and_never_merges, the test extracts the PR body with `body = create[create.index(\"--body\") + 1]` and asserts `assert \"Satisfies: SC-1, SC-2\" in body`, but tests for the task id `T-1` with `assert \"T-1\" in create[create.index(\"--title\") + 1]` (the PR title option) rather than asserting that the body contains the task id. If the PR body omitted the task id, test_sc3 would still pass, meaning the cited test does not fail when the behavior it claims to verify is broken."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 8717,
+      "output_tokens": 32345,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc2_next_action_precedence never verifies the 'Approved spec with open tasks' rule branch; it tautologically asserts the prior step's result and would pass even if that branch were broken or missing.",
+          "evidence": "SC-2 requires: \"The next action follows the precedence rule (Approach) in a fixture for each rule branch, and exactly one is shown.\"\n\nIn tests/orientation/test_status_card.py::test_sc2_next_action_precedence, the test sets up _spec(root, \"compact\", \"Approved\") and verifies it returns \"Implement spec compact (compact spec)\". Next, it attempts to test the Approved spec with open tasks branch by adding _spec(root, \"tasked\", \"Approved\", \"### [ ] T-4 — do it\\\\n\").\n\nHowever, because active specs are iterated in alphabetical slug order (\"compact\" before \"tasked\"), next_action encounters \"compact\" first and returns \"Implement spec compact (compact spec)\". Instead of structuring the fixture to verify the open tasks rule branch (\"Next task T-4 of tasked: do it\"), the test simply re-asserts the result of the previous step:\nassert next_action(read_repo(root), pr) == \"Implement spec compact (compact spec)\"  # slug order\n\nBecause of this, the rule branch for an Approved spec with open tasks (return f\"Next task {task_id} of {spec.slug}: {summary}\") is never executed or verified in test_sc2_next_action_precedence or anywhere else in the test suite. If the open tasks rule branch were broken or removed entirely, the cited test would still pass. This is test theatre."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 26640,
+      "output_tokens": 29326,
+      "class": "caught"
+    },
+    {
+      "case": "pr-81",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc7_old_shaped_requests_and_responses_still_work fails to test behavior through the gate, testing only dispatch; it would not fail if behavior through the gate were broken for an old-shaped provider fake.",
+          "evidence": "SC-7 explicitly requires that 'A provider fake that returns a response with only text and tool calls, and a request built with only a prompt and tools, behave as before through dispatch and the gate'. The only test cited for SC-7, test_sc7_old_shaped_requests_and_responses_still_work, only invokes dispatch and never invokes the gate (validate() or the gate CLI). If the gate broke when presented with an old-shaped provider fake returning only text and tool calls, test_sc7_old_shaped_requests_and_responses_still_work would still pass."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 24057,
+      "output_tokens": 54291,
+      "class": "caught"
+    },
+    {
+      "case": "pr-18",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The test cited for SC-4 (tests/validator/test_judgment.py::test_sc4_defect_from_return_verdict_is_carried_verbatim) does not verify that the verdict is REJECT carrying the model's finding and evidence verbatim. It only tests the judgment stage helper judge() returning an intermediate Judgment object without ever verifying the validator gate's verdict.",
+          "evidence": "SC-4 specifies: 'When the model judgment reports a defect (e.g. test theatre), the verdict is `REJECT` carrying the model's finding and evidence verbatim from the structured response.' However, test_sc4_defect_from_return_verdict_is_carried_verbatim only invokes judge(_bundle(), _roster(), registry=reg) and asserts judgment.defect_found is True and judgment.findings matches the parsed Finding. It never invokes validate() or asserts that the resulting verdict is an instance of Reject carrying those findings verbatim. In test_gate.py, _FakeProvider explicitly hardcodes defect_found=False, meaning there is zero test coverage verifying that a defect judgment causes validate() to produce a Reject verdict. If the gate failed to return a REJECT verdict when the model reports a defect, the cited test would still pass."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 10118,
+      "output_tokens": 45459,
+      "class": "caught"
+    },
+    {
+      "case": "pr-28",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc3_completed_session_becomes_declared_pr_and_never_merges does not assert that the PR body carries the task id, asserting it on --title instead, so it would pass even if the body omitted the task id.",
+          "evidence": "SC-3 requires that the orchestrator opens a PR 'whose body carries the task id and Satisfies: naming exactly the task's criteria'. However, the cited test test_sc3_completed_session_becomes_declared_pr_and_never_merges only asserts 'Satisfies: SC-1, SC-2' against the PR body, while asserting the task id 'T-1' against the PR title (--title) rather than the body (--body). If the implementation failed to include the task id in the PR body, the test would still pass. Thus, the test fails to verify the behavior SC-3 mandates for the PR body."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 8717,
+      "output_tokens": 23573,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "Cited test test_sc2_next_action_precedence fails to test the 'Approved spec with open tasks' rule branch required by SC-2, asserting a repeated outcome from a previous step instead; the branch could be entirely broken without failing the test.",
+          "evidence": "SC-2 requires testing the next action precedence rule in a fixture for each rule branch. However, the rule branch for an Approved spec with open tasks ('Next task {task_id} of {spec.slug}: {summary}') is never exercised or asserted anywhere in the test suite. In test_sc2_next_action_precedence, the test first adds an Approved compact spec ('compact') and asserts that 'Implement spec compact (compact spec)' is returned. When it subsequently adds an Approved tasked spec ('tasked' with open task 'T-4'), 'compact' still resides in the repo and precedes 'tasked' alphabetically in active_specs. As a result, next_action encounters 'compact' first, matches the compact spec branch, and returns 'Implement spec compact (compact spec)' again. The test asserts this repeated result ('assert next_action(...) == \\\"Implement spec compact (compact spec)\\\"  # slug order') rather than verifying the open-tasks rule branch. If the code path returning 'Next task {task_id} of {spec.slug}: {summary}' were broken, raised an exception, or deleted, test_sc2_next_action_precedence and all other tests in the suite would still pass."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 26640,
+      "output_tokens": 26747,
+      "class": "caught"
+    },
+    {
+      "case": "pr-81",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The cited test for SC-7 fails to test behavior through the gate, testing only dispatch and leaving the gate behavior unverified.",
+          "evidence": "SC-7 requires that 'A provider fake that returns a response with only text and tool calls, and a request built with only a prompt and tools, behave as before through dispatch and the gate'. The only test cited for SC-7 in the Traceability table is tests/test_required_answer.py::test_sc7_old_shaped_requests_and_responses_still_work. However, this test only tests dispatch (calling `await dispatch(...)`); it never invokes the gate or tests that an old-shaped provider fake behaves as before through the gate. Furthermore, the mock provider in the test explicitly asserts `assert request.require_tool is None`, which would fail if invoked through the gate since the judgment stage always requires its verdict tool. If behavior through the gate for a provider fake returning only text and tool calls were broken, this cited test would not fail."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 24057,
+      "output_tokens": 63498,
+      "class": "caught"
+    },
+    {
+      "case": "pr-18",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 10118,
+      "output_tokens": 30775,
+      "class": "missed"
+    },
+    {
+      "case": "pr-28",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc3_completed_session_becomes_declared_pr_and_never_merges asserts the task id in the PR title instead of the PR body, leaving the SC-3 requirement that the body carry the task id unverified.",
+          "evidence": "SC-3 explicitly requires that the PR handoff opens a PR 'whose body carries the task id and Satisfies: naming exactly the task\\'s criteria'. In test_sc3_completed_session_becomes_declared_pr_and_never_merges, the test extracts the PR body into `body`, but only asserts 'Satisfies: SC-1, SC-2' against `body`. For the task id, it asserts that 'T-1' is in the PR title (`--title`) rather than the PR body. If the orchestrator broke the requirement to carry the task id in the PR body, this test would still pass because the title contains 'T-1'. Therefore, the test does not honestly verify that the PR body carries the task id."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 8717,
+      "output_tokens": 26529,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The cited test for SC-2 never exercises or asserts the next-action rule branch for an Approved spec with open tasks, instead asserting the previous compact-spec outcome again; if that branch were broken or removed, the test would still pass.",
+          "evidence": "SC-2 requires testing the next-action precedence rule for each rule branch in a fixture. The cited test `test_sc2_next_action_precedence` claims in its docstring to test \"each rule branch, highest first\". However, the branch for an Approved spec with open tasks (which produces \"Next task <id> of <spec>: <summary>\") is never exercised or asserted. When the test adds `tasked` (an Approved spec with open task T-4), it merely repeats the previous assertion: `assert next_action(read_repo(root), pr) == \"Implement spec compact (compact spec)\"  # slug order`. Because `compact` comes before `tasked` alphabetically in `active_specs(state)`, `next_action` returns on `compact` and never inspects `tasked`. No other test in the suite exercises or asserts the `Approved` spec with open tasks branch; if that branch were deleted or broken, `test_sc2_next_action_precedence` and all other tests would still pass."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 26640,
+      "output_tokens": 27332,
+      "class": "caught"
+    },
+    {
+      "case": "pr-81",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc7_old_shaped_requests_and_responses_still_work does not exercise the gate, so it would not fail if behavior through the gate with old-shaped responses were broken.",
+          "evidence": "SC-7 explicitly requires that 'A provider fake that returns a response with only text and tool calls, and a request built with only a prompt and tools, behave as before through dispatch and the gate'. The only test cited for SC-7 in the spec's Traceability table is test_sc7_old_shaped_requests_and_responses_still_work. However, that test only invokes dispatch() with an _OldFake returning ToolCall('lookup', {}); it never executes validate(), judge(), or any part of the gate. If the gate's behavior when handling a provider fake that returns only text and tool calls were broken (for instance, if the gate crashed on a Response with default stop reason or usage=None), test_sc7_old_shaped_requests_and_responses_still_work would not fail because it never runs the gate."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 24057,
+      "output_tokens": 48967,
+      "class": "caught"
+    },
+    {
+      "case": "pr-18",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The test cited for SC-4 (test_sc4_defect_from_return_verdict_is_carried_verbatim) does not verify that the validator gate produces a REJECT verdict carrying findings verbatim; it only checks the internal Judgment object returned by judge(), leaving the verdict behavior unverified.",
+          "evidence": "SC-4 requires that 'the verdict is `REJECT` carrying the model\\'s finding and evidence verbatim from the structured response'. However, the cited test tests/validator/test_judgment.py::test_sc4_defect_from_return_verdict_is_carried_verbatim only calls judge() directly ('judgment = await judge(_bundle(), _roster(), registry=reg)') and asserts on the intermediate Judgment dataclass ('assert judgment.defect_found is True'). It never invokes validate(), never asserts that the gate outputs a Reject verdict, and never verifies that the findings are carried into the verdict. If the gate failed to produce a REJECT verdict or dropped findings when a defect is reported, this cited test would still pass."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 10118,
+      "output_tokens": 43865,
+      "class": "caught"
+    },
+    {
+      "case": "pr-28",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc3_completed_session_becomes_declared_pr_and_never_merges fails to verify that the PR body carries the task id, asserting it against the PR title instead; if the PR body omitted the task id, the test would still pass.",
+          "evidence": "SC-3 specifies that the PR body must carry the task id in addition to the Satisfies declaration: 'whose body carries the task id and `Satisfies:` naming exactly the task's criteria'. In test_sc3_completed_session_becomes_declared_pr_and_never_merges, the test extracts the PR body with `body = create[create.index(\"--body\") + 1]`, but only asserts `assert \"Satisfies: SC-1, SC-2\" in body`. It checks the task id against the PR title instead (`assert \"T-1\" in create[create.index(\"--title\") + 1]`). Because the test never asserts that the task id is in the body, it would not fail if the behavior required by SC-3 (body carrying the task id) were broken."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 8717,
+      "output_tokens": 41299,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "Cited test test_sc2_next_action_precedence fails to verify the 'Next task' precedence branch for an Approved spec with open tasks; if that branch were broken, the test would still pass.",
+          "evidence": "Criterion SC-2 requires that the next action follows the precedence rule in a fixture for each rule branch. In test_sc2_next_action_precedence, the branch for an Approved spec with open tasks ('Next task <task_id> of <spec_slug>: <summary>') is never exercised or asserted. The fixture defines a spec 'compact' without tasks before adding a spec 'tasked' with open tasks. Because specs are sorted alphabetically by slug, 'compact' sorts before 'tasked' and next_action returns 'Implement spec compact (compact spec)'. Rather than testing the open-tasks rule branch, the test asserts the compact-spec result a second time with the comment '# slug order' and then moves directly to 'aaa-draft' (Under review). If the 'Next task' rule branch were deleted or broken, test_sc2_next_action_precedence would still pass."
+        },
+        {
+          "check": "test-honesty",
+          "finding": "Cited test test_sc8_failing_channels_change_neither_outcome_nor_exit_code fails to assert that the worker CLI output reports the failed phone push notification, only verifying the GitHub issue failure.",
+          "evidence": "Criterion SC-8 requires that 'with the push endpoint and GitHub both failing, the worker returns the same outcome and exit code as with them working, and its output reports each failed notification'. In test_sc8_failing_channels_change_neither_outcome_nor_exit_code, broken.alerts contains both ('github issue: failed: gh: network down', 'phone push: failed: no route to host'). However, the test only asserts that the GitHub failure appears in the CLI output ('assert \"github issue: failed: gh: network down\" in out'), completely omitting verification that the phone push failure is reported in the worker CLI output. If the worker failed to report each failed notification in its output, the test would still pass."
+        },
+        {
+          "check": "test-honesty",
+          "finding": "Cited test test_sc4_nudge_opens_exactly_one_status_issue_when_none does not verify that the push contains the issue link when opening a new status issue.",
+          "evidence": "Criterion SC-4 requires that when a nudge runs with no existing status issue, 'it opens exactly one; either way it sends one push containing the next action and the issue link'. In test_sc4_nudge_opens_exactly_one_status_issue_when_none, the assertion on the push message only checks that the next action is present ('assert len(push.sent) == 1 and \"Next: Sign off spec s (Draft)\" in push.sent[0][1]'), omitting any check that the newly opened issue link is included in the push. If notify or nudge omitted the issue link on new issue creation, this test would still pass."
+        }
+      ],
+      "reported": 3,
+      "dropped": 0,
+      "input_tokens": 26640,
+      "output_tokens": 39535,
+      "class": "caught"
+    },
+    {
+      "case": "pr-81",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc7_old_shaped_requests_and_responses_still_work claims to verify SC-7 but does not test the provider fake through the gate.",
+          "evidence": "SC-7 explicitly requires verifying that a provider fake returning a response with only text and tool calls behaves as before through both dispatch and the gate ('behave as before through dispatch and the gate'). However, the sole test cited for SC-7 (test_sc7_old_shaped_requests_and_responses_still_work) only tests invoking dispatch(roster, 'validator', ...). It never passes an old-shaped response or old-shaped fake to judge() or the gate (validate()). If the gate broke when handling a legacy response (such as a Response without usage, stop, or stop_detail), test_sc7_old_shaped_requests_and_responses_still_work would not fail."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 24057,
+      "output_tokens": 29856,
+      "class": "caught"
+    }
+  ]
+}

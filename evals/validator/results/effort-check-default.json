@@ -1,0 +1,340 @@
+{
+  "model": "google:gemini-3.8-flash",
+  "date": "2026-11-12",
+  "runs": 5,
+  "instructions": "b7f84511eacc",
+  "case_set": "9ce495da8677",
+  "inputs": "1f427ab0b735",
+  "scorecard": {
+    "accepted": {
+      "passed": 0,
+      "wrongly-rejected": 0,
+      "could-not-judge": 0
+    },
+    "seeded": {
+      "caught": 5,
+      "other-reason": 0,
+      "missed": 15,
+      "could-not-judge": 0
+    },
+    "dropped": 0,
+    "input_tokens": 347660,
+    "output_tokens": 178500,
+    "unstable": [
+      "pr-28",
+      "pr-81"
+    ]
+  },
+  "judgments": [
+    {
+      "case": "pr-18",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 10118,
+      "output_tokens": 17688,
+      "class": "missed"
+    },
+    {
+      "case": "pr-28",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 8717,
+      "output_tokens": 1904,
+      "class": "missed"
+    },
+    {
+      "case": "pr-59",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 26640,
+      "output_tokens": 3817,
+      "class": "missed"
+    },
+    {
+      "case": "pr-81",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc7_old_shaped_requests_and_responses_still_work does not test behavior through the gate despite citing SC-7, testing only dispatch.",
+          "evidence": "SC-7 requires that 'A provider fake that returns a response with only text and tool calls, and a request built with only a prompt and tools, behave as before through dispatch and the gate'. The only test cited for SC-7 is test_sc7_old_shaped_requests_and_responses_still_work. However, that test only invokes dispatch(), verifying how dispatch handles an old-shaped request and response. It never invokes the gate or runs a provider fake returning only text and tool calls through the gate. In fact, _OldFake inside the test explicitly asserts 'assert request.require_tool is None', which would fail if called by the gate (since build_request sets require_tool). If the gate's behavior with a provider fake returning only text and tool calls were broken, test_sc7_old_shaped_requests_and_responses_still_work would not fail."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 24057,
+      "output_tokens": 20125,
+      "class": "caught"
+    },
+    {
+      "case": "pr-18",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 10118,
+      "output_tokens": 16531,
+      "class": "missed"
+    },
+    {
+      "case": "pr-28",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc3 fails to verify that the PR body carries the task id, checking the PR title instead.",
+          "evidence": "SC-3 specifies that the PR's 'body carries the task id and Satisfies: naming exactly the task\\'s criteria'. In test_sc3_completed_session_becomes_declared_pr_and_never_merges, the test extracts the PR body, but only asserts that the Satisfies declaration is present in the body. It asserts that the task ID ('T-1') appears in the PR title (--title) rather than in the body. If the PR body did not carry the task ID, this test would still pass, failing to verify that required behavior."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 8717,
+      "output_tokens": 9824,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 26640,
+      "output_tokens": 1995,
+      "class": "missed"
+    },
+    {
+      "case": "pr-81",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 24057,
+      "output_tokens": 2837,
+      "class": "missed"
+    },
+    {
+      "case": "pr-18",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 10118,
+      "output_tokens": 8264,
+      "class": "missed"
+    },
+    {
+      "case": "pr-28",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc3_completed_session_becomes_declared_pr_and_never_merges does not verify that the PR body carries the task id, asserting it only on the PR title instead.",
+          "evidence": "SC-3 explicitly requires that the orchestrator opens a PR 'whose body carries the task id and `Satisfies:` naming exactly the task's criteria'. However, in the cited test test_sc3_completed_session_becomes_declared_pr_and_never_merges, the test extracts the PR body into `body` and asserts that 'Satisfies: SC-1, SC-2' is in `body`, but asserts the task id 'T-1' against `--title` (`create[create.index(\"--title\") + 1]`) instead of `body`. If the PR body omitted the task id, the test would still pass. Thus, the test fails to verify the behavior required by SC-3."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 8717,
+      "output_tokens": 14116,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 26640,
+      "output_tokens": 4589,
+      "class": "missed"
+    },
+    {
+      "case": "pr-81",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 24057,
+      "output_tokens": 2514,
+      "class": "missed"
+    },
+    {
+      "case": "pr-18",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 10118,
+      "output_tokens": 10142,
+      "class": "missed"
+    },
+    {
+      "case": "pr-28",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc3 fails to verify that the PR body carries the task id as specified by SC-3; it asserts the task id in the PR title instead of the body.",
+          "evidence": "SC-3 requires that the PR body carries the task id and 'Satisfies:' naming exactly the task's criteria. However, test_sc3_completed_session_becomes_declared_pr_and_never_merges extracts the PR body into `body` and checks `assert \"Satisfies: SC-1, SC-2\" in body`, but checks for the task id 'T-1' only in the PR title (`--title`). It never asserts that the task id is in the PR body. If the implementation omitted the task id from the PR body, the test would still pass."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 8717,
+      "output_tokens": 13304,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 26640,
+      "output_tokens": 3526,
+      "class": "missed"
+    },
+    {
+      "case": "pr-81",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "test_sc7_old_shaped_requests_and_responses_still_work does not exercise the gate, despite SC-7 requiring backwards compatibility through both dispatch and the gate.",
+          "evidence": "SC-7 explicitly requires: 'A provider fake that returns a response with only text and tool calls, and a request built with only a prompt and tools, behave as before through dispatch and the gate'. However, the only test cited for SC-7 (test_sc7_old_shaped_requests_and_responses_still_work) only invokes `dispatch`, never testing a provider fake returning an old-shaped response through the gate (`validate`). If the gate's handling of an old-shaped response (with defaulted stop reason, stop detail, and usage) were broken, the cited test would still pass."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 24057,
+      "output_tokens": 12672,
+      "class": "caught"
+    },
+    {
+      "case": "pr-18",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 10118,
+      "output_tokens": 7879,
+      "class": "missed"
+    },
+    {
+      "case": "pr-28",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 8717,
+      "output_tokens": 17504,
+      "class": "missed"
+    },
+    {
+      "case": "pr-59",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 26640,
+      "output_tokens": 4180,
+      "class": "missed"
+    },
+    {
+      "case": "pr-81",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 24057,
+      "output_tokens": 5089,
+      "class": "missed"
+    }
+  ]
+}
