@@ -196,5 +196,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/judgment-reliability/` — Implemented (frozen).
 - `specs/finding-evidence/` — Implemented (frozen).
 - `specs/validator-eval-set/` — Implemented (frozen).
-- `specs/conformance-only-judgment/` — Approved; implemented, awaiting
-  its baseline run and sign-off.
+- `specs/conformance-only-judgment/` — Implemented (frozen).

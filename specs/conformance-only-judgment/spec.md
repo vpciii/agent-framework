@@ -1,6 +1,6 @@
 # Spec: The judgment checks conformance only
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-12
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0008 (accepted with this spec; supersedes
@@ -113,7 +113,22 @@ One PR.
 
 ### Decisions
 
-- *(none yet)*
+- *2026-11-12* — **Implemented by #102; signed off by vpc.** The scope
+  sentence went in as drafted. The instructions' fingerprint is now
+  `b7f84511eacc` and the case set's `94861a900ca8`.
+- *2026-11-12* — **The run after the change (R-6), by vpc:**
+  `evals/validator/results/2026-11-12-gemini-3.8-flash-conformance-only.json`.
+  22 of 24 accepted cases passed; 10 of 12 expected rejects were caught
+  (all nine seeded defects and `pr-89`); nothing could not be judged;
+  output tokens fell from 232,318 to 146,012. No finding was filed
+  outside the three names. Of the 34 cases whose answers did not
+  change, 32 got the verdict they got in the 2026-11-12 baseline.
+- *2026-11-12* — **What the run left open.** `pr-28` and `pr-81` were
+  rejected for the first time in three runs, each for a cited test that
+  verifies less than its criterion says; both findings are true, and
+  their expected answers are not yet ruled on. `pr-18` and `pr-59`, the
+  same kind of finding, were missed. The judgment is not shown to be
+  steadier on that kind, as the non-goals said it would not be.
 
 ## Rollout and undo
 
