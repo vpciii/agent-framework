@@ -86,7 +86,12 @@ corrected) and `2026-11-12-gemini-3.8-flash.json` (after), both made
 while the judgment still hunted for an unstated edge case; and the
 baseline for the judgment as it is now, made after that item was retired
 and two answers changed with it (specs/conformance-only-judgment):
-*not yet run*.
+`2026-11-12-gemini-3.8-flash-conformance-only.json`. In it 22 of 24
+accepted cases passed and 10 of 12 expected rejects were caught; the two
+rejections of accepted work (`pr-28`, `pr-81`) and the two misses
+(`pr-18`, `pr-59`) are all the same kind of finding — a cited test that
+verifies less than its criterion says — and none of the four has yet
+been ruled on or steadied.
 
 ## Execution surfaces (ADR 0004)
 
