@@ -137,15 +137,7 @@ One PR.
 
 ### Decisions
 
-- *2026-11-12* — **How SC-6 is read, found implementing (for vpc's
-  sign-off).** As written it ties the three stored results to "the case
-  set's" fingerprint with no date. The day a case is added or a bundle
-  rebuilt, they no longer carry it, and a test written to the letter
-  would fail a legitimate change to the set. It is read, and tested, as:
-  each of the three carries the fingerprint of the cases it judged,
-  `1f427ab0b735`; `show` prints its scorecard while the repository's
-  cases still send that, and refuses it once they do not — which is
-  R-2's rule. Nothing else in the spec changes.
+- *(none yet)*
 
 ## Rollout and undo
 
