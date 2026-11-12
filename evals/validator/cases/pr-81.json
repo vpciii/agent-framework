@@ -1,8 +1,9 @@
 {
   "id": "pr-81",
   "kind": "accepted",
-  "expected": "pass",
-  "reason": "Merged 2026-11-10; accepted by vpciii.",
+  "expected": "reject",
+  "check": "test-honesty",
+  "reason": "Merged 2026-11-10; accepted by vpciii. Answer corrected 2026-11-12 by vpc: SC-7 says through dispatch and the gate; the test cited for it calls only dispatch.",
   "provenance": {
     "repo": "vpciii/agent-framework",
     "pr": 81,
