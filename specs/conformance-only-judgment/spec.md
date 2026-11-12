@@ -172,8 +172,8 @@ answers).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
-| SC-2 | R-2 | *(pending)* |
-| SC-3 | R-3 | *(pending)* |
-| SC-4 | R-4 | *(pending)* |
-| SC-5 | R-5 | *(pending)* |
+| SC-1 | R-1 | `tests/validator/test_conformance_only.py::test_sc1_the_request_carries_three_checklist_items_and_asks_for_no_edge_case` |
+| SC-2 | R-2 | `tests/validator/test_conformance_only.py::test_sc2_the_request_says_only_a_departure_from_the_contract_is_a_defect` |
+| SC-3 | R-3 | `tests/validator/test_conformance_only.py::test_sc3_the_schema_allows_only_the_three_check_names`, `tests/validator/test_conformance_only.py::test_sc3_a_finding_filed_as_an_edge_case_is_malformed_not_a_verdict` |
+| SC-4 | R-4 | `tests/evals/test_edge_case_retired.py::test_sc4_a_case_that_names_edge_case_fails_to_load_naming_the_file`, `tests/evals/test_edge_case_retired.py::test_sc4_every_case_in_the_repositorys_set_loads_and_none_names_edge_case` |
+| SC-5 | R-5 | `tests/evals/test_edge_case_retired.py::test_sc5_the_results_recorded_before_the_change_still_load_and_render` |
