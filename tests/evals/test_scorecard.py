@@ -78,10 +78,11 @@ def _one_of_each() -> tuple[JudgmentRecord, ...]:
 
 
 def _result(judgments: tuple[JudgmentRecord, ...] | None = None, case_set: str = "aaaaaaaaaaaa",
-            instructions: str = "bbbbbbbbbbbb", runs: int = 1) -> Result:
+            instructions: str = "bbbbbbbbbbbb", runs: int = 1,
+            inputs: str | None = "eeeeeeeeeeee") -> Result:
     return Result(model="google:judge-9", date="2026-11-10", runs=runs,
                   instructions=instructions, case_set=case_set,
-                  judgments=_one_of_each() if judgments is None else judgments)
+                  judgments=_one_of_each() if judgments is None else judgments, inputs=inputs)
 
 
 # ---- SC-7: the classes and the counts --------------------------------------
@@ -217,6 +218,7 @@ def test_sc9_a_result_round_trips_with_what_was_measured() -> None:
     data = json.loads(text)
     assert (data["model"], data["date"], data["runs"]) == ("google:judge-9", "2026-11-10", 1)
     assert (data["instructions"], data["case_set"]) == ("bbbbbbbbbbbb", "aaaaaaaaaaaa")
+    assert data["inputs"] == "eeeeeeeeeeee"
     assert data["scorecard"]["accepted"] == {
         "passed": 1, "wrongly-rejected": 1, "could-not-judge": 1,
     }
@@ -271,12 +273,19 @@ def test_sc9_the_instructions_fingerprint_does_not_move_with_the_data() -> None:
 
 def test_sc9_results_on_different_case_sets_are_not_comparable() -> None:
     """SC-9: comparing two results whose case sets differ says so, and
-    offers no differences to misread."""
-    comparison = compare(_result(case_set="aaaaaaaaaaaa"), _result(case_set="cccccccccccc"))
+    offers no differences to misread. Since specs/eval-rescore, "differ"
+    means the cases sent the judgment something different — the inputs
+    fingerprint; a corrected answer alone no longer makes two results
+    incomparable."""
+    one, other = _result(inputs="eeeeeeeeeeee"), _result(inputs="ffffffffffff")
+    comparison = compare(one, other)
 
     assert comparison.comparable is False and comparison.changed == ()
-    text = render_comparison(_result(case_set="aaaaaaaaaaaa"), _result(case_set="cccccccccccc"))
-    assert "not comparable" in text and "aaaaaaaaaaaa" in text and "cccccccccccc" in text
+    text = render_comparison(one, other)
+    assert "not comparable" in text and "eeeeeeeeeeee" in text and "ffffffffffff" in text
+
+    assert compare(_result(case_set="aaaaaaaaaaaa"), _result(case_set="cccccccccccc")).comparable
+    assert compare(_result(inputs=None), _result()).comparable is False
 
 
 def test_sc9_comparable_results_show_the_cases_whose_class_changed() -> None:

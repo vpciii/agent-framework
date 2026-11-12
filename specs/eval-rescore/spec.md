@@ -178,10 +178,10 @@ answers).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
-| SC-2 | R-2 | *(pending)* |
-| SC-3 | R-2 | *(pending)* |
-| SC-4 | R-3 | *(pending)* |
-| SC-5 | R-4 | *(pending)* |
-| SC-6 | R-5 | *(pending)* |
-| SC-7 | R-6 | *(pending)* |
+| SC-1 | R-1 | `tests/evals/test_rescore.py::test_sc1_the_inputs_fingerprint_moves_with_what_is_sent_and_not_with_the_answers`, `tests/evals/test_rescore.py::test_sc1_a_new_result_carries_the_inputs_fingerprint` |
+| SC-2 | R-2 | `tests/evals/test_rescore.py::test_sc2_show_classes_a_stored_result_against_the_answers_on_disk` |
+| SC-3 | R-2 | `tests/evals/test_rescore.py::test_sc3_show_refuses_a_result_whose_cases_have_changed` |
+| SC-4 | R-3 | `tests/evals/test_rescore.py::test_sc4_compare_classes_both_results_against_the_answers_on_disk` |
+| SC-5 | R-4 | `tests/evals/test_rescore.py::test_sc5_show_and_compare_leave_the_result_files_as_they_were` |
+| SC-6 | R-5 | `tests/evals/test_rescore.py::test_sc6_a_result_recorded_before_the_change_carries_its_inputs_fingerprint`, `tests/evals/test_rescore.py::test_sc6_a_result_with_no_inputs_fingerprint_is_refused_saying_so` |
+| SC-7 | R-6 | `tests/evals/test_rescore.py::test_sc7_a_run_records_what_it_recorded_before_plus_the_inputs_fingerprint` |

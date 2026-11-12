@@ -11,7 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import Counter
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import Any, Literal
 
 from ..errors import EvalResultError
@@ -145,8 +145,11 @@ class Result:
     date: str
     runs: int
     instructions: str  # fingerprint of the judgment's instructions and schema
-    case_set: str  # fingerprint of the case set
+    case_set: str  # fingerprint of the case set, answers included, at the run
     judgments: tuple[JudgmentRecord, ...]
+    # Fingerprint of what the cases sent the judgment; None in a result
+    # made before results recorded it.
+    inputs: str | None = None
 
     @property
     def scorecard(self) -> Scorecard:
@@ -199,6 +202,7 @@ def result_to_json(result: Result) -> str:
     data = {
         "model": result.model, "date": result.date, "runs": result.runs,
         "instructions": result.instructions, "case_set": result.case_set,
+        "inputs": result.inputs,
         "scorecard": asdict(result.scorecard),
         "judgments": judgments,
     }
@@ -228,9 +232,51 @@ def result_from_json(text: str) -> Result:
                 )
                 for j in data["judgments"]
             ),
+            inputs=None if data.get("inputs") is None else str(data["inputs"]),
         )
     except (ValueError, KeyError, TypeError) as e:
         raise EvalResultError(f"not an eval result: {type(e).__name__}: {e}") from None
+
+
+# ---- reading a stored result against today's answers ------------------------
+
+
+def _outcome(j: JudgmentRecord) -> Outcome:
+    if j.outcome == "pass":
+        return Passed()
+    if j.outcome == "reject":
+        return Rejected(j.findings)
+    return NotJudged(j.reason or "")
+
+
+def rescore(result: Result, cases: tuple[EvalCase, ...]) -> tuple[Result, tuple[str, ...]]:
+    """The result with every judgment classed against the cases' answers as
+    they are now, and the cases whose answer differs from the one recorded
+    at the run. What the model said is untouched: only the expected
+    answer, the checklist item and the class are recomputed, by `classify`.
+
+    Call it only for a result whose inputs fingerprint is the case set's —
+    its judgments are then of these cases (specs/eval-rescore)."""
+    by_id = {case.id: case for case in cases}
+    judgments: list[JudgmentRecord] = []
+    changed: set[str] = set()
+    for j in result.judgments:
+        case = by_id.get(j.case)
+        if case is None:
+            raise EvalResultError(f"the result judged {j.case}, which is not in the case set")
+        if (case.expected, case.check) != (j.expected, j.check):
+            changed.add(j.case)
+        judgments.append(replace(
+            j, expected=case.expected, check=case.check, cls=classify(case, _outcome(j)),
+        ))
+    return replace(result, judgments=tuple(judgments)), tuple(sorted(changed))
+
+
+def _rescored_note(changed: tuple[str, ...], label: str = "") -> str:
+    return (
+        f"{label}Re-scored against today's answers ({len(changed)}), "
+        f"changed since the run: {', '.join(changed)}"
+    )
 
 
 # ---- rendering ------------------------------------------------------------
@@ -273,10 +319,15 @@ def _head(result: Result) -> str:
     )
 
 
-def render(result: Result) -> str:
-    """The scorecard as text, and every case a human should look at."""
+def render(result: Result, rescored: tuple[str, ...] = ()) -> str:
+    """The scorecard as text, and every case a human should look at.
+    `rescored` names the cases whose answer changed since the run, when the
+    result is being read against today's answers."""
     card = result.scorecard
-    lines = ["Eval of the validator's judgment", _head(result), ""]
+    lines = ["Eval of the validator's judgment", _head(result)]
+    if rescored:
+        lines.append(_rescored_note(rescored))
+    lines.append("")
     lines += _counts("Accepted work (expected PASS)", card.accepted)
     lines += _counts("Defects (expected REJECT)", card.seeded)
     lines += [
@@ -336,15 +387,18 @@ def _by_case(result: Result) -> dict[str, tuple[Class, ...]]:
 
 
 def compare(before: Result, after: Result) -> Comparison:
-    """The cases whose class changed between two results on the same case
-    set. Results on different case sets are not comparable, and no
-    difference between them is offered.
+    """The cases whose class changed between two results that judged the
+    same cases — the same inputs fingerprint. Results on different inputs,
+    or with none recorded, are not comparable, and no difference between
+    them is offered. The answers in force at each run do not matter here:
+    the caller classes both results against one set of answers first
+    (`rescore`).
 
     A run of some cases (`--only`) carries the whole set's fingerprint, so
     two results on one set need not have judged the same cases. Only a case
     both judged can have changed; one judged in a single result is named as
     such and never counted as a change."""
-    if before.case_set != after.case_set:
+    if before.inputs is None or after.inputs is None or before.inputs != after.inputs:
         return Comparison(comparable=False, changed=())
     was, now = _by_case(before), _by_case(after)
     return Comparison(
@@ -359,13 +413,24 @@ def compare(before: Result, after: Result) -> Comparison:
     )
 
 
-def render_comparison(before: Result, after: Result) -> str:
-    lines = [f"before: {_head(before)}", f"after:  {_head(after)}", ""]
+def render_comparison(
+    before: Result,
+    after: Result,
+    rescored: tuple[tuple[str, ...], tuple[str, ...]] = ((), ()),
+) -> str:
+    """The comparison as text. `rescored` names, for each result, the cases
+    whose answer changed since its run."""
+    lines = [f"before: {_head(before)}", f"after:  {_head(after)}"]
+    for label, changed in zip(("before — ", "after — "), rescored, strict=True):
+        if changed:
+            lines.append(_rescored_note(changed, label))
+    lines.append("")
     comparison = compare(before, after)
     if not comparison.comparable:
         lines.append(
-            f"These results are not comparable: their case sets differ "
-            f"({before.case_set} and {after.case_set})."
+            "These results are not comparable: the cases they judged differ "
+            f"(inputs {before.inputs or 'not recorded'} and "
+            f"{after.inputs or 'not recorded'})."
         )
         return "\n".join(lines) + "\n"
     for label, result in (("before", before), ("after", after)):

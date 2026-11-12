@@ -277,10 +277,26 @@ def load_set(directory: Path) -> tuple[EvalCase, ...]:
     return tuple(load_case(path) for path in _case_files(directory))
 
 
+def inputs_fingerprint(directory: Path) -> str:
+    """A short hash of what every case sends the judgment — its id and its
+    evidence bundle, after a seeded edit is applied — and of nothing else.
+    An expected answer, a checklist item or a reason does not move it; a
+    changed bundle or edit, or a case added or removed, does. Two results
+    with the same one judged the same cases (specs/eval-rescore)."""
+    digest = hashlib.sha256()
+    for case in load_set(directory):
+        sent = json.dumps(asdict(case.bundle), sort_keys=True, ensure_ascii=False)
+        digest.update(case.id.encode())
+        digest.update(b"\0")
+        digest.update(hashlib.sha256(sent.encode()).digest())
+    return digest.hexdigest()[:12]
+
+
 def set_fingerprint(directory: Path) -> str:
     """A short hash over every case file's name and bytes: it changes when a
-    case is added, removed or edited, and two results are comparable only
-    when it matches."""
+    case is added, removed or edited. It records which answers were in
+    force at a run; what makes two results comparable is the inputs
+    fingerprint."""
     digest = hashlib.sha256()
     for path in _case_files(directory):
         digest.update(path.name.encode())

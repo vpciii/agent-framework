@@ -4,6 +4,7 @@
   "runs": 1,
   "instructions": "e6614c584085",
   "case_set": "9097135beedf",
+  "inputs": "1f427ab0b735",
   "scorecard": {
     "accepted": {
       "passed": 23,

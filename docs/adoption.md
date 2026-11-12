@@ -215,11 +215,28 @@ its own reviewed change.
 uv run agent-framework-eval compare <before>.json <after>.json
 ```
 
-It prints the cases whose class changed. Two results are comparable only
-when they were run on the same case set; otherwise it says so and exits 2.
-A run made with `--only` judged some of the set: only the cases both
-results judged are compared, and the rest are listed as judged in one
-result only.
+It prints the cases whose class changed. Both results are read against
+the answers in the case set as it is now (`--cases DIR`, the same default
+as `run`), so a corrected answer never makes two results incomparable;
+the cases whose answer changed since each run are named. Two results are
+comparable when their cases sent the judgment the same thing — the same
+inputs fingerprint; otherwise it says so and exits 2. A run made with
+`--only` judged some of the set: only the cases both results judged are
+compared, and the rest are listed as judged in one result only.
+
+**Read a stored result.**
+
+```bash
+uv run agent-framework-eval show <result>.json
+```
+
+It prints the scorecard of a result made earlier, classed against
+today's answers, and writes nothing. When a wrongly judged case turns out
+to be a real defect, correct the case's answer and run `show` again: no
+new run is needed, because nothing the model was sent has changed. If a
+case's bundle or a seeded edit has changed since the run, or a case was
+added or removed, the result is of something else and `show` and
+`compare` refuse it with exit 2.
 
 **Build your own set.** The cases in this repository are its own pull
 requests; a target repository freezes its own:

@@ -2,14 +2,17 @@
 
     agent-framework-eval run [--cases DIR] [--roster FILE] [--runs N]
                              [--only ID ...] [--pause SECONDS] [--out FILE]
-    agent-framework-eval compare <result> <result>
+    agent-framework-eval show <result> [--cases DIR]
+    agent-framework-eval compare <result> <result> [--cases DIR]
     agent-framework-eval freeze <pr> [--repo OWNER/NAME] [--cases DIR]
 
 `run` judges every case exactly as the gate does, prints the scorecard on
 stdout and writes the result file; it exits 0 when the run completed,
-whatever the score, and 2 when it could not start. `compare` prints the
-cases whose class changed between two results, and exits 2 when their case
-sets differ. `freeze` writes a merged pull request into the set as an
+whatever the score, and 2 when it could not start. `show` prints the
+scorecard of a stored result and `compare` the cases whose class changed
+between two; both class every judgment against the answers in the case set
+as it is now, write nothing, and exit 2 when the cases no longer send what
+the result judged (specs/eval-rescore). `freeze` writes a merged pull request into the set as an
 accepted case, reading GitHub through `gh`; it exits 2, writing nothing,
 for one that is not merged or that the deterministic stage rejects. `run`
 is run by a human with a provider key in their shell — never by CI
@@ -32,7 +35,7 @@ from ..providers.anthropic import AnthropicProvider
 from ..providers.google import GoogleProvider
 from ..providers.registry import register_provider
 from ..roster import Roster
-from .case import load_set, set_fingerprint
+from .case import EvalCase, inputs_fingerprint, load_set, set_fingerprint
 from .freeze import freeze
 from .run import run_eval
 from .scorecard import (
@@ -42,6 +45,7 @@ from .scorecard import (
     instructions_fingerprint,
     render,
     render_comparison,
+    rescore,
     result_from_json,
     result_to_json,
 )
@@ -118,7 +122,7 @@ def _run(args: argparse.Namespace) -> int:
     result = Result(
         model=f"{validator.provider}:{validator.model}", date=date, runs=args.runs,
         instructions=instructions_fingerprint(), case_set=set_fingerprint(args.cases),
-        judgments=judgments,
+        judgments=judgments, inputs=inputs_fingerprint(args.cases),
     )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(result_to_json(result), encoding="utf-8")
@@ -136,13 +140,66 @@ def _read(path: Path) -> Result:
         raise EvalResultError(f"{path}: {e}") from None
 
 
+def _against_todays_answers(
+    paths: list[Path], directory: Path
+) -> tuple[list[Result], tuple[EvalCase, ...]]:
+    """The stored results and the case set they are to be read against.
+
+    Raises when a result cannot be read against it: it records no inputs
+    fingerprint, or the cases no longer send what it judged."""
+    results = [_read(path) for path in paths]
+    cases = load_set(directory)
+    for path, result in zip(paths, results, strict=True):
+        if result.inputs is None:
+            raise EvalResultError(
+                f"{path}: records no inputs fingerprint, so it cannot be shown to have "
+                f"judged the cases in {directory}"
+            )
+    return results, cases
+
+
+def _changed_since(path: Path, result: Result, directory: Path, now: str) -> str | None:
+    if result.inputs == now:
+        return None
+    return (
+        f"{path}: the cases have changed since the run (inputs {result.inputs} then, "
+        f"{now} in {directory}); its judgments are of something else"
+    )
+
+
+def _show(args: argparse.Namespace) -> int:
+    try:
+        [result], cases = _against_todays_answers([args.result], args.cases)
+        problem = _changed_since(
+            args.result, result, args.cases, inputs_fingerprint(args.cases)
+        )
+        if problem:
+            return _refuse(problem)
+        rescored, changed = rescore(result, cases)
+    except AgentFrameworkError as e:
+        return _refuse(str(e))
+    print(render(rescored, changed), end="")
+    return 0
+
+
 def _compare(args: argparse.Namespace) -> int:
     try:
-        before, after = _read(args.before), _read(args.after)
-    except EvalResultError as e:
+        [before, after], cases = _against_todays_answers(
+            [args.before, args.after], args.cases
+        )
+        if not compare(before, after).comparable:
+            print(render_comparison(before, after), end="")
+            return CANNOT_START
+        problem = _changed_since(
+            args.before, before, args.cases, inputs_fingerprint(args.cases)
+        )
+        if problem:
+            return _refuse(problem)
+        (was, was_changed), (now, now_changed) = rescore(before, cases), rescore(after, cases)
+    except AgentFrameworkError as e:
         return _refuse(str(e))
-    print(render_comparison(before, after), end="")
-    return 0 if compare(before, after).comparable else CANNOT_START
+    print(render_comparison(was, now, (was_changed, now_changed)), end="")
+    return 0
 
 
 def _freeze(args: argparse.Namespace) -> int:
@@ -177,9 +234,17 @@ def main(argv: list[str] | None = None) -> int:
                      help="result file (default: results/<date>-<model>.json beside the cases)")
     run.set_defaults(handler=_run)
 
+    show = commands.add_parser("show", help="print a stored result against today's answers")
+    show.add_argument("result", type=Path)
+    show.add_argument("--cases", type=Path, default=DEFAULT_CASES, metavar="DIR",
+                      help="the case set whose answers the result is read against")
+    show.set_defaults(handler=_show)
+
     cmp_ = commands.add_parser("compare", help="show which cases changed between two results")
     cmp_.add_argument("before", type=Path)
     cmp_.add_argument("after", type=Path)
+    cmp_.add_argument("--cases", type=Path, default=DEFAULT_CASES, metavar="DIR",
+                      help="the case set whose answers both results are read against")
     cmp_.set_defaults(handler=_compare)
 
     frz = commands.add_parser("freeze", help="write a merged pull request as an accepted case")
