@@ -1,6 +1,6 @@
 # Spec: A role's effort is set in the roster
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-12
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0001 (roles are bound by the roster; no vendor
@@ -197,24 +197,25 @@ roster is changed.
 
 ## Open questions
 
-Each has a drafted answer; all are vpc's to accept or change.
+All resolved 2026-11-12 (human sign-off: vpc accepted the five drafted
+answers).
 
-- [ ] **When the roster is changed.** Drafted rule, fixed before the
+- [x] **When the roster is changed.** Drafted rule, fixed before the
   numbers are in: set `effort = "high"` for the validator if the after
   check catches at least 15 of 20, at least 5 more than the before
   check, and the full run rejects no accepted work on a finding vpc
   rules false. Anything short of that, the roster stays as it is and
   the next lever is tried. In between is vpc's call.
-- [ ] **Whether the setting merges if the check shows no gain.**
+- [x] **Whether the setting merges if the check shows no gain.**
   Drafted: no. An unused setting is clutter; the branch is closed and
   the spec marked `Withdrawn` with the numbers recorded in it.
-- [ ] **Three levels, not the providers' full ranges.** `low`, `medium`
+- [x] **Three levels, not the providers' full ranges.** `low`, `medium`
   and `high` are the levels both providers share. Anthropic's higher
   levels can be added when a role needs them.
-- [ ] **No ADR.** The setting extends what a roster binding says and
+- [x] **No ADR.** The setting extends what a roster binding says and
   changes none of ADR 0001's decisions; it is undone by deleting a
   field.
-- [ ] **The worker refuses the setting rather than passing it on**
+- [x] **The worker refuses the setting rather than passing it on**
   (R-5). Passing it to the session is a separate piece of work on a
   different surface.
 
