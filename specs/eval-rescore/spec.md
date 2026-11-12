@@ -94,10 +94,10 @@ printed once, by the run that made it.
   it exits 2. (R-3)
 - **SC-5** — After `show` and `compare`, the result files are
   byte-for-byte what they were. (R-4)
-- **SC-6** — Each of the three result files in the repository loads,
-  carries the case set's inputs fingerprint, and `show` prints a
-  scorecard for it; a result with no inputs fingerprint is refused with
-  a message that says so. (R-5)
+- **SC-6** — Each of the three result files in the repository on
+  2026-11-12 loads and carries one and the same inputs fingerprint; a
+  result with no inputs fingerprint is refused with a message that says
+  so. (R-5)
 - **SC-7** — For the same cases and the same provider answers, a run
   records the judgments and classes it recorded before the change; its
   result differs only in carrying the inputs fingerprint. (R-6)
@@ -137,7 +137,17 @@ One PR.
 
 ### Decisions
 
-- *(none yet)*
+- *2026-11-12* — **SC-6 amended before the implementation merged, in its
+  own PR.** As first signed it read: "Each of the three result files in
+  the repository loads, carries the case set's inputs fingerprint, and
+  `show` prints a scorecard for it". That ties three records of past
+  runs to the case set as it is on whatever day the test runs: the first
+  time a case is added or a bundle rebuilt they no longer carry "the
+  case set's" fingerprint, `show` rightly refuses them (R-2), and the
+  criterion's test fails a legitimate change. The criterion now names
+  the date and asks only what stays true of the files. That `show`
+  prints a scorecard for a result on the current inputs is SC-2's, and
+  that it refuses one that is not is SC-3's. No requirement changes.
 
 ## Rollout and undo
 
