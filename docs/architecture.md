@@ -197,3 +197,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/validator-eval-set/` — Implemented (frozen).
 - `specs/conformance-only-judgment/` — Implemented (frozen).
 - `specs/eval-rescore/` — Implemented (frozen).
+- `specs/role-effort/` — Approved (not yet implemented).
