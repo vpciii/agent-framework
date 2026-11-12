@@ -1,6 +1,6 @@
 # Spec: A stored eval result is read against today's answers
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-12
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0008 (what the judgment is for)
@@ -19,7 +19,7 @@ nothing the model saw has changed.
 A result is tied to a fingerprint of the whole case set, answers
 included, and `compare` refuses two results whose fingerprints differ.
 The answers have been corrected three times in three days (#99, #102,
-and #103, open as this is written), each time because the judgment found a real defect in accepted
+and #103), each time because the judgment found a real defect in accepted
 work. Each time the stored result stopped being comparable with
 anything, and the choice was a fresh run — 33 minutes with vpc's key —
 or a re-reading by hand in a PR body.
@@ -149,21 +149,22 @@ No model is called and no key is needed, for the change or its tests.
 
 ## Open questions
 
-Each has a drafted answer; all are vpc's to accept or change.
+All resolved 2026-11-12 (human sign-off: vpc accepted the four drafted
+answers).
 
-- [ ] **The three stored results are edited to add one field.** They are
+- [x] **The three stored results are edited to add one field.** They are
   records of runs, and this adds to them what was true of the run but
   not written down. The alternative leaves them untouched and makes the
   current baseline unreadable by the new commands, which defeats the
   purpose.
-- [ ] **`compare` always uses today's answers.** There is no flag to
+- [x] **`compare` always uses today's answers.** There is no flag to
   compare under the answers recorded at each run; those remain in the
   files for anyone who wants them.
-- [ ] **A result on other inputs is refused, not partly read.** If one
+- [x] **A result on other inputs is refused, not partly read.** If one
   case's bundle is rebuilt, every earlier result stops being readable
   by `show`. Per-case fingerprints would allow a partial reading and
   are left until that happens.
-- [ ] **`show` moves here from specs/judgment-stability** (PR #100, not
+- [x] **`show` moves here from specs/judgment-stability** (PR #100, not
   merged), which this and ADR 0008 between them replace.
 
 ## Out of scope (for now)
