@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Any, Literal, Protocol, runtime_checkable
 
 from ..errors import RequestError
+from ..models import EFFORTS, Effort
 
 
 @dataclass(frozen=True)
@@ -36,14 +37,23 @@ class Request:
     `require_tool` names one of `tools` as the required answer: the provider
     is asked to enforce that the response is a call to it. `max_output_tokens`
     bounds the response; None means the adapter's own documented default.
+    `effort` is how much reasoning the model is asked to spend, as intent:
+    each adapter asks its provider in that provider's own way, and None
+    means the provider's default. Dispatch sets it from the role's roster
+    binding; a caller does not.
     """
 
     prompt: str
     tools: tuple[ToolDef, ...] = ()
     require_tool: str | None = None
     max_output_tokens: int | None = None
+    effort: Effort | None = None
 
     def __post_init__(self) -> None:
+        if self.effort is not None and self.effort not in EFFORTS:
+            raise RequestError(
+                f"effort must be one of {', '.join(EFFORTS)}, got {self.effort!r}"
+            )
         if self.require_tool is not None and self.require_tool not in {
             t.name for t in self.tools
         }:

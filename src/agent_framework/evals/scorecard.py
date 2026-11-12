@@ -150,6 +150,9 @@ class Result:
     # Fingerprint of what the cases sent the judgment; None in a result
     # made before results recorded it.
     inputs: str | None = None
+    # The effort the validator's roster binding asked for; None when it set
+    # none, or in a result made before results recorded it.
+    effort: str | None = None
 
     @property
     def scorecard(self) -> Scorecard:
@@ -199,8 +202,13 @@ def result_to_json(result: Result) -> str:
         item = asdict(j)
         item["class"] = item.pop("cls")
         judgments.append(item)
-    data = {
-        "model": result.model, "date": result.date, "runs": result.runs,
+    data: dict[str, Any] = {"model": result.model}
+    if result.effort is not None:
+        # Written only when the roster set one, so a run at the provider's
+        # default is recorded as it always was.
+        data["effort"] = result.effort
+    data |= {
+        "date": result.date, "runs": result.runs,
         "instructions": result.instructions, "case_set": result.case_set,
         "inputs": result.inputs,
         "scorecard": asdict(result.scorecard),
@@ -233,6 +241,7 @@ def result_from_json(text: str) -> Result:
                 for j in data["judgments"]
             ),
             inputs=None if data.get("inputs") is None else str(data["inputs"]),
+            effort=None if data.get("effort") is None else str(data["effort"]),
         )
     except (ValueError, KeyError, TypeError) as e:
         raise EvalResultError(f"not an eval result: {type(e).__name__}: {e}") from None
@@ -314,7 +323,8 @@ def _findings(j: JudgmentRecord) -> list[str]:
 
 def _head(result: Result) -> str:
     return (
-        f"{result.model}, {result.date} · instructions {result.instructions} · "
+        f"{result.model}, effort {result.effort or 'provider default'}, {result.date} · "
+        f"instructions {result.instructions} · "
         f"case set {result.case_set} · {result.runs} run(s) per case"
     )
 

@@ -14,7 +14,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from ..alerts import GhIssueTracker, IssueTracker, Push, notify, push_from_env
-from ..errors import SessionTimeoutError
+from ..errors import SessionTimeoutError, WorkerError
 from ..proc import Runner, run_command
 from ..project import DEFAULTS, ProjectConfig
 from ..roster import Roster
@@ -67,6 +67,14 @@ def work(
     push_factory: Callable[[], Push | None] = push_from_env,
 ) -> WorkerOutcome:
     """Dispatch one task to one headless session; return its outcome."""
+    worker = roster.resolve("worker")
+    if worker.effort is not None:
+        # The session is not reached through a provider adapter and takes
+        # no such setting; ignoring it silently would be worse than refusing.
+        raise WorkerError(
+            f"the worker's roster binding sets effort = {worker.effort!r}, which the "
+            "worker session does not take; remove it from the worker's binding"
+        )
     task = parse_task(spec_slug, task_id, specs_dir=specs_dir)
     brief = build_brief(task, project)
     logger.info("worker %s/%s: brief built (%d criteria)", spec_slug, task_id, len(task.criteria))
@@ -74,7 +82,7 @@ def work(
     worktree, branch = create_worktree(task, run=run)
     logger.info("worker %s/%s: worktree %s on %s", spec_slug, task_id, worktree, branch)
 
-    model = roster.resolve("worker").model
+    model = worker.model
     # The confinement profile (ADR 0007): computed here from project config,
     # never taken from the caller.
     profile = profile_args(project, _read_roots(run))

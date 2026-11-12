@@ -74,6 +74,10 @@ class AnthropicProvider:
                 {"name": t.name, "description": t.description, "input_schema": t.parameters}
                 for t in request.tools
             ]
+        if request.effort is not None:
+            # The provider's control for how much to reason is the output
+            # effort; it rides beside the answer format when there is one.
+            kwargs.setdefault("output_config", {})["effort"] = request.effort
         try:
             message = await client.messages.create(**kwargs)
         except (APIError, TypeError) as e:

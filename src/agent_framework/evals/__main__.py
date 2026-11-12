@@ -123,6 +123,7 @@ def _run(args: argparse.Namespace) -> int:
         model=f"{validator.provider}:{validator.model}", date=date, runs=args.runs,
         instructions=instructions_fingerprint(), case_set=set_fingerprint(args.cases),
         judgments=judgments, inputs=inputs_fingerprint(args.cases),
+        effort=validator.effort,
     )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(result_to_json(result), encoding="utf-8")

@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from agent_framework.errors import SessionTimeoutError
+from agent_framework.errors import SessionTimeoutError, WorkerError
 from agent_framework.roster import Roster
 from agent_framework.worker.orchestrator import work
 from agent_framework.worker.types import Escalated, PrOpened, TimedOut
@@ -162,3 +162,22 @@ def test_sc5_budget_expiry_times_out_with_preserved_worktree(repo: Path) -> None
     assert outcome == TimedOut(worktree_path=".worktrees/fixture-t-1")
     assert not git.named("gh", "pr", "create")
     assert not git.having("git", "worktree", "remove")  # preserved for inspection
+
+
+def test_sc6_a_worker_binding_with_an_effort_is_refused_before_anything_runs(
+    repo: Path,
+) -> None:
+    """specs/role-effort SC-6: the worker session does not take an effort,
+    so a `worker` binding that carries one is refused — before any git or
+    session command is run — and the error names the setting."""
+    git = _GitGh()
+    record, session = _session({"status": "completed", "detail": "did it"})
+    roster = Roster.from_dict(
+        {"roles": {"worker": {"provider": "anthropic", "model": "worker-model-x",
+                              "effort": "high"}}}
+    )
+
+    with pytest.raises(WorkerError, match="effort"):
+        work("fixture", "T-1", roster, specs_dir=repo / "specs", run=git, session_run=session)
+
+    assert git.calls == [] and record == []

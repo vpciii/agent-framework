@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import tomllib
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from .errors import RosterError, UnknownRoleError
-from .models import ModelRef
+from .models import EFFORTS, Effort, ModelRef
 
 # Field names that must never appear in a roster — they smell like a secret,
 # and secrets belong in the environment, not in config (SC-5).
@@ -63,7 +63,15 @@ class Roster:
                 raise RosterError(
                     f"role {role!r} needs string 'provider' and 'model'"
                 )
-            roles[role] = ModelRef(provider=provider, model=model)
+            effort = binding.get("effort")
+            if effort is not None and effort not in EFFORTS:
+                raise RosterError(
+                    f"role {role!r} has effort {effort!r}; it must be one of "
+                    f"{', '.join(EFFORTS)}, or be left out for the provider's default"
+                )
+            roles[role] = ModelRef(
+                provider=provider, model=model, effort=cast("Effort | None", effort)
+            )
 
         if not roles:
             raise RosterError("roster defines no roles")

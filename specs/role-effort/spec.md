@@ -230,10 +230,10 @@ answers).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
-| SC-2 | R-2 | *(pending)* |
-| SC-3 | R-3 | *(pending)* |
-| SC-4 | R-3 | *(pending)* |
-| SC-5 | R-4 | *(pending)* |
-| SC-6 | R-5 | *(pending)* |
-| SC-7 | R-6 | *(pending)* |
+| SC-1 | R-1 | `tests/test_role_effort.py::test_sc1_a_binding_may_carry_an_effort`, `tests/test_role_effort.py::test_sc1_a_binding_without_an_effort_has_none`, `tests/test_role_effort.py::test_sc1_any_other_effort_is_a_roster_error_naming_the_role` |
+| SC-2 | R-2 | `tests/test_role_effort.py::test_sc2_dispatch_hands_the_roles_effort_to_the_adapter` |
+| SC-3 | R-3 | `tests/test_role_effort.py::test_sc3_the_google_adapter_asks_for_the_effort_as_the_thinking_level` |
+| SC-4 | R-3 | `tests/test_role_effort.py::test_sc4_the_anthropic_adapter_asks_for_the_effort_as_the_output_effort` |
+| SC-5 | R-4 | `tests/test_role_effort.py::test_sc5_no_providers_option_name_outside_the_adapters` |
+| SC-6 | R-5 | `tests/worker/test_orchestrator.py::test_sc6_a_worker_binding_with_an_effort_is_refused_before_anything_runs` |
+| SC-7 | R-6 | `tests/evals/test_effort_record.py::test_sc7_a_judgment_logs_the_effort_it_ran_at`, `tests/evals/test_effort_record.py::test_sc7_an_eval_result_records_the_effort_and_the_scorecard_shows_it`, `tests/evals/test_effort_record.py::test_sc7_a_result_written_before_the_change_shows_the_providers_default` |
