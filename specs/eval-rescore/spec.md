@@ -1,6 +1,6 @@
 # Spec: A stored eval result is read against today's answers
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-12
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0008 (what the judgment is for)
@@ -148,6 +148,19 @@ One PR.
   the date and asks only what stays true of the files. That `show`
   prints a scorecard for a result on the current inputs is SC-2's, and
   that it refuses one that is not is SC-3's. No requirement changes.
+- *2026-11-12* — **Implemented by #105; signed off by vpc.** The inputs
+  fingerprint of the repository's case set, and the value added to the
+  three stored results, is `1f427ab0b735`; it was computed from the case
+  files at the commit that added each result (`013c1e3`, `e1a6912`,
+  `4782d17`) and today, and is the same at all four.
+- *2026-11-12* — **`show` and `compare` take `--cases DIR`**, defaulting
+  to `evals/validator/cases` as `run` does; results made on another
+  directory need it. When two results match each other but not the cases
+  on disk, `compare` refuses as `show` does.
+- *2026-11-12* — **Three tests cited by the frozen eval-set spec's SC-9
+  changed with the rule and kept their names**: two in
+  `tests/evals/test_scorecard.py` now tell results apart by inputs
+  fingerprint, and the one in `tests/evals/test_cli.py` passes `--cases`.
 
 ## Rollout and undo
 
