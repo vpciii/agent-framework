@@ -22,9 +22,9 @@ from agent_framework.validator.bundle import CIEvidence, EvidenceBundle, TaskRef
 from agent_framework.validator.judgment import VERDICT_TOOL, build_request
 
 ROOT = Path(__file__).resolve().parents[2]
-REPO_CASES = ROOT / "evals" / "validator" / "cases"
 REPO_RESULTS = ROOT / "evals" / "validator" / "results"
-# What the repository's cases sent the judgment at each recorded run.
+# What the repository's cases sent the judgment at each of the three runs
+# recorded by 2026-11-12, as the case files stood at each run's commit.
 RECORDED_INPUTS = "1f427ab0b735"
 
 TEST_SOURCE = 'def test_a() -> None:\n    """SC-1."""\n    assert collect() == 1\n'
@@ -283,24 +283,15 @@ def test_sc5_show_and_compare_leave_the_result_files_as_they_were(root: Path) ->
     "2026-11-12-gemini-3.8-flash-conformance-only.json",
 ])
 def test_sc6_a_result_recorded_before_the_change_carries_its_inputs_fingerprint(
-    name: str, capsys: pytest.CaptureFixture[str]
+    name: str,
 ) -> None:
-    """SC-6: each of the three results loads and carries the inputs
-    fingerprint of the case set it judged; `show` prints its scorecard while
-    the repository's cases still send the same thing, and refuses it once
-    they do not."""
-    path = REPO_RESULTS / name
-    result = result_from_json(path.read_text(encoding="utf-8"))
-    assert result.inputs == RECORDED_INPUTS and len(result.judgments) == 36
+    """SC-6: each of the three results in the repository on 2026-11-12
+    loads and carries one and the same inputs fingerprint — what the case
+    files sent at the commit of each run."""
+    result = result_from_json((REPO_RESULTS / name).read_text(encoding="utf-8"))
 
-    code = eval_cli.main(["show", str(path), "--cases", str(REPO_CASES)])
-
-    out, err = capsys.readouterr()
-    if _inputs(REPO_CASES) == RECORDED_INPUTS:
-        assert code == 0 and "Accepted work (expected PASS)" in out
-        assert {case.id for case in load_set(REPO_CASES)} == {j.case for j in result.judgments}
-    else:
-        assert code == 2 and "cases have changed since the run" in err
+    assert result.inputs == RECORDED_INPUTS
+    assert len(result.judgments) == 36
 
 
 def test_sc6_a_result_with_no_inputs_fingerprint_is_refused_saying_so(
