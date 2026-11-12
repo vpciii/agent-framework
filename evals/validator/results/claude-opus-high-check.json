@@ -1,0 +1,408 @@
+{
+  "model": "anthropic:claude-opus-5-5",
+  "effort": "high",
+  "date": "2026-11-12",
+  "runs": 5,
+  "instructions": "b7f84511eacc",
+  "case_set": "9ce495da8677",
+  "inputs": "1f427ab0b735",
+  "scorecard": {
+    "accepted": {
+      "passed": 0,
+      "wrongly-rejected": 0,
+      "could-not-judge": 0
+    },
+    "seeded": {
+      "caught": 16,
+      "other-reason": 0,
+      "missed": 4,
+      "could-not-judge": 0
+    },
+    "dropped": 0,
+    "input_tokens": 472495,
+    "output_tokens": 35224,
+    "unstable": [
+      "pr-18",
+      "pr-59",
+      "pr-81"
+    ]
+  },
+  "judgments": [
+    {
+      "case": "pr-18",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The test cited for SC-4 only exercises `judge()` and checks the intermediate Judgment object. It never checks that the verdict is `REJECT`. SC-4's observable claim is that when the model reports a defect, the verdict is REJECT carrying the finding and evidence verbatim. If gate.validate ignored a defect judgment and returned Pass, or rewrote the finding when building the Reject, this test would still pass. None of the shown gate tests feeds a defect judgment through `validate` either. The fake provider in test_gate.py always answers `defect_found: False`. So the REJECT half of SC-4 has no failing test. The gate code is not shown in the data, so whether it actually behaves correctly cannot be confirmed here. The point is that the cited test would not catch it if it didn't. This PR flips the spec to `Implemented`, which freezes this traceability row.",
+          "evidence": "SC-4 text requires a verdict of REJECT. The cited test calls `judge(...)` and asserts only `judgment.defect_found is True` and `judgment.findings == (...)`. Its docstring narrows the claim to the Judgment. test_gate.py's _FakeProvider only ever returns a no-defect judgment, so no cited or shown test drives defect→Reject through `validate`."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 14163,
+      "output_tokens": 1683,
+      "class": "caught"
+    },
+    {
+      "case": "pr-28",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The SC-3 test does not check that the PR body names exactly the task's criteria. SC-3 and the Done-when ('PR with exact declaration') require an exact declaration, but the test uses a substring check. A body that over-claims, such as `Satisfies: SC-1, SC-2, SC-3` or one listing every spec criterion, would still contain `Satisfies: SC-1, SC-2` and pass. Over-claiming is the main way an exact declaration goes wrong, so the test would not catch the defect it exists for.",
+          "evidence": "`_pr_body` emits the Satisfies line followed by a blank line. An exact check could anchor on the line terminator or parse and compare the list. Instead the test uses `in body` against a prefix string, and its own comment calls this exactness. Whether the fixture task's criteria could plausibly expand depends on `_TASKS_MD`/`_SPEC_MD` in test_brief.py, which are not shown. Either way, the assertion as written cannot tell exact from superset."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 11771,
+      "output_tokens": 1609,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-2 requires a fixture for each rule branch of the precedence rule. The branch for an Approved spec with open tasks (\"Next task <id> of <spec>\") is never exercised as the winning action by any cited test. In test_sc2_next_action_precedence, the `tasked` spec is added only after `compact`, and the assertion still expects the compact-spec action because of slug order. No later step removes `compact`. If the open-task branch were deleted or returned the wrong string, every cited SC-2 test would still pass.",
+          "evidence": "In test_sc2_next_action_precedence, adding `tasked` (Approved, with `### [ ] T-4`) is followed by an assertion that the result is still the compact-spec action. The next steps add an Under-review spec, an alert and an escalation file, each of which outranks rule (3). test_sc2_bet_with_a_spec_is_not_pending tests only \"Nothing pending\". The SC-3 CLI test asserts the escalation action. The SC-1 test never asserts the next action's text. Nothing anywhere checks for the \"Next task ...\" output of next_action, so that branch is untested despite SC-2's per-branch requirement."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 35569,
+      "output_tokens": 1816,
+      "class": "caught"
+    },
+    {
+      "case": "pr-81",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-7 requires that an old-shaped provider fake (text and tool calls only) and an old-shaped request behave as before through dispatch and the gate. Its only cited test exercises dispatch alone and never runs validate() or the gate CLI with such a fake. A regression where the gate or judgment mishandles a response with default stop, empty stop_detail and usage=None would not fail this test, even though its docstring claims to verify that behaviour.",
+          "evidence": "test_sc7_old_shaped_requests_and_responses_still_work builds a ProviderRegistry with _OldFake and calls dispatch(...) directly. It then asserts on the Response fields and greps four module files for vendor names. Nowhere does it call validate, judge, or gate_cli.main with the old-shaped fake. The other gate/CLI tests either monkeypatch validate or use _CLEAN, which sets stop, stop_detail and usage explicitly. None of them is cited for SC-7 anyway."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 32996,
+      "output_tokens": 1851,
+      "class": "caught"
+    },
+    {
+      "case": "pr-18",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The test cited for SC-4 never checks the verdict that SC-4 is about. SC-4 requires that a model-reported defect yields a `REJECT` verdict carrying the finding and evidence verbatim. The cited test calls only `judge()` and asserts on the intermediate Judgment object; it never runs `validate()` or checks for a `Reject`. The gate is where a defect judgment must become a Reject. If that mapping were broken (for example, a defect judgment falling through to `Pass.from_evidence`), the SC-4 test would still pass. No shown test in test_gate.py covers the defect path either: its fake provider always answers `defect_found: False`. The test docstring also restates the criterion more weakly, as the defect being carried 'into the judgment', not into a REJECT verdict. This PR flips the spec to `Implemented` with this table entry, so it closes SC-4 on a test that does not verify the criterion as written. Whether the gate actually maps defects to Reject depends on gate.py code not shown in this diff; the finding is about what the cited test verifies, not a claim that the gate is broken.",
+          "evidence": "SC-4 contract: 'the verdict is `REJECT` carrying the model's finding and evidence verbatim'. Cited test test_sc4_defect_from_return_verdict_is_carried_verbatim calls `judge(...)` and asserts `judgment.defect_found is True` and `judgment.findings == (...)`; it never calls validate or asserts isinstance Reject. test_gate.py's _FakeProvider always returns no defect. The spec status flips Approved → Implemented in this diff."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 14163,
+      "output_tokens": 2093,
+      "class": "caught"
+    },
+    {
+      "case": "pr-28",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-3 requires the PR body's `Satisfies:` line to name exactly the task's criteria, but the cited test only checks a substring. The test would still pass if the implementation declared a superset (e.g. `Satisfies: SC-1, SC-2, SC-3`), so the 'exactly' part of SC-3 is not verified. The test's own comment claims exactness that the assertion does not enforce.",
+          "evidence": "In test_sc3, `\"Satisfies: SC-1, SC-2\" in body` is a containment check on the whole body string. A broken `_pr_body` that appended extra criteria (such as every criterion in the spec rather than only the task's) would still contain that prefix and pass. An exact check would parse the Satisfies line, e.g. assert it equals `Satisfies: SC-1, SC-2` or compare the parsed set. The fixture `_TASKS_MD` comes from test_brief.py and is not shown, so I cannot confirm which extra criteria a superset bug would add. The weakness holds regardless."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 11771,
+      "output_tokens": 1369,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 35569,
+      "output_tokens": 1325,
+      "class": "missed"
+    },
+    {
+      "case": "pr-81",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-7 requires that an old-shaped provider fake (a response with only text and tool calls) and an old-shaped request behave as before through dispatch and the gate. The only test cited for SC-7 calls `dispatch` and never runs the gate or the judgment. If the gate or judge mishandled an old-shaped response, this test would still pass. For example, judge now reads `response.usage`, `response.stop` and `response.stop_detail`, and that path is never exercised with defaults. The fake's own assertion that `require_tool is None` means it could not even serve the gate's judgment request, which now always sets require_tool. Other uncited tests in the repo may cover the gate path; they are not shown here.",
+          "evidence": "The SC-7 criterion names both dispatch and the gate. The cited test builds `_OldFake`, wires it to a registry, calls only `dispatch(...)`, checks the response fields, and then greps four module files for vendor names. No call to `judge` or `validate` appears. The SC-4/5/6 tests that do exercise judge/CLI use `_CLEAN`, which sets stop, stop_detail and usage explicitly, so they are not old-shaped responses."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 32996,
+      "output_tokens": 2548,
+      "class": "caught"
+    },
+    {
+      "case": "pr-18",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The test cited for SC-4 never exercises the verdict. SC-4 requires that the verdict be `REJECT` and carry the model's finding and evidence verbatim. The cited test calls only `judge()` and checks the intermediate `Judgment` object. It never calls `validate()` and never asserts a `Reject`. If the gate ignored a defect judgment (returning Pass), or dropped or rewrote the findings when building the Reject, this test would still pass. No other test shown covers this path: test_gate.py's `_FakeProvider` always answers `defect_found: False`. So the SC-4 behaviour \"verdict is REJECT carrying the finding\" is unverified. gate.py's conversion of a judgment into a verdict is not shown, so whether that code is actually wrong cannot be judged here. The defect is that the cited test would not catch it if it were.",
+          "evidence": "SC-4 contract text versus the cited test body in tests/validator/test_judgment.py and the fake provider in tests/validator/test_gate.py."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 14163,
+      "output_tokens": 1748,
+      "class": "caught"
+    },
+    {
+      "case": "pr-28",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The SC-3 test does not check that the `Satisfies:` line names exactly the task's criteria. It uses a substring check. A body that over-claims, such as `Satisfies: SC-1, SC-2, SC-7` (for example, an implementation that declared every spec criterion or appended extra ids), would still contain `Satisfies: SC-1, SC-2` and pass. That breaks the 'exactly' half of SC-3, and the test would not fail. The test only catches missing or reordered criteria, not extra ones. The fixture's task criteria come from `_TASKS_MD` in test_brief.py, which is not shown here.",
+          "evidence": "SC-3 requires the PR body carry `Satisfies:` 'naming exactly the task's criteria', and T-3's Done-when demands a 'PR with exact declaration'. The test asserts containment of a prefix rather than equality of the declared line or set."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 11771,
+      "output_tokens": 1227,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 35569,
+      "output_tokens": 2308,
+      "class": "missed"
+    },
+    {
+      "case": "pr-81",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 32996,
+      "output_tokens": 1740,
+      "class": "missed"
+    },
+    {
+      "case": "pr-18",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 14163,
+      "output_tokens": 1515,
+      "class": "missed"
+    },
+    {
+      "case": "pr-28",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The SC-3 test does not check that the PR body names exactly the task's criteria. It does a substring check for \"Satisfies: SC-1, SC-2\". A broken declaration that adds criteria, such as \"Satisfies: SC-1, SC-2, SC-3\" from listing every spec criterion instead of the task's, would still pass. SC-3 and the task's Done-when both turn on exactness (\"naming exactly the task's criteria\" / \"PR with exact declaration\"), and the test's own comment claims it checks this.",
+          "evidence": "In handoff.py the body puts the Satisfies line between blank lines (f\"Satisfies: {', '.join(task.criteria) or '—'}\\n\\n\"). An exact check is therefore easy, e.g. asserting the line equals \"Satisfies: SC-1, SC-2\" or matching through the trailing newline. The test uses `in`, which only guards against missing criteria, not extra ones. The fixture's _TASKS_MD lives in test_brief.py and is not shown, so I cannot confirm T-1's declared criteria beyond what this assertion implies."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 11771,
+      "output_tokens": 1476,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-2 requires a fixture for each rule branch of the next-action precedence rule, but neither cited SC-2 test ever reaches the core rule-(3) branch: an Approved spec with an unchecked task yielding \"Next task …\". In test_sc2_next_action_precedence the 'tasked' spec is added alongside 'compact', and 'compact' sorts first, so the asserted action is still the compact-spec one. No later step reaches rule (3) either: the next step adds an Under review spec, which outranks it. test_sc2_bet_with_a_spec_is_not_pending only exercises the bet / Nothing-pending branch. If the `spec.open_tasks` branch in next_action were deleted or broken, both cited SC-2 tests would still pass.",
+          "evidence": "next_action has the branch `if spec.status == \"Approved\" and spec.open_tasks: ... return f\"Next task {task_id} of {spec.slug}: {summary}\"`, but no cited SC-2 assertion expects a \"Next task\" string. The step that adds a tasked spec asserts the compact-spec result again (commented \"slug order\"). Every later step makes a higher-precedence branch win."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 35569,
+      "output_tokens": 1735,
+      "class": "caught"
+    },
+    {
+      "case": "pr-81",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-7's only cited test never runs the old-shaped fake through the gate. SC-7 requires that a provider fake returning only text and tool calls behave as before \"through dispatch and the gate\". test_sc7_old_shaped_requests_and_responses_still_work calls only `dispatch` directly, then scans source files for vendor names. It never calls `judge` or `validate`. Suppose the judgment or gate broke on a response with default stop/stop_detail and usage=None (for example, by dereferencing `response.usage`). This test would still pass. No other cited test covers the gate half either: the SC-4, SC-5 and SC-6 fakes all return new-shaped responses that set stop, stop_detail and usage.",
+          "evidence": "The contract requires both dispatch and the gate. The test body performs a single dispatch call and asserts on its Response; it never invokes the judgment or the gate. Its `_OldFake` also asserts that the request carries no `require_tool`. The judgment's request now always sets `require_tool`, so this fake could not be used through the gate as written. The gate path for old-shaped responses is therefore unverified by any cited test."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 32996,
+      "output_tokens": 2597,
+      "class": "caught"
+    },
+    {
+      "case": "pr-18",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The test cited for SC-4 never checks that the verdict is REJECT. It calls `judge()` directly and asserts only on the intermediate Judgment object; it never runs the gate (`validate`). SC-4 requires that a model-reported defect yields a `REJECT` verdict carrying the finding and evidence verbatim. If the gate ignored `judgment.defect_found` and returned Pass, or rewrote or dropped the findings when building the Reject, this test would still pass. No test in test_gate.py covers the path from a defect judgment to a Reject either: its fake provider always answers `defect_found: False`. This PR flips the spec to `Implemented` and records SC-4 as satisfied on that evidence. gate.py is not shown, so whether the gate actually propagates the findings cannot be confirmed here; the point is that the cited test would not catch it if it did not.",
+          "evidence": "SC-4 contract text versus the cited test body and docstring. The test asserts only `judgment.defect_found` and `judgment.findings`, and contains no `validate(...)` call and no `Reject` assertion. test_gate.py's `_FakeProvider` only ever returns no defect."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 14163,
+      "output_tokens": 1603,
+      "class": "caught"
+    },
+    {
+      "case": "pr-28",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-3 requires the PR body's `Satisfies:` line to name exactly the task's criteria, but the cited test only checks a substring. Any over-claiming body, e.g. `Satisfies: SC-1, SC-2, SC-5`, still contains `Satisfies: SC-1, SC-2` and would pass. The test's own comment says \"exactly the task's criteria\", so it claims to verify exactness, but it would not fail if the handoff declared extra criteria.",
+          "evidence": "In test_sc3, the body is extracted from the recorded `gh pr create` call and checked with `in`. There is no line-level equality check (e.g. that the Satisfies line equals `Satisfies: SC-1, SC-2`). Including additional criteria is exactly what 'exactly' is meant to forbid, and this test does not catch it. Over-claiming is the failure mode that matters for the declaration-as-exclusive-claim-channel (SC-7). The task's Done-when also demands 'PR with exact declaration'."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 11771,
+      "output_tokens": 1192,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-2 requires a fixture for each branch of the next-action precedence rule. No cited test ever reaches the 'Approved spec with open tasks → Next task …' branch. In test_sc2_next_action_precedence, the only tasked Approved spec is `tasked`. The compact spec `compact` sorts first, so the asserted result stays 'Implement spec compact (compact spec)'. Deleting or breaking the open-tasks branch in next_action would leave every cited SC-2 test passing. In the other card fixtures, a Draft spec or an Open escalation always outranks the Approved spec `alpha` with its open T-2. So SC-2 is claimed with one rule branch unverified.",
+          "evidence": "next_action has an open-tasks branch that returns 'Next task {task_id} of {spec.slug}: {summary}'. The test adds `tasked` with an open T-4 but asserts the compact-spec result. No assertion anywhere in the cited tests expects a 'Next task' string."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 35569,
+      "output_tokens": 1709,
+      "class": "caught"
+    },
+    {
+      "case": "pr-81",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-7 requires that an old-shaped provider fake (text and tool calls only) and an old-shaped request behave as before through dispatch and the gate. The only test cited for SC-7 never reaches the gate or the judgment. It passes an old-shaped Request through `dispatch` alone, then does a source-text scan. If an old-shaped response broke the gate or the judgment, this test would still pass. For example, a Response with default `stop`/`usage` could be mishandled by `judge`'s new stop checks or its log line. The 'through the gate' half of SC-7 is claimed but not verified by any cited test. Other gate tests may exist, but they are not cited for SC-7 and are not shown.",
+          "evidence": "The SC-7 test's only behavioral exercise is a `dispatch` call with `_OldFake`, followed by assertions on the returned Response. Neither `validate` nor `judge` is called. The vendor scan covers only the words anthropic/claude/google/gemini, so 'no model' is checked only through those words."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 32996,
+      "output_tokens": 2080,
+      "class": "caught"
+    }
+  ]
+}
