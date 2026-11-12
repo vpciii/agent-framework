@@ -62,8 +62,10 @@ there.
    not a verdict on the pull request; its output names the reason. On the
    free tier, expect it occasionally. A REJECT's findings are the ones
    whose quoted evidence was found; `check` is one of `test-honesty`,
-   `spec-conformance`, `criteria-integrity`, `edge-case` for a judgment
-   finding.
+   `spec-conformance`, `criteria-integrity` for a judgment finding.
+   The judgment checks that the work matches its task and the criteria
+   it claims, and nothing else: a bug they do not state is not grounds
+   for a REJECT (ADR 0008).
    The job holds a secret, so it must not run the pull request's code:
    keep its checkout on your **default branch** (`ref:` as in this repo's
    job), so `agent-framework.toml` — the roster and the gate's settings —
@@ -235,8 +237,8 @@ file.
 
 A seeded-defect case is a small hand-written file beside its accepted
 case, `pr-<n>--<name>.json`: the accepted case's id, the checklist item
-(`test-honesty`, `spec-conformance`, `criteria-integrity` or
-`edge-case`), a one-line reason, and an edit of exact replacements in
+(`test-honesty`, `spec-conformance` or `criteria-integrity`), a
+one-line reason, and an edit of exact replacements in
 the diff or in a test file. Each replacement must match exactly once.
 Copy one of this repository's as a pattern, and keep a test like
 `tests/evals/test_set.py`, which loads every case and puts it through the

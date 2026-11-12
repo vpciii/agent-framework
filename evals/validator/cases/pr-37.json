@@ -1,9 +1,8 @@
 {
   "id": "pr-37",
   "kind": "accepted",
-  "expected": "reject",
-  "check": "edge-case",
-  "reason": "Merged 2026-07-12; accepted by vpciii. Answer corrected 2026-11-10 by vpc: an empty `test_pattern` was silently replaced by the default instead of being refused (fixed in #98).",
+  "expected": "pass",
+  "reason": "Merged 2026-07-12; accepted by vpciii. Answer returned to pass 2026-11-12 by vpc (ADR 0008): its only finding was an edge case its task did not state, which the validator no longer judges.",
   "provenance": {
     "repo": "vpciii/agent-framework",
     "pr": 37,

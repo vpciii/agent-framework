@@ -109,7 +109,9 @@ def _bundle(contract: Contract | None = None) -> EvidenceBundle:
     )
 
 
-def _finding(*quotes: str, check: str = "edge-case", finding: str = "it crashes") -> dict[str, Any]:
+def _finding(
+    *quotes: str, check: str = "spec-conformance", finding: str = "it crashes"
+) -> dict[str, Any]:
     return {"check": check, "finding": finding, "evidence": "see the quotes",
             "quotes": list(quotes)}
 
@@ -129,7 +131,8 @@ A_SUPPORTED_FINDING = _finding(
 
 def test_sc1_the_schema_requires_quotes_and_fixes_the_check_names() -> None:
     """SC-1: per finding, a non-empty list of quotes is required and `check`
-    is one of the four names — in a schema that is still closed."""
+    is one of the fixed names — three, since specs/conformance-only-judgment
+    retired `edge-case` — in a schema that is still closed."""
     item = VERDICT_TOOL.parameters["properties"]["findings"]["items"]
 
     assert "quotes" in item["required"]
@@ -137,7 +140,7 @@ def test_sc1_the_schema_requires_quotes_and_fixes_the_check_names() -> None:
     assert quotes["type"] == "array" and quotes["items"] == {"type": "string"}
     assert quotes["minItems"] == 1
     assert item["properties"]["check"]["enum"] == list(CHECK_NAMES) == [
-        "test-honesty", "spec-conformance", "criteria-integrity", "edge-case",
+        "test-honesty", "spec-conformance", "criteria-integrity",
     ]
     assert item["additionalProperties"] is False
 
@@ -145,11 +148,11 @@ def test_sc1_the_schema_requires_quotes_and_fixes_the_check_names() -> None:
 @pytest.mark.parametrize(
     "broken",
     [
-        {"check": "edge-case", "finding": "it crashes", "evidence": "trust me"},
-        {"check": "edge-case", "finding": "it crashes", "evidence": "trust me", "quotes": []},
-        {"check": "edge-case", "finding": "it crashes", "evidence": "trust me",
+        {"check": "test-honesty", "finding": "it crashes", "evidence": "trust me"},
+        {"check": "test-honesty", "finding": "it crashes", "evidence": "trust me", "quotes": []},
+        {"check": "test-honesty", "finding": "it crashes", "evidence": "trust me",
          "quotes": "contract = bundle.contract"},
-        {"check": "edge-case", "finding": "it crashes", "evidence": "trust me", "quotes": [7]},
+        {"check": "test-honesty", "finding": "it crashes", "evidence": "trust me", "quotes": [7]},
     ],
     ids=["no quotes field", "empty list", "not a list", "not a string"],
 )
@@ -335,7 +338,7 @@ async def test_sc5_an_unsupported_finding_is_logged_with_the_quote_not_found(
         await validate(_bundle(), roster, registry=registry)
 
     [line] = [r.getMessage() for r in caplog.records if "unsupported finding" in r.getMessage()]
-    assert "PR-77" in line and "edge-case" in line
+    assert "PR-77" in line and "spec-conformance" in line
     assert "run_checks calls table_citations when no spec was resolved" in line
     assert "not found" in line and "if bundle.contract.problem:" in line
     # The quotes that were found are not reported as missing.

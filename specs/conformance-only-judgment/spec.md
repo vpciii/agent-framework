@@ -1,6 +1,6 @@
 # Spec: The judgment checks conformance only
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-12
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0008 (accepted with this spec; supersedes
@@ -113,7 +113,22 @@ One PR.
 
 ### Decisions
 
-- *(none yet)*
+- *2026-11-12* — **Implemented by #102; signed off by vpc.** The scope
+  sentence went in as drafted. The instructions' fingerprint is now
+  `b7f84511eacc` and the case set's `94861a900ca8`.
+- *2026-11-12* — **The run after the change (R-6), by vpc:**
+  `evals/validator/results/2026-11-12-gemini-3.8-flash-conformance-only.json`.
+  22 of 24 accepted cases passed; 10 of 12 expected rejects were caught
+  (all nine seeded defects and `pr-89`); nothing could not be judged;
+  output tokens fell from 232,318 to 146,012. No finding was filed
+  outside the three names. Of the 34 cases whose answers did not
+  change, 32 got the verdict they got in the 2026-11-12 baseline.
+- *2026-11-12* — **What the run left open.** `pr-28` and `pr-81` were
+  rejected for the first time in three runs, each for a cited test that
+  verifies less than its criterion says; both findings are true, and
+  their expected answers are not yet ruled on. `pr-18` and `pr-59`, the
+  same kind of finding, were missed. The judgment is not shown to be
+  steadier on that kind, as the non-goals said it would not be.
 
 ## Rollout and undo
 
@@ -172,8 +187,8 @@ answers).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
-| SC-2 | R-2 | *(pending)* |
-| SC-3 | R-3 | *(pending)* |
-| SC-4 | R-4 | *(pending)* |
-| SC-5 | R-5 | *(pending)* |
+| SC-1 | R-1 | `tests/validator/test_conformance_only.py::test_sc1_the_request_carries_three_checklist_items_and_asks_for_no_edge_case` |
+| SC-2 | R-2 | `tests/validator/test_conformance_only.py::test_sc2_the_request_says_only_a_departure_from_the_contract_is_a_defect` |
+| SC-3 | R-3 | `tests/validator/test_conformance_only.py::test_sc3_the_schema_allows_only_the_three_check_names`, `tests/validator/test_conformance_only.py::test_sc3_a_finding_filed_as_an_edge_case_is_malformed_not_a_verdict` |
+| SC-4 | R-4 | `tests/evals/test_edge_case_retired.py::test_sc4_a_case_that_names_edge_case_fails_to_load_naming_the_file`, `tests/evals/test_edge_case_retired.py::test_sc4_every_case_in_the_repositorys_set_loads_and_none_names_edge_case` |
+| SC-5 | R-5 | `tests/evals/test_edge_case_retired.py::test_sc5_the_results_recorded_before_the_change_still_load_and_render` |
