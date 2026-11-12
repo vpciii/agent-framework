@@ -1,6 +1,6 @@
 # Spec: A stored eval result is read against today's answers
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-12
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0008 (what the judgment is for)
@@ -148,6 +148,19 @@ One PR.
   the date and asks only what stays true of the files. That `show`
   prints a scorecard for a result on the current inputs is SC-2's, and
   that it refuses one that is not is SC-3's. No requirement changes.
+- *2026-11-12* — **Implemented by #105; signed off by vpc.** The inputs
+  fingerprint of the repository's case set, and the value added to the
+  three stored results, is `1f427ab0b735`; it was computed from the case
+  files at the commit that added each result (`013c1e3`, `e1a6912`,
+  `4782d17`) and today, and is the same at all four.
+- *2026-11-12* — **`show` and `compare` take `--cases DIR`**, defaulting
+  to `evals/validator/cases` as `run` does; results made on another
+  directory need it. When two results match each other but not the cases
+  on disk, `compare` refuses as `show` does.
+- *2026-11-12* — **Three tests cited by the frozen eval-set spec's SC-9
+  changed with the rule and kept their names**: two in
+  `tests/evals/test_scorecard.py` now tell results apart by inputs
+  fingerprint, and the one in `tests/evals/test_cli.py` passes `--cases`.
 
 ## Rollout and undo
 
@@ -188,10 +201,10 @@ answers).
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
-| SC-2 | R-2 | *(pending)* |
-| SC-3 | R-2 | *(pending)* |
-| SC-4 | R-3 | *(pending)* |
-| SC-5 | R-4 | *(pending)* |
-| SC-6 | R-5 | *(pending)* |
-| SC-7 | R-6 | *(pending)* |
+| SC-1 | R-1 | `tests/evals/test_rescore.py::test_sc1_the_inputs_fingerprint_moves_with_what_is_sent_and_not_with_the_answers`, `tests/evals/test_rescore.py::test_sc1_a_new_result_carries_the_inputs_fingerprint` |
+| SC-2 | R-2 | `tests/evals/test_rescore.py::test_sc2_show_classes_a_stored_result_against_the_answers_on_disk` |
+| SC-3 | R-2 | `tests/evals/test_rescore.py::test_sc3_show_refuses_a_result_whose_cases_have_changed` |
+| SC-4 | R-3 | `tests/evals/test_rescore.py::test_sc4_compare_classes_both_results_against_the_answers_on_disk` |
+| SC-5 | R-4 | `tests/evals/test_rescore.py::test_sc5_show_and_compare_leave_the_result_files_as_they_were` |
+| SC-6 | R-5 | `tests/evals/test_rescore.py::test_sc6_a_result_recorded_before_the_change_carries_its_inputs_fingerprint`, `tests/evals/test_rescore.py::test_sc6_a_result_with_no_inputs_fingerprint_is_refused_saying_so` |
+| SC-7 | R-6 | `tests/evals/test_rescore.py::test_sc7_a_run_records_what_it_recorded_before_plus_the_inputs_fingerprint` |

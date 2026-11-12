@@ -71,6 +71,10 @@ and agent prompts. Add a term here before inventing a name for a concept.
 - **Scorecard** — the result of running the judgment over the eval set:
   how many accepted cases it passed or wrongly rejected, how many seeded
   defects it caught or missed, and how many it could not judge.
+- **Inputs fingerprint** — a short hash of what every case in the eval
+  set sends the judgment. Two results with the same inputs fingerprint
+  judged the same cases, whatever answers were expected at the time
+  (specs/eval-rescore).
 - **Regression claim** — the token `regression` in a PR's Satisfies
   declaration: the author's explicit claim that the PR fixes a bug with a
   cited red→green regression test. The gate verifies the evidence

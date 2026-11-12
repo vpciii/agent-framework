@@ -221,7 +221,8 @@ def test_sc9_compare_names_what_changed_and_refuses_different_case_sets(
     assert _run(setup, "--out", str(second)) == 0
     capsys.readouterr()
 
-    assert eval_cli.main(["compare", str(first), str(second)]) == 0
+    cases = str(setup / "evals" / "cases")
+    assert eval_cli.main(["compare", str(first), str(second), "--cases", cases]) == 0
     assert "pr-1--tautology: caught → missed" in capsys.readouterr().out
 
     (setup / "evals" / "cases" / "pr-1--tautology.json").unlink()
@@ -229,11 +230,11 @@ def test_sc9_compare_names_what_changed_and_refuses_different_case_sets(
     assert _run(setup, "--out", str(third)) == 0
     capsys.readouterr()
 
-    assert eval_cli.main(["compare", str(first), str(third)]) == 2
+    assert eval_cli.main(["compare", str(first), str(third), "--cases", cases]) == 2
     assert "not comparable" in capsys.readouterr().out
 
     third.write_text("{ not a result", encoding="utf-8")
-    assert eval_cli.main(["compare", str(first), str(third)]) == 2
+    assert eval_cli.main(["compare", str(first), str(third), "--cases", cases]) == 2
     assert "third.json" in capsys.readouterr().err
 
 
