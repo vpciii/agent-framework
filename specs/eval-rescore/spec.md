@@ -138,7 +138,7 @@ One PR.
 ### Decisions
 
 - *2026-11-12* — **SC-6 amended before the implementation merged, in its
-  own PR.** As first signed it read: "Each of the three result files in
+  own PR (#106; signed off by vpc, 2026-11-12).** As first signed it read: "Each of the three result files in
   the repository loads, carries the case set's inputs fingerprint, and
   `show` prints a scorecard for it". That ties three records of past
   runs to the case set as it is on whatever day the test runs: the first
