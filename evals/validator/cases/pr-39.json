@@ -1,8 +1,9 @@
 {
   "id": "pr-39",
   "kind": "accepted",
-  "expected": "pass",
-  "reason": "Merged 2026-07-12; accepted by vpciii.",
+  "expected": "reject",
+  "check": "test-honesty",
+  "reason": "Merged 2026-07-12; accepted by vpciii. Answer corrected 2026-11-12 by vpc: SC-2 says the brief contains exactly the configured commands; the test cited for it asserts only that they are present and that two toolchain names are absent.",
   "provenance": {
     "repo": "vpciii/agent-framework",
     "pr": 39,
