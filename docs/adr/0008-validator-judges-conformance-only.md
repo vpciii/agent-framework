@@ -1,10 +1,10 @@
 # ADR 0008: The validator judges conformance to the contract; it does not hunt for unstated defects
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-12
 - **Deciders:** vpc
 
-Supersedes ADR 0005 when accepted. Decisions 2–5 below are ADR 0005's,
+Supersedes ADR 0005 (accepted by vpc, 2026-11-12). Decisions 2–5 below are ADR 0005's,
 carried over unchanged; decision 1 is narrowed and decision 6 is new.
 
 ## Context

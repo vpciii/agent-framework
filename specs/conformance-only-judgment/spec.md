@@ -1,9 +1,9 @@
 # Spec: The judgment checks conformance only
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-12
 - **Author:** Claude (draft) — vpc is author of record
-- **Related ADRs:** ADR 0008 (proposed with this spec; supersedes
+- **Related ADRs:** ADR 0008 (accepted with this spec; supersedes
   ADR 0005), ADR 0001 (roles are bound by the roster)
 
 > This spec is editable while `Draft` / `Under review` / `Approved`.
@@ -106,8 +106,8 @@ One PR.
   and this spec are the record of why it is now three.
 - Docs in the same PR: `docs/adoption.md` (the list of `check` names,
   twice), `docs/architecture.md` (the judgment row, the eval set's
-  counts, the baseline), the ADR index. ADR 0005 is marked superseded
-  when ADR 0008 is accepted.
+  counts, the baseline). ADR 0005 was marked superseded, and the ADR
+  index updated, in the PR that signed this spec off.
 - Both fingerprints move, as they should: the instructions change and
   two answers change.
 
@@ -129,11 +129,12 @@ minutes with vpc's key — the size already run twice.
 
 ## Open questions
 
-Each has a drafted answer; all are vpc's to accept or change.
+All resolved 2026-11-12 (human sign-off: vpc accepted the five drafted
+answers).
 
-- [ ] **`pr-37` goes back to expected `pass`.** Its only finding was an
+- [x] **`pr-37` goes back to expected `pass`.** Its only finding was an
   edge case — an empty `test_pattern` — that its task never mentioned.
-- [ ] **`pr-18` stays expected `reject`, now under `test-honesty`.** The
+- [x] **`pr-18` stays expected `reject`, now under `test-honesty`.** The
   first run reported two findings; the second one is a conformance
   finding and it is true. specs/validator-gate SC-4 says the *verdict*
   is a REJECT carrying the model's finding; the one test cited for it,
@@ -142,18 +143,18 @@ Each has a drafted answer; all are vpc's to accept or change.
   verdict. If the gate dropped a defect judgment, that test would still
   pass. This is still so on main today. The alternative is to return
   `pr-18` to `pass`.
-- [ ] **One eval run, after the change.** The before is the 2026-11-12
+- [x] **One eval run, after the change.** The before is the 2026-11-12
   result. `compare` will refuse the pair, correctly, because two answers
   change; the delivery PR sets the two results side by side by hand for
   the 34 cases whose answers do not change and reports the other two
   apart. The alternative keeps `compare` usable: relabel the two cases
   in a PR of their own, run, then change the instructions and run again
   — two runs, about 66 minutes.
-- [ ] **A single run cannot show that `pr-59` or `pr-18` is now
+- [x] **A single run cannot show that `pr-59` or `pr-18` is now
   steady.** It can show that no accepted work is newly rejected and
   that the nine seeded defects are still caught. Steadiness on the real
   defects is a five-run check of three cases, left to the next step.
-- [ ] **No planning stage.** The decision is ADR 0008's; this is its
+- [x] **No planning stage.** The decision is ADR 0008's; this is its
   one-PR consequence.
 
 ## Out of scope (for now)
