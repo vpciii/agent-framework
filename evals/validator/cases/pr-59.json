@@ -1,8 +1,9 @@
 {
   "id": "pr-59",
   "kind": "accepted",
-  "expected": "pass",
-  "reason": "Merged 2026-10-26; accepted by vpciii.",
+  "expected": "reject",
+  "check": "test-honesty",
+  "reason": "Merged 2026-10-26; accepted by vpciii. Answer corrected 2026-11-10 by vpc: SC-2's test asserted the same next action twice, so the open-task branch was never shown (test added in #98).",
   "provenance": {
     "repo": "vpciii/agent-framework",
     "pr": 59,
