@@ -79,8 +79,11 @@ A change to the judgment's instructions, its tool schema, what it is sent
 or the validator's model cites a run from before the change and one from
 after, compared with `agent-framework-eval compare`. This is a rule for
 the author and the reviewer; no code enforces it
-(specs/validator-eval-set, R-13). The first baseline is
-`evals/validator/results/2026-11-10-gemini-3.8-flash.json`.
+(specs/validator-eval-set, R-13). The baseline for the
+current case set is `evals/validator/results/2026-11-12-gemini-3.8-flash.json`.
+The run of 2026-11-10 beside it was made before four cases' expected
+answers were corrected, so it is on a different case set and is not
+comparable with later runs.
 
 ## Execution surfaces (ADR 0004)
 
