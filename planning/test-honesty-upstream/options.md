@@ -2,7 +2,7 @@
 
 - **Status:** Open
 - **Date:** 2026-11-12 (revised the same day after the full Opus run and
-  an online research pass; see "What published work says")
+  an online research pass; spike findings added 2026-11-13)
 - **Author:** Claude (draft, from four independent divergers) — vpc is author of record
 
 > At least two genuinely different approaches, kept alive until the last
@@ -221,8 +221,8 @@ are under "Sources".
   paths), not by the first reviewer's confidence [11]; we have no such
   rule yet. A session of the worker's own lineage was the other
   objection (ADR 0001); the research weakens it [8]. Whether a model
-  writes a break that targets the right clause is unmeasured. It only
-  covers work that comes through the worker.
+  writes a break that targets the right clause was measured once: see
+  "Spike findings". It only covers work that comes through the worker.
 - **Wins when** — The same conditions as C, with less appetite for
   changing the contract's format.
 - **Rough size** — About a week: a reviewer brief, an orchestrator step,
@@ -297,7 +297,7 @@ are under "Sources".
 | A — clause ledger | About a day | Unmeasured on code; false REJECTs | One revert | The shape with the best measured gain on another task |
 | B — mutation testing | 1–2 days and a dependency | Reaches little of this class; noise | Remove a CI step | No model, no variance |
 | C — falsifiable clauses | 2–3 weeks | Authoring weight on every spec and task | Hard: it changes the contract's format | Makes the defect mechanical |
-| D — hostile review | About a week | Effort sink unless selective; break quality unmeasured | Remove an orchestrator step | Best-supported check, without changing the contract |
+| D — hostile review | About a week | Effort sink unless selective; about half its flags are not thin tests | Remove an orchestrator step | Best-supported check, without changing the contract |
 | E — different validator | A roster line and an ADR | Cost or latency; still misses some | A roster edit | 16–18 of 20, measured |
 | F — offline sweep | None | A window on main; a habit | Nothing to undo | The route that found all five |
 | G — verdict to the worker | About a week | Over-specified tests; budget | Remove an orchestrator step | Lowers the cost of every other option |
@@ -310,6 +310,80 @@ criterion into clauses; A asks the model to do it per PR, C asks the
 spec to do it once. E and F are not alternatives to each other: one
 picks the validator, the other picks when a slow one runs. G is not an
 alternative to any of them.
+
+## Spike findings — the hostile review by hand (2026-11-13)
+
+Step 3 of the recommendation, run by Claude at vpc's word. The spike's
+code and patches stayed in scratch space; only the findings are here.
+
+**Method.** Ten pull requests at their head commits: the five defect
+cases and, as clean controls, the next accepted case after each
+(`pr-25`, `pr-31`, `pr-40`, `pr-65`, `pr-84`). For each, a fresh
+`claude-sonnet-5-5` session was given the worktree and the text of the
+claimed criteria, told not to read or run tests, and asked to split each
+criterion into at most four clauses and write one break per clause. Each
+break was then applied and only the tests the Traceability table cites
+for its criterion were run. A break those tests do not notice is
+"unnoticed". The sessions' tool calls were checked: none read a test.
+
+**Counts.** 129 breaks, all applying cleanly and leaving the package
+importable: 113 noticed, 16 unnoticed. About 850,000 tokens in all;
+each session took between 23 seconds and 3 minutes.
+
+**The five known thin tests.**
+
+| Case | Result | Why |
+|---|---|---|
+| `pr-18` SC-4 | Found | The gate ignores a reported defect; the cited test stays green |
+| `pr-28` SC-3 | Found | The PR body loses the task id; the cited test stays green |
+| `pr-59` SC-2 | Flagged by another route | Two breaks to the precedence rule went unnoticed; none touched the open-task branch on record |
+| `pr-39` SC-2 | Missed | The break dropped a command; "exactly" needed one that adds a command |
+| `pr-81` SC-7 | Missed | The break changed dispatch, which the test checks; it needed to break only the gate leg |
+
+**The 16 unnoticed breaks, sorted by Claude.**
+
+| Break | What it changed | Reading |
+|---|---|---|
+| `pr-18` SC-4.a | The gate never rejects on a reported defect | Known thin test |
+| `pr-28` SC-3.b | The PR body has no task id | Known thin test |
+| `pr-59` SC-2.a | A Draft spec no longer leads to sign-off | Known criterion; the fixture uses only "Under review" |
+| `pr-59` SC-2.b | An alert no longer outranks an open PR | Known criterion; no fixture has both |
+| `pr-28` SC-2.d | The session gets the raw task section, not the brief | **New.** The test's sentinel is in both |
+| `pr-59` SC-6.a | Only the session's leader is killed | **New.** The test waits 60 seconds for the children to exit by themselves, then finds none |
+| `pr-59` SC-7.a | The note prints the budget as the elapsed time | **New.** The test asserts the label, not the value |
+| `pr-18` SC-3.b | The collector counts missing checks as green | Mis-aimed: the criterion is about the gate; another test notices |
+| `pr-28` SC-4.b | One line of the escalation loses the task id | Mis-aimed: the heading still names the task |
+| `pr-59` SC-3.b | The GitHub heading is dropped | Mis-aimed: the card still states the status is unavailable |
+| `pr-59` SC-6.b | Children that ignore SIGTERM are not killed | Partial: the fixture's children do not ignore it |
+| `pr-81` SC-4.c | A refusal that carries text is not a refusal | Partial: the test's refusal carries none |
+| `pr-40` SC-3.c | The default pattern loses its multi-line flag | Clean case. The whole suite stays green; not checked further |
+| `pr-40` SC-3.d | The CLI stops passing the project config to the gate | Clean case. Outside the criterion, which speaks of the check; no test anywhere notices |
+| `pr-65` SC-5.d | The CLI stops passing `test_paths` to the collector | Clean case. Outside the criterion; no test anywhere notices |
+| `pr-65` SC-1.c | Several changed spec directories resolve to the first | Clean case. The clause covers exactly one; no test covers several |
+
+**Clean cases.** 4 of 50 breaks went unnoticed, in 2 of the 5 pull
+requests. None is a test weaker than its criterion.
+
+**On main at `9dba794`.** With the break applied the whole suite still
+passes for four of these: the PR body without a task id, the leader-only
+kill, the elapsed value, and several spec directories. `pr-18`'s is now
+caught. Three patches no longer apply and were not checked.
+
+**What it settles.**
+
+- A model can aim a break from the criterion's text alone when the
+  clause names a surface (the body, the gate's verdict).
+- It misses when the break must be the exact difference between the
+  clause and the obvious test: a quantifier ("exactly") broken in the
+  permissive direction, or one leg of "A and B". A sharper brief may fix
+  this; that is not measured.
+- An unnoticed break is a lead, not a verdict. Seven of the 16 pointed
+  at a real thin test and nine did not. Rejecting on any unnoticed break
+  would have wrongly rejected two of five clean pull requests.
+
+**Limits.** One run, one model, ten pull requests. Claude sorted the 16
+knowing which cases were defects, and "mis-aimed" and "partial" are
+readings vpc may rule differently.
 
 ## Recommendation
 
@@ -327,12 +401,12 @@ one with a known ceiling.
    check, with the rule the role-effort spec already uses: it counts
    only at 15 of 20 or better and at least 5 more than the same model
    without it. Free-tier Gemini first, then Opus.
-3. **Spike D by hand before building it.** A Claude Code session writes
-   one break per claimed criterion for the five defect cases and for
-   five clean ones, and runs each cited test alone. It answers the two
-   things nobody has measured: does a model aim the break at the right
-   clause, and how often is an honest test flagged? About a day, on the
-   subscription, nothing merged.
+3. **Spike D by hand before building it.** *Done 2026-11-13; see "Spike
+   findings".* It found two of the five known thin tests squarely and
+   three new ones, missed two, and flagged two of five clean pull
+   requests. So D is worth building only with a judging step: the
+   unnoticed breaks go to the validator as evidence, and it answers one
+   narrow question each — does this break negate this clause?
 4. **Then one ADR** that names the validator, records which of A and D
    was adopted, and answers cost (ADR 0004) and lineage (ADR 0001,
    restated in ADR 0008) in the open. The research says the lineage
