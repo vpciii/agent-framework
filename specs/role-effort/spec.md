@@ -2,10 +2,14 @@
 
 - **Status:** Approved
 - **Date:** 2026-11-12
+- **Amended:** 2026-11-13, signed off by vpc — the check as it was run, and ADR
+  0009 in place of the drafted roster rule (R-7, *Rollout and undo*,
+  *Open questions*). No requirement or criterion other than R-7 changes.
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0001 (roles are bound by the roster; no vendor
   in the framework), ADR 0008 (what the validator judges), ADR 0004
-  (which surface each role runs on)
+  (which surface each role runs on), ADR 0009 (the validator is bound
+  by what the eval set measures)
 
 > This spec is editable while `Draft` / `Under review` / `Approved`.
 > When the PR that marks it `Implemented` merges it **freezes** into a
@@ -91,9 +95,12 @@ on every judgment the gate makes.
 - **R-6 (MUST)** A judgment's log line names the effort it ran at, and
   an eval result records it; the scorecard's first lines show it. A
   result with no such record reads as "provider default".
-- **R-7 (SHOULD)** The delivery records the check described under
-  *Rollout and undo*: the four cases, five runs each, at the provider's
-  default and at `high`, and one full run at `high`.
+- **R-7 (SHOULD)** The delivery records the check as it was run (see
+  *Rollout and undo*): the four cases, five runs each, on
+  `gemini-3.8-flash` at the provider's default and at `high`; the same
+  20 judgments on `claude-sonnet-5-5` at its default and on
+  `claude-opus-5-5` at `high`; and one full run on `claude-opus-5-5` at
+  `high`.
 
 ## Success criteria
 
@@ -161,6 +168,9 @@ has `ThinkingConfig.thinking_level` with `low`, `medium`, `high`
 (`gemini-3.8-flash` rejects `minimal`); `anthropic` 0.116 has
 `output_config.effort`. The Anthropic path is tested at the transport
 level only — this project has no Anthropic API key, as before.
+*(Amended 2026-11-13: the first live calls through the Anthropic
+adapter were made during the check, on 2026-11-12, with vpc's own key.
+The automated tests are still transport-level only.)*
 
 ### Decisions
 
@@ -187,9 +197,31 @@ Read each by its scorecard's "caught n of 20"; `compare` lines up a
 case's runs in order, so on multi-run results it is not the tool for
 this.
 
-**Cost.** 76 judgments in all, against a free-tier daily limit that has
-been shown to allow 36 and may not allow much more: spread over two or
-three days unless the limit page says otherwise. At `high` each
+**The check as run (amended 2026-11-13).** Steps 1 and 2 were run by
+vpc on 2026-11-12. Step 3 was not: at `high`, `gemini-3.8-flash` took
+about four minutes a judgment, which vpc judged borderline unacceptable
+for a gate, so the full run was put on hold and the same check was run
+on two Claude models with vpc's own key. Result files are in
+`evals/validator/results/` on the implementing branch.
+
+| Run | Validator | Result | File |
+|---|---|---|---|
+| Step 1 | `gemini-3.8-flash`, default | caught 5 of 20 | `effort-check-default.json` |
+| Step 2 | `gemini-3.8-flash`, `high` | caught 18 of 20 | `effort-check-high.json` |
+| Step 3 | `gemini-3.8-flash`, `high`, full | not run | — |
+| Added | `claude-sonnet-5-5`, default | caught 8 of 20 | `claude-sonnet-check.json` |
+| Added | `claude-opus-5-5`, `high` | caught 16 of 20 | `claude-opus-high-check.json` |
+| Added | `claude-opus-5-5`, `high`, full | 19 of 20 accepted passed, 14 of 16 expected rejects caught | `claude-opus-high-full.json` |
+
+The full run's figures are read with `show` against the answers on
+main today. Its one rejection of accepted work is `pr-69`. No check was
+run on `claude-opus-5-5` without the setting, so what `high` adds on
+that model is not known.
+
+**Cost, as estimated before the check.** 76 judgments in all, against
+a free-tier daily limit that has been shown to allow 36 and may not
+allow much more: spread over two or three days unless the limit page
+says otherwise. At `high` each
 judgment will take longer and use more output tokens — roughly three to
 five times as many on these cases, if it thinks as it did when it
 caught them. The advisory CI job would slow by the same factor once the
@@ -206,9 +238,16 @@ answers).
   check, and the full run rejects no accepted work on a finding vpc
   rules false. Anything short of that, the roster stays as it is and
   the next lever is tried. In between is vpc's call.
+  **Amended 2026-11-13:** the rule was not completed as written. Its
+  first two parts were met on `gemini-3.8-flash` (18 of 20, 13 more
+  than before); its third, the full run, was not made. ADR 0009,
+  accepted by vpc on 2026-11-13, decides the binding instead:
+  `claude-opus-5-5` at `high`. The roster line is still its own PR.
 - [x] **Whether the setting merges if the check shows no gain.**
   Drafted: no. An unused setting is clutter; the branch is closed and
   the spec marked `Withdrawn` with the numbers recorded in it.
+  **Amended 2026-11-13:** the check showed a gain, and the binding ADR
+  0009 names uses the setting, so the setting merges.
 - [x] **Three levels, not the providers' full ranges.** `low`, `medium`
   and `high` are the levels both providers share. Anthropic's higher
   levels can be added when a role needs them.
