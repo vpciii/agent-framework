@@ -200,6 +200,5 @@ carries a change to one, so update this list promptly when one changes
 - `specs/validator-eval-set/` — Implemented (frozen).
 - `specs/conformance-only-judgment/` — Implemented (frozen).
 - `specs/eval-rescore/` — Implemented (frozen).
-- `specs/role-effort/` — Approved; the setting is implemented and this
-  repository's roster does not use it. Whether it does is decided by the
-  check in the spec's *Rollout and undo*, which has not been run.
+- `specs/role-effort/` — Implemented (frozen). This repository's roster
+  does not use the setting yet; ADR 0009 names the binding that will.

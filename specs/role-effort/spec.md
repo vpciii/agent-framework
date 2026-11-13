@@ -1,6 +1,6 @@
 # Spec: A role's effort is set in the roster
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-12
 - **Amended:** 2026-11-13, signed off by vpc — the check as it was run, and ADR
   0009 in place of the drafted roster rule (R-7, *Rollout and undo*,
@@ -174,7 +174,15 @@ The automated tests are still transport-level only.)*
 
 ### Decisions
 
-- *(none yet)*
+- *2026-11-13* — **Implemented by #108; signed off by vpc.** One pull
+  request, about 440 lines of code, tests and docs, where the Approach
+  allowed two: the setting merges whole or not at all.
+- *2026-11-13* — **An eval result records `effort` only when the roster
+  set one**, so a run at the provider's default is written exactly as
+  before and the stored results still load unchanged.
+- *2026-11-13* — **The roster in this repository is unchanged by this
+  spec.** ADR 0009 names the binding; the roster line is its own pull
+  request.
 
 ## Rollout and undo
 
