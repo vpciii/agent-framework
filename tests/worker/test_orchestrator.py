@@ -120,6 +120,7 @@ def test_sc3_completed_session_becomes_declared_pr_and_never_merges(repo: Path) 
     [create] = git.named("gh", "pr", "create")
     body = create[create.index("--body") + 1]
     assert "Satisfies: SC-1, SC-2" in body  # exactly the task's criteria
+    assert "T-1" in body  # SC-3 says the *body* carries the task id
     assert "T-1" in create[create.index("--title") + 1]
     assert not [c for c in git.calls if "merge" in c]  # never merges
     assert git.having("git", "worktree", "remove")  # cleaned up on success
