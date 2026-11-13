@@ -1,8 +1,9 @@
 {
   "id": "pr-27",
   "kind": "accepted",
-  "expected": "pass",
-  "reason": "Merged 2026-07-12; accepted by vpciii.",
+  "expected": "reject",
+  "check": "spec-conformance",
+  "reason": "Merged 2026-07-12; accepted by vpciii. Answer corrected 2026-11-12 by vpc: the diff adds `proc.py` and edits `validator/collector.py`, and T-2's Touches lists neither.",
   "provenance": {
     "repo": "vpciii/agent-framework",
     "pr": 27,
