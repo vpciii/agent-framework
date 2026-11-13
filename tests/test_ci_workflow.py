@@ -8,8 +8,13 @@ session's commits reach CI exactly this way.
 
 The rule these tests pin: **code from a pull request never runs in a job
 that holds a secret.** The `ci` job runs the PR's code and holds none; the
-`validator` job holds the key and runs only the default branch's code,
-reading the PR as data through the API.
+`validator` job holds the credentials and runs only the default branch's
+code, reading the PR as data through the API.
+
+Since ADR 0009 the validator may be bound to an Anthropic model, so the
+job reaches Anthropic too: by Workload Identity Federation when it is
+configured, by an API key only when it is not — never both, because the
+SDK lets a key outrank federation.
 """
 
 from __future__ import annotations
@@ -52,9 +57,27 @@ def test_the_job_holding_the_key_runs_only_the_default_branchs_code() -> None:
         assert head_ref not in text, f"the validator job refers to the PR's head: {head_ref}"
 
 
+_GATE = "Cite-the-test gate (advisory)"
+_GATE_KEY = "Cite-the-test gate (advisory, API key)"
+_FEDERATION_VARS = (
+    "ANTHROPIC_FEDERATION_RULE_ID",
+    "ANTHROPIC_ORGANIZATION_ID",
+    "ANTHROPIC_SERVICE_ACCOUNT_ID",
+)
+
+
+def _gate_steps() -> dict[str, dict[str, Any]]:
+    return {
+        s["name"]: s
+        for s in _steps("validator")
+        if str(s.get("name", "")).startswith("Cite-the-test gate")
+    }
+
+
 def test_the_key_is_given_to_one_step_in_one_job() -> None:
-    """Regression: `GEMINI_API_KEY` appears only in the gate step's
-    environment — never at job or workflow level, never in the `ci` job."""
+    """Regression: a secret appears only in a gate step's environment —
+    never at job or workflow level, never in the `ci` job. There are two
+    gate steps and only one of them ever runs (see the next test)."""
     wf = _workflow()
     assert "secrets." not in yaml.safe_dump(wf.get("env", {}))
     for name, job in wf["jobs"].items():
@@ -66,7 +89,49 @@ def test_the_key_is_given_to_one_step_in_one_job() -> None:
         for step in _steps(job)
         if "secrets." in yaml.safe_dump(step.get("env", {}))
     ]
-    assert holders == [("validator", "Cite-the-test gate (advisory)")]
+    assert holders == [("validator", _GATE), ("validator", _GATE_KEY)]
+
+
+def test_the_gate_reaches_anthropic_by_federation_or_by_key_never_both() -> None:
+    """ADR 0009: the validator may be an Anthropic model. With federation
+    configured the gate step gets the federation variables and the identity
+    token's path, and no Anthropic key; without it, the key and none of the
+    federation variables. Exactly one of the two steps runs, and both run
+    the same command."""
+    gates = _gate_steps()
+    assert set(gates) == {_GATE, _GATE_KEY}
+    federated, keyed = gates[_GATE], gates[_GATE_KEY]
+
+    assert federated["if"] == "vars.ANTHROPIC_FEDERATION_RULE_ID != ''"
+    assert keyed["if"] == "vars.ANTHROPIC_FEDERATION_RULE_ID == ''"
+
+    for name in _FEDERATION_VARS:
+        assert federated["env"][name] == "${{ vars." + name + " }}"
+        assert name not in keyed["env"]
+    assert "ANTHROPIC_IDENTITY_TOKEN_FILE" in federated["env"]
+    assert "ANTHROPIC_API_KEY" not in federated["env"]
+    assert keyed["env"]["ANTHROPIC_API_KEY"] == "${{ secrets.ANTHROPIC_API_KEY }}"
+
+    command = "uv run python -m agent_framework.validator --ignore-check validator"
+    assert command in federated["run"] and command in keyed["run"]
+
+
+def test_only_the_validator_job_may_request_an_identity_token() -> None:
+    """The identity token for federation is requested by the job that runs
+    the default branch's code, by a step that holds no secret — never by
+    the job that runs the pull request's code."""
+    wf = _workflow()
+    assert wf["jobs"]["validator"]["permissions"]["id-token"] == "write"
+    assert "id-token" not in wf["permissions"]
+    assert "permissions" not in wf["jobs"]["ci"]
+
+    fetchers = [
+        s for job in wf["jobs"] for s in _steps(job)
+        if "ACTIONS_ID_TOKEN_REQUEST_URL" in str(s.get("run", ""))
+    ]
+    assert [s["name"] for s in fetchers] == ["Fetch GitHub OIDC token for Anthropic"]
+    assert fetchers[0] in _steps("validator")
+    assert "secrets." not in yaml.safe_dump(fetchers[0].get("env", {}))
 
 
 def test_the_job_that_runs_pull_request_code_holds_no_secret_and_a_read_only_token() -> None:

@@ -70,7 +70,7 @@ dispatch through the provider adapters.
 | Shared seam | `proc.py` | The one subprocess runner both edges shell out through; failures carry stderr |
 | Project config | `project.py` + `agent-framework.toml` | Per-repo contract: gate commands, conventions note, test-citation pattern, test paths, ignore-checks, and how far worker sessions are widened (session paths, hosts, environment names; protected paths). Defaults = this repo's conventions; invalid patterns unconstructible. Adoption: `docs/adoption.md` |
 | Spec-coverage checker | `scripts/check_spec_coverage.py` | CI-enforced traceability (ADR 0003); `*(pending)*` rows allowed at `Approved`, forbidden at `Implemented` |
-| CI | `.github/workflows/ci.yml` | `uv sync --frozen` → ruff → mypy --strict → pytest → coverage check; required status check on `main`. Plus an **advisory** `validator` job: the cite-the-test gate runs on every PR (never blocking; judgment only when the `GEMINI_API_KEY` secret is set), from the default branch's code, never the PR's |
+| CI | `.github/workflows/ci.yml` | `uv sync --frozen` → ruff → mypy --strict → pytest → coverage check; required status check on `main`. Plus an **advisory** `validator` job: the cite-the-test gate runs on every PR (never blocking; judgment only when a credential for the validator's provider is available: Anthropic by Workload Identity Federation, or by an `ANTHROPIC_API_KEY` secret when federation is not configured; Google by the `GEMINI_API_KEY` secret), from the default branch's code, never the PR's |
 
 **Changing the judgment: cite a run from before and after.** The eval
 measures the validator's judgment on a fixed set of cases
@@ -79,28 +79,34 @@ A change to the judgment's instructions, its tool schema, what it is sent
 or the validator's model cites a run from before the change and one from
 after, compared with `agent-framework-eval compare`. This is a rule for
 the author and the reviewer; no code enforces it
-(specs/validator-eval-set, R-13). Three runs are on record:
-`2026-11-10-gemini-3.8-flash.json` and `2026-11-12-gemini-3.8-flash.json`,
-both made while the judgment still hunted for an unstated edge case, and
-`2026-11-12-gemini-3.8-flash-conformance-only.json`, the baseline for
-the judgment as it is now (specs/conformance-only-judgment). Answers
-were corrected between and after them, and that no longer matters: all
-three judged the same inputs, so `show` reads each against today's
-answers and `compare` takes any pair. Read that way, the baseline is 20
-of 20 accepted cases passed and 12 of 16 expected rejects caught, with
-`pr-18`, `pr-27`, `pr-39` and `pr-59` missed. `pr-18`, `pr-28`, `pr-59`
-and `pr-81` are the same kind of finding — a cited test that verifies
-less than its criterion says — and each has been caught in one run of
-three. `pr-39` is that kind too, and `pr-27` is a change outside its
-task's files; no run on record has caught either. Both were found by a
-trial of a different model as the validator.
+(specs/validator-eval-set, R-13). Four full runs are on record. Three
+were made on `gemini-3.8-flash`: `2026-11-10-gemini-3.8-flash.json` and
+`2026-11-12-gemini-3.8-flash.json`, both while the judgment still hunted
+for an unstated edge case, and
+`2026-11-12-gemini-3.8-flash-conformance-only.json`, the first for the
+judgment as it is now (specs/conformance-only-judgment). The fourth,
+`claude-opus-high-full.json`, was made on `claude-opus-5-5` at effort
+`high` and is the baseline for the validator the roster binds today
+(ADR 0009). Answers were corrected between and after them, and that no
+longer matters: all four judged the same inputs, so `show` reads each
+against today's answers and `compare` takes any pair. Read that way, the
+baseline is 19 of 20 accepted cases passed and 14 of 16 expected rejects
+caught: `pr-59` and `pr-81` are missed, and `pr-69` is wrongly rejected,
+on a sign-off recorded in the pull request description, which the
+validator is not shown. The last Gemini run reads 20 of 20 and 12 of 16.
+`pr-18`, `pr-28`, `pr-39`, `pr-59` and `pr-81` are the same kind of
+finding — a cited test that verifies less than its criterion says. The
+other result files are the 20-judgment checks on four of those cases
+that specs/role-effort records.
 
-## Execution surfaces (ADR 0004)
+## Execution surfaces (ADR 0004, ADR 0009)
 
 Chief + adversarial plan review: interactive sessions (Claude Code / Max,
 Antigravity / AI Pro) — not dispatched by this code. Worker:
 headless Claude Code, Max while supported, API-key fallback. Validator:
-Gemini via `GoogleProvider` (free tier; Vertex fallback). Retrieval/triage
+`claude-opus-5-5` at effort `high` via `AnthropicProvider`, metered under
+a spend cap (ADR 0009); the previous binding, Gemini via `GoogleProvider`
+on the free tier, is one roster line away. Retrieval/triage
 (future): Ollama on the LAN inference server, never on the correctness path.
 
 ## Trust boundaries
@@ -150,14 +156,18 @@ Where untrusted input enters, and what each AI agent can reach
   request never runs in a job that holds a secret.** The `ci` job runs the
   PR's code (its tests, its locked dependencies) with no secret, a
   read-only token, and no token left in the checkout. The `validator` job
-  holds `GEMINI_API_KEY` and checks out the **default branch**: the
+  holds the provider credentials — the `GEMINI_API_KEY` secret and, for
+  Anthropic, an identity token for Workload Identity Federation (or an
+  `ANTHROPIC_API_KEY` secret when federation is not configured; never
+  both) — and checks out the **default branch**: the
   validator, its dependencies and its roster come from merged code, and the
   PR reaches it only as data through the API — so a PR that changes the
   validator is judged by the merged validator, not by itself. *Residual:*
   on a `pull_request` event the workflow file itself comes from the PR, so
   a PR that edits it can undo this. A worker's commits cannot (the handoff
-  check refuses `.github/**`), fork PRs receive no secrets, and no one but
-  vpc pushes other branches.
+  check refuses `.github/**`), fork PRs receive no secrets and no identity
+  token, and no one but vpc pushes other branches. The Anthropic account's
+  spend cap bounds what such a change could cost.
 - **Collector / alerts / resume card** — plain code over `gh` with the
   caller's token; PR titles and bodies are parsed by regex, never executed.
 - **Roster currency workflow** — `issues: write` and `id-token: write`
@@ -175,9 +185,10 @@ carries a change to one, so update this list promptly when one changes
 | Repository visibility | public | CI installs via `uvx --from git+https://…` in adopting repos (`docs/adoption.md`); sending PR diffs to the validator's provider is not a disclosure |
 | Ruleset `protect-main` | active, no bypass actors: changes by PR (0 approvals required), required status check `ci`, no force-push, no deletion | "the human is author of record" — nothing reaches `main` without a PR and green deterministic CI; the `validator` job is deliberately *not* required (ADR 0005) |
 | Default workflow token permissions | read-only; workflows cannot approve pull requests | the `ci` job runs a PR's code — `ci.yml` also pins `contents: read` itself, so this setting is a second layer, not the only one |
-| Actions secret `GEMINI_API_KEY` | set (vpc's AI Studio key, free tier — ADR 0004) | the advisory validator job and the Google side of the roster currency check; absent → both skip or report unchecked |
-| Actions variables `ANTHROPIC_FEDERATION_RULE_ID`, `ANTHROPIC_ORGANIZATION_ID`, `ANTHROPIC_SERVICE_ACCOUNT_ID` | set (vpc's Anthropic organization) | the roster currency check reaches Anthropic by Workload Identity Federation, with no stored Anthropic secret |
-| Plans | Claude Max (worker sessions, interactive chief); Google AI Pro / Gemini API free tier (validator) — ADR 0004 | the cost model of every role; a billing change is an ADR 0004 revisit |
+| Actions secret `GEMINI_API_KEY` | set (vpc's AI Studio key, free tier — ADR 0004) | the Google side of the roster currency check, and the advisory validator job when the roster binds a Google model (the fallback binding); absent → they skip or report unchecked |
+| Actions variables `ANTHROPIC_FEDERATION_RULE_ID`, `ANTHROPIC_ORGANIZATION_ID`, `ANTHROPIC_SERVICE_ACCOUNT_ID` | set (vpc's Anthropic organization) | the roster currency check and the advisory validator job reach Anthropic by Workload Identity Federation, with no stored Anthropic secret. **Not yet confirmed (2026-11-13):** that the federation rule accepts a pull request's identity token and that the service account may call a model — the currency check runs from `main` and only lists models |
+| Anthropic account spend cap | **to be set by vpc** before the validator's first live run on this binding (ADR 0004, ADR 0009) | bounds what the metered validator, and anything holding its credentials, can cost |
+| Plans | Claude Max (worker sessions, interactive chief); Anthropic API, metered (validator — ADR 0009); Gemini API free tier (the fallback validator binding and the roster currency check) — ADR 0004 | the cost model of every role; a billing change is an ADR 0004 revisit |
 | launchd agent `com.ciganik.agent-framework-nudge` | loaded on vpc's primary Mac, weekly, run from a checkout of this repo | the nudge (`specs/orientation-and-alerts`) |
 | `AF_HA_WEBHOOK_URL` | in an env file on vpc's primary Mac (not in the repo) | the phone push; unset → alerts still open issues and report the push as skipped |
 

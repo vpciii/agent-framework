@@ -80,10 +80,14 @@ there.
    job), so `agent-framework.toml` — the roster and the gate's settings —
    is the merged one, and install the framework from its own `main` with
    `uvx`. The PR reaches the validator only as data, through the API.
-4. **`GEMINI_API_KEY` secret** on the repo (free-tier AI Studio key;
-   ADR 0004): `gh secret set GEMINI_API_KEY --repo <owner/name> --body ...`
-   from a shell holding it. Without it the job skips politely — as it
-   also does on fork PRs, which receive no secrets.
+4. **A credential for your validator's provider** on the repo. For a
+   Google model, the `GEMINI_API_KEY` secret (a free-tier AI Studio key
+   is enough): `gh secret set GEMINI_API_KEY --repo <owner/name> --body ...`
+   from a shell holding it. For an Anthropic model, an
+   `ANTHROPIC_API_KEY` secret, or Workload Identity Federation as this
+   repo's job does — never both, since a key outranks federation. Set a
+   spend cap on a metered account first. Without a credential the job
+   skips politely — as it also does on fork PRs, which receive none.
 
 ## Installing the framework
 
