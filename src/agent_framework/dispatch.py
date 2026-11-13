@@ -8,6 +8,8 @@ raises before any invocation.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from .providers.base import Request, Response
 from .providers.registry import ProviderRegistry, default_registry
 from .roster import Roster
@@ -22,6 +24,9 @@ async def dispatch(
 ) -> Response:
     """Resolve `role` via the roster and invoke its bound provider.
 
+    When the role's binding carries an effort, the request the provider
+    receives carries it; otherwise the request is passed on as it was given.
+
     Raises `UnknownRoleError` if the role is unbound, or `UnknownProviderError`
     if its provider has no registered adapter — in either case, nothing is
     invoked.
@@ -29,4 +34,6 @@ async def dispatch(
     reg = registry if registry is not None else default_registry()
     ref = roster.resolve(role)
     provider = reg.get(ref.provider)
+    if ref.effort is not None:
+        request = replace(request, effort=ref.effort)
     return await provider.invoke(request, model=ref.model)

@@ -314,10 +314,12 @@ async def judge(
     response = await dispatch(roster, "validator", request, registry=registry)
     task_id = bundle.task.task_id
     said = f"provider said {response.stop_detail or 'nothing'}"
+    validator = roster.resolve("validator")
     logger.info(
-        "judgment %s: model=%s stop=%s (%s) input_tokens=%s output_tokens=%s",
+        "judgment %s: model=%s effort=%s stop=%s (%s) input_tokens=%s output_tokens=%s",
         task_id,
-        roster.resolve("validator").model,
+        validator.model,
+        validator.effort or "default",
         response.stop,
         response.stop_detail or "-",
         response.usage.input_tokens if response.usage else "unknown",

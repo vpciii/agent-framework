@@ -36,6 +36,10 @@ and agent prompts. Add a term here before inventing a name for a concept.
   a high-end model as chief, a cheaper one as worker, a different-lineage
   model as validator). Swapping a model is a roster edit, not a code
   change; it is the one source of truth for the role→model mapping.
+- **Effort** — how much reasoning a role's model is asked to spend on a
+  request: `low`, `medium` or `high`. Set per role in the roster; each
+  provider adapter translates it to its provider's own control. Unset
+  means the provider's default (specs/role-effort).
 - **Roster currency check** — the scheduled CI check that each model the
   roster binds is still served by its provider (failing if not, or if the
   provider silently routes it elsewhere), reporting newer models in the

@@ -1,0 +1,359 @@
+{
+  "model": "anthropic:claude-sonnet-5-5",
+  "date": "2026-11-12",
+  "runs": 5,
+  "instructions": "b7f84511eacc",
+  "case_set": "9ce495da8677",
+  "inputs": "1f427ab0b735",
+  "scorecard": {
+    "accepted": {
+      "passed": 0,
+      "wrongly-rejected": 0,
+      "could-not-judge": 0
+    },
+    "seeded": {
+      "caught": 8,
+      "other-reason": 0,
+      "missed": 12,
+      "could-not-judge": 0
+    },
+    "dropped": 0,
+    "input_tokens": 472495,
+    "output_tokens": 27622,
+    "unstable": [
+      "pr-18",
+      "pr-28",
+      "pr-59"
+    ]
+  },
+  "judgments": [
+    {
+      "case": "pr-18",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The cited SC-4 test does not verify the criterion's REJECT outcome. SC-4 requires that a model-reported defect produces a REJECT verdict carrying the finding and evidence verbatim. The cited test calls only `judge()` and asserts on the returned `Judgment` (`defect_found` and `findings`). It never runs `validate()` and never checks for a `Reject`. If the gate failed to turn a defect judgment into a `Reject`, or dropped or rewrote the findings when building it, this test would still pass. The `test_gate.py` file shown has no test where the fake provider reports a defect, so no cited test covers the defect-to-REJECT step. I only see the tests shown; if a gate-level defect test exists elsewhere, it is not cited.",
+          "evidence": "The SC-4 test docstring describes only Judgment-level behaviour ('arrive in the Judgment untouched'), and its assertions stop at the Judgment object. In `test_gate.py` the fake provider always returns `{\"defect_found\": False, \"findings\": []}`, and no test exercises the defect-to-Reject path."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 14163,
+      "output_tokens": 1774,
+      "class": "caught"
+    },
+    {
+      "case": "pr-28",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The SC-3 test does not verify two parts of the criterion: that the PR body carries the task id, and that `Satisfies:` names exactly the task's criteria. The task id is asserted only against the PR title, not the body. The Satisfies check is a substring match, so extra trailing criteria would still pass.",
+          "evidence": "SC-3 requires a PR whose body carries the task id and `Satisfies:` naming exactly the task's criteria. The test extracts `body` but only checks the title for \"T-1\". If `_pr_body` dropped the task id, the test would still pass, because the title is built separately in `_pr_title`. The Satisfies assertion `\"Satisfies: SC-1, SC-2\" in body` is a prefix/substring check, so a body reading `Satisfies: SC-1, SC-2, SC-3` would also pass despite claiming more than the task's criteria. The fixture's criteria list is in `test_brief` and is not shown, so I cannot say whether the fixture has other criteria. The test still does not pin the line to exactly the task's criteria. The implementation appears to do the right thing; the weakness is in the test's ability to catch a regression."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 11771,
+      "output_tokens": 1503,
+      "class": "caught"
+    },
+    {
+      "case": "pr-59",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-2 requires a fixture for each rule branch, but the \"Next task <id> of <spec>\" branch of `next_action` is never asserted. In `test_sc2_next_action_precedence` the Approved spec `tasked` with an open task is added after the compact spec `compact`. Compact wins on slug order, so the \"Next task\" branch never fires. No other cited test asserts that branch either. If that branch were broken or removed, every cited SC-2 test would still pass. I did not see the spec's Approach text, so I can't confirm the exact list of rule branches. This one is plainly a branch in `next_action`.",
+          "evidence": "The only assertions touching the tasked spec are the slug-order check and the escalation-file check, neither of which exercises the task branch. The SC-1 fixture has `alpha` Approved with open task T-2, but that test never checks the next action text."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 35569,
+      "output_tokens": 1586,
+      "class": "caught"
+    },
+    {
+      "case": "pr-81",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 32996,
+      "output_tokens": 1316,
+      "class": "missed"
+    },
+    {
+      "case": "pr-18",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 14163,
+      "output_tokens": 1269,
+      "class": "missed"
+    },
+    {
+      "case": "pr-28",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 11771,
+      "output_tokens": 784,
+      "class": "missed"
+    },
+    {
+      "case": "pr-59",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 35569,
+      "output_tokens": 1529,
+      "class": "missed"
+    },
+    {
+      "case": "pr-81",
+      "run": 2,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 32996,
+      "output_tokens": 1255,
+      "class": "missed"
+    },
+    {
+      "case": "pr-18",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-4 requires that when the model reports a defect, the verdict is `REJECT` carrying the model's finding and evidence verbatim. The cited test only exercises `judge()` and asserts on the returned `Judgment`. It never builds a `Reject` verdict and never goes through `validate()`. If the gate dropped, altered or failed to convert a model-reported defect into a `Reject`, this test would still pass.",
+          "evidence": "The cited SC-4 test ends with assertions on `judgment.defect_found` and `judgment.findings`, with no verdict-level assertion. `test_gate.py` is the only place `validate()` is exercised. Its four tests (SC-1, SC-2, SC-3, SC-7) all use a fake provider that returns `defect_found: False`, so no shown test drives a model-reported defect through the gate to a `Reject`. The gate code itself is not in the diff, so I cannot say whether another test covers this. Nothing cited does."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 14163,
+      "output_tokens": 1452,
+      "class": "caught"
+    },
+    {
+      "case": "pr-28",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 11771,
+      "output_tokens": 630,
+      "class": "missed"
+    },
+    {
+      "case": "pr-59",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 35569,
+      "output_tokens": 1487,
+      "class": "missed"
+    },
+    {
+      "case": "pr-81",
+      "run": 3,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 32996,
+      "output_tokens": 1463,
+      "class": "missed"
+    },
+    {
+      "case": "pr-18",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The cited SC-4 test checks only that judge() returns the model's finding and evidence unchanged in a Judgment object. SC-4 says the verdict is REJECT carrying that finding and evidence. The test never calls validate() and never asserts a Reject verdict. If the gate turned a defect judgment into a Pass, or dropped the findings from the Reject, this test would still pass. No test in the shown test_gate.py covers the model-defect to REJECT path either: its tests cover the clean PASS, the deterministic REJECTs, and the missing red evidence case. The gate code is not in the diff, so I cannot say what it does. I can say the cited test would not catch a break in it.",
+          "evidence": "The criterion requires a REJECT verdict. The cited test's assertions are limited to `judgment.defect_found is True` and `judgment.findings == (Finding(...),)`. The test_judgment.py docstring itself scopes the test to the judgment stage ('carried into the judgment verbatim'), not the verdict. The Traceability table still maps SC-4 to this test unchanged."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 14163,
+      "output_tokens": 2018,
+      "class": "caught"
+    },
+    {
+      "case": "pr-28",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 11771,
+      "output_tokens": 710,
+      "class": "missed"
+    },
+    {
+      "case": "pr-59",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-2 requires a fixture for each rule branch, but the \"Next task <id> of <spec>\" branch (an Approved spec with unchecked tasks) is never asserted. The cited precedence test creates a `tasked` spec with an open task, then only asserts that the compact spec wins on slug order, so the `tasked` spec's task is never selected. The other next-action assertions only exercise the compact-spec, sign-off, alert, escalation-file, PR, bet and nothing-pending branches. If the task-selection branch were broken or deleted, no cited test would fail.",
+          "evidence": "In `test_sc2_next_action_precedence`, `tasked` is shadowed by `compact` (slug order) and gets no assertion of its own. `test_sc1` renders the card with an Approved `alpha` spec that has open task T-2, but never asserts the next-action text. `test_sc3_cli_reports_a_failing_gh` fires the escalation-file branch, and the nudge tests fire the sign-off branch. So the `Next task` return statement in `next_action` has no asserting test. The spec's Approach (the precedence rule) is outside the data, so which branches it lists beyond this one is not shown."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 35569,
+      "output_tokens": 2060,
+      "class": "caught"
+    },
+    {
+      "case": "pr-81",
+      "run": 4,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 32996,
+      "output_tokens": 1121,
+      "class": "missed"
+    },
+    {
+      "case": "pr-18",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The test cited for SC-4 does not exercise the behavior SC-4 states. SC-4 requires that a model-reported defect makes the verdict a REJECT carrying the finding and evidence verbatim. The cited test calls only `judge()` and checks the intermediate `Judgment` object. It never runs the gate, so it never checks that a REJECT verdict is produced. If the gate dropped, rewrote, or failed to convert a defective judgment into a REJECT, this test would still pass. The `test_gate.py` shown has no test where the model reports a defect, only tests for SC-1, SC-2, SC-3 and SC-7. I cannot see other test files, so a REJECT test elsewhere is possible but is not cited.",
+          "evidence": "The test docstring says the finding arrives \"in the Judgment untouched\", and its assertions are on `judgment.defect_found` and `judgment.findings`. Neither is a `Reject` verdict. The fake provider in `test_gate.py` only ever returns `defect_found: False`, so the defect-to-REJECT path in `validate` is never driven by any cited test."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 14163,
+      "output_tokens": 1711,
+      "class": "caught"
+    },
+    {
+      "case": "pr-28",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 11771,
+      "output_tokens": 768,
+      "class": "missed"
+    },
+    {
+      "case": "pr-59",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "SC-2 requires a fixture for each next-action rule branch, but the cited precedence test never asserts the \"Next task <id> of <spec>\" branch (an Approved spec with unchecked tasks). The only Approved-with-tasks spec, `tasked`, is always outranked by the compact spec `compact`, so the test asserts the compact branch's output both before and after `tasked` is added. If the `Next task ...` return line were broken or deleted, `test_sc2_next_action_precedence` would still pass. The other cited SC-2 test, `test_sc2_bet_with_a_spec_is_not_pending`, covers only the bet branch.",
+          "evidence": "In `test_sc2_next_action_precedence`, after `_spec(root, \"tasked\", \"Approved\", \"### [ ] T-4 — do it\\n\")` the expected value is still the compact spec's action, \"slug order\". No assertion in the cited tests expects a string beginning \"Next task\". The `test_sc3_cli_reports_a_failing_gh` card has an Approved spec with an open task (`alpha` T-2), but an Open escalation file takes precedence there, so that branch is not reached either."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 35569,
+      "output_tokens": 1887,
+      "class": "caught"
+    },
+    {
+      "case": "pr-81",
+      "run": 5,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "pass",
+      "reason": null,
+      "findings": [],
+      "reported": 0,
+      "dropped": 0,
+      "input_tokens": 32996,
+      "output_tokens": 1299,
+      "class": "missed"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "model": "anthropic:claude-sonnet-5-5",
+  "date": "2026-11-12",
+  "runs": 1,
+  "instructions": "b7f84511eacc",
+  "case_set": "9ce495da8677",
+  "inputs": "1f427ab0b735",
+  "scorecard": {
+    "accepted": {
+      "passed": 0,
+      "wrongly-rejected": 0,
+      "could-not-judge": 0
+    },
+    "seeded": {
+      "caught": 1,
+      "other-reason": 0,
+      "missed": 0,
+      "could-not-judge": 0
+    },
+    "dropped": 0,
+    "input_tokens": 35569,
+    "output_tokens": 1971,
+    "unstable": []
+  },
+  "judgments": [
+    {
+      "case": "pr-59",
+      "run": 1,
+      "expected": "reject",
+      "check": "test-honesty",
+      "outcome": "reject",
+      "reason": null,
+      "findings": [
+        {
+          "check": "test-honesty",
+          "finding": "The \"Next task\" rule branch of next_action (an Approved spec with unchecked tasks) is never asserted, although SC-2 requires a fixture for each rule branch. In test_sc2_next_action_precedence, the only Approved spec with tasks (`tasked`) is added while an Approved compact spec (`compact`) sorts earlier. The test expects the compact-spec result both times and never sees the \"Next task T-4 of tasked: do it\" string. If that branch returned the wrong text, or never ran, the test would still pass. The other tests either use specs with no tasks or fixtures where an escalation or Draft rule wins first.",
+          "evidence": "After `tasked` is created, the assertion still expects the compact-spec action. The task branch is shadowed by slug order, so its own output is never checked. No other cited SC-2 test (test_sc2_bet_with_a_spec_is_not_pending) reaches it either."
+        }
+      ],
+      "reported": 1,
+      "dropped": 0,
+      "input_tokens": 35569,
+      "output_tokens": 1971,
+      "class": "caught"
+    }
+  ]
+}

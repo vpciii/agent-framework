@@ -15,6 +15,7 @@ from google.genai.types import (
     FunctionCallingConfigMode,
     GenerateContentConfigDict,
     GenerateContentResponse,
+    ThinkingLevel,
 )
 
 from ..errors import ProviderError
@@ -69,6 +70,12 @@ class GoogleProvider:
             }
         if request.max_output_tokens is not None:
             config["max_output_tokens"] = request.max_output_tokens
+        if request.effort is not None:
+            # The provider's control for how much to reason is its thinking
+            # level: the most the model may think, not what it must.
+            config["thinking_config"] = {
+                "thinking_level": ThinkingLevel(request.effort.upper())
+            }
         try:
             response = await client.aio.models.generate_content(
                 model=model, contents=request.prompt, config=config or None

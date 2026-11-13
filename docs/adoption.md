@@ -38,7 +38,16 @@ there.
    ```
 
    Use each provider's current model IDs; this repo's own
-   `agent-framework.toml` is a working example. No secrets here, ever. `gate_commands` are what a worker must run
+   `agent-framework.toml` is a working example. No secrets here, ever.
+   A role's binding may also set `effort = "low"`, `"medium"` or
+   `"high"` — how much reasoning its model is asked to spend; each
+   provider adapter translates it (Google: the thinking level; Anthropic:
+   the output effort). Leave it out for the provider's default. More
+   effort is more tokens and time on every call, and on some models it
+   is the most the model may think, not what it must — measure it with
+   the eval before keeping it. It applies to roles reached through an
+   adapter (the validator); the worker session does not take it, and a
+   `worker` binding that sets it is refused. `gate_commands` are what a worker must run
    green before committing; `test_pattern` needs exactly one capture
    group (the test name) — non-Python projects set their own.
    `test_paths` says which changed files are test files (`**/` spans
