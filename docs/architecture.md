@@ -212,4 +212,5 @@ carries a change to one, so update this list promptly when one changes
 - `specs/conformance-only-judgment/` — Implemented (frozen).
 - `specs/eval-rescore/` — Implemented (frozen).
 - `specs/role-effort/` — Implemented (frozen). This repository's roster
-  does not use the setting yet; ADR 0009 names the binding that will.
+  uses the setting: the validator runs at effort `high` (ADR 0009).
+- `specs/pr-description-in-judgment/` — Approved (not yet implemented).
