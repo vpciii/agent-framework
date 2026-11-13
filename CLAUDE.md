@@ -18,8 +18,8 @@ durable project-specific rules live in `docs/adr/` and `docs/glossary.md`.
 1. `$METHODOLOGY_HOME/methodology.md` — the practices and why (global;
    read once if unfamiliar; see its "Using this methodology" section for
    the decision guide and agent operating rules).
-2. `docs/architecture.md` — the current shape of the system (added once
-   the first component lands); the ADRs say *why*.
+2. `docs/architecture.md` — the current shape of the system; the ADRs
+   say *why*.
 3. `docs/glossary.md` — this project's ubiquitous language. Use these
    terms exactly (chief, worker, validator, task, success criterion…).
 4. `docs/adr/` — every numbered ADR is binding unless `superseded`.
@@ -60,9 +60,8 @@ durable project-specific rules live in `docs/adr/` and `docs/glossary.md`.
   (`tasks.md` items traced to `SC-` ids; PRs whose tests cite those ids;
   validator verdicts that cite evidence).
 - **The validator cites, it does not assert.** "Show done, don't assert
-  it" is the gate — a PASS names the passing test per criterion (see the
-  cite-the-test gate in the design doc). This will get its own ADR when
-  built.
+  it" is the gate — a PASS names the passing test per criterion
+  (`specs/validator-gate`, ADR 0008).
 - **The human is author of record — above the chief.** No agent, chief
   included, is the final acceptance authority.
 - **Model-agnostic — no hardcoded vendor.** Roles (chief / worker /
