@@ -2,8 +2,8 @@
 
 - **Status:** Approved
 - **Date:** 2026-11-13
-- **Amended:** 2026-11-13, proposed — the sign-off rule and the eval's
-  cases are deferred (R-5 to R-9, SC-5 to SC-8); see *Deferred*.
+- **Amended:** 2026-11-13, signed off by vpc — the sign-off rule and the
+  eval's cases are deferred (R-5 to R-9, SC-5 to SC-8); see *Deferred*.
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0008 (the validator judges conformance, cites
   and never asserts, code before model), ADR 0009 (the validator is
