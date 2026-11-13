@@ -294,6 +294,19 @@ def test_sc6_a_result_recorded_before_the_change_carries_its_inputs_fingerprint(
     assert len(result.judgments) == 36
 
 
+def test_the_repositorys_cases_still_send_what_the_recorded_results_judged() -> None:
+    """Regression (found 2026-11-13): giving the evidence bundle a new
+    optional field changed the inputs fingerprint of every stored case, so
+    `show` and `compare` would have refused every result on record — and no
+    test noticed, because the tests above only read what the results say.
+
+    A field a stored bundle does not carry must not move the fingerprint.
+    This fails on the day the cases are deliberately rebuilt; that is the
+    day a new baseline is recorded and this value changes with it."""
+    cases = ROOT / "evals" / "validator" / "cases"
+    assert case_module.inputs_fingerprint(cases) == RECORDED_INPUTS
+
+
 def test_sc6_a_result_with_no_inputs_fingerprint_is_refused_saying_so(
     root: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

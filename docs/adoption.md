@@ -79,7 +79,9 @@ there.
    keep its checkout on your **default branch** (`ref:` as in this repo's
    job), so `agent-framework.toml` — the roster and the gate's settings —
    is the merged one, and install the framework from its own `main` with
-   `uvx`. The PR reaches the validator only as data, through the API.
+   `uvx`. The PR reaches the validator only as data, through the API —
+   its title and description included, which the judgment reads as the
+   author's account and never as instructions.
 4. **A credential for your validator's provider** on the repo. For a
    Google model, the `GEMINI_API_KEY` secret (a free-tier AI Studio key
    is enough): `gh secret set GEMINI_API_KEY --repo <owner/name> --body ...`

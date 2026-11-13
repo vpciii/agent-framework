@@ -258,7 +258,7 @@ human reads the verdict, and that the human merges.
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
-| SC-2 | R-2 | *(pending)* |
-| SC-3 | R-3 | *(pending)* |
-| SC-4 | R-4 | *(pending)* |
+| SC-1 | R-1 | `tests/validator/test_description.py::test_sc1_the_bundle_carries_the_title_and_description`, `tests/validator/test_description.py::test_sc1_a_description_over_the_limit_is_cut_and_says_so` |
+| SC-2 | R-2 | `tests/validator/test_description.py::test_sc2_the_request_shows_them_inside_the_data_region_under_their_own_label`, `tests/validator/test_description.py::test_sc2_a_bundle_with_neither_sends_todays_request` |
+| SC-3 | R-3 | `tests/validator/test_description.py::test_sc3_the_instructions_say_what_the_description_is_and_is_not_for` |
+| SC-4 | R-4 | `tests/validator/test_description.py::test_sc4_a_closing_marker_inside_the_data_does_not_end_it`, `tests/validator/test_description.py::test_sc4_a_lookalike_marker_also_gets_the_data_a_tagged_region` |

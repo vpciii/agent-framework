@@ -50,6 +50,19 @@ class Contract:
 
 
 @dataclass(frozen=True)
+class Description:
+    """What the PR's author wrote about it: the title and description, as
+    collected. It is the author's account of the change — shown to the
+    judgment as data, never as evidence that the work is right
+    (specs/pr-description-in-judgment). `cut` is True when the description
+    was longer than the collector's limit and `text` holds only its start."""
+
+    title: str
+    text: str
+    cut: bool = False
+
+
+@dataclass(frozen=True)
 class EvidenceBundle:
     """One task's PR evidence: diff, the tests citing its criteria, CI, red evidence,
     and the contract the claims are judged against."""
@@ -61,3 +74,5 @@ class EvidenceBundle:
     red_evidence: str | None = None  # a fix's failing-before run
     # None only for a hand-built bundle; the collector always supplies one.
     contract: Contract | None = None
+    # None for a hand-built bundle, and for one stored before it was carried.
+    description: Description | None = None
