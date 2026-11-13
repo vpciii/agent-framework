@@ -1,6 +1,6 @@
 # Spec: The judgment is shown the pull request's description
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-13
 - **Amended:** 2026-11-13, signed off by vpc — the sign-off rule and the
   eval's cases are deferred (R-5 to R-9, SC-5 to SC-8); see *Deferred*.
@@ -119,7 +119,22 @@ on. (SC-1 to SC-4)
 
 ### Decisions
 
-- *(none yet)*
+- *2026-11-13* — **Implemented by #118; signed off by vpc.** The first
+  live judgment by the bound validator in CI was made on that pull
+  request: PASS, a test cited for each of SC-1 to SC-4.
+- *2026-11-13* — **The markers carry a tag only when they need one.**
+  When anything in the data resembles a marker, the request's opening
+  and closing lines carry twelve characters derived from the data that
+  the data does not contain, and the instructions name them. Plain data
+  keeps the plain markers, so a bundle always produces the same request.
+- *2026-11-13* — **The instructions about the description are sent only
+  with a description.** That is what keeps a bundle with neither on
+  today's request (SC-2).
+- *2026-11-13* — **The eval stores and fingerprints a bundle without a
+  description as before**, and a guard test pins the repository's cases
+  to the recorded fingerprint. A case file can already hold a
+  description, because a frozen case must load as the bundle collected
+  (validator-eval-set SC-4); no stored case was rebuilt.
 
 ## Rollout and undo
 
