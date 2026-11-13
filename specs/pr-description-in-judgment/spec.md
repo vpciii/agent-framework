@@ -119,9 +119,9 @@ on. (SC-1 to SC-4)
 
 ### Decisions
 
-- *2026-11-13* — **Implemented by #118.** The first live judgment by
-  the bound validator in CI was made on that pull request: PASS, a test
-  cited for each of SC-1 to SC-4.
+- *2026-11-13* — **Implemented by #118; signed off by vpc.** The first
+  live judgment by the bound validator in CI was made on that pull
+  request: PASS, a test cited for each of SC-1 to SC-4.
 - *2026-11-13* — **The markers carry a tag only when they need one.**
   When anything in the data resembles a marker, the request's opening
   and closing lines carry twelve characters derived from the data that
