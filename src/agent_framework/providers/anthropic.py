@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from typing import Any, cast
 
-from anthropic import AnthropicError, APIError, AsyncAnthropic
+from anthropic import AnthropicError, AsyncAnthropic
 from anthropic.types import Message, TextBlock, ToolUseBlock
 
 from ..errors import ProviderError
@@ -80,7 +80,10 @@ class AnthropicProvider:
             kwargs.setdefault("output_config", {})["effort"] = request.effort
         try:
             message = await client.messages.create(**kwargs)
-        except (APIError, TypeError) as e:
+        except (AnthropicError, TypeError) as e:
+            # Every error the SDK raises, not only those from the API: a
+            # refused credential exchange (federation) is an AnthropicError
+            # that is not an APIError, and is raised from inside the request.
             # TypeError is how the SDK says it found no credentials: it is
             # raised as the request is built, before anything is sent.
             raise ProviderError(f"{type(e).__name__}: {e}") from e
