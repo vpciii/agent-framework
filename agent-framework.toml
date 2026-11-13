@@ -5,7 +5,10 @@
 [roles]
 chief     = { provider = "anthropic", model = "claude-fable-5-1" }
 worker    = { provider = "anthropic", model = "claude-sonnet-5-5" }
-validator = { provider = "google",    model = "gemini-3.8-flash" }
+# Bound by what the eval set measures (ADR 0009); the scorecard for this
+# line is evals/validator/results/claude-opus-high-full.json. The previous
+# binding, one line away: { provider = "google", model = "gemini-3.8-flash" }
+validator = { provider = "anthropic", model = "claude-opus-5-5", effort = "high" }
 
 [project]
 gate_commands = [
