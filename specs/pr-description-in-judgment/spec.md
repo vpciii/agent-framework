@@ -1,6 +1,6 @@
 # Spec: The judgment is shown the pull request's description
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-13
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0008 (the validator judges conformance, cites
@@ -197,21 +197,24 @@ human reads the verdict, and that the human merges.
 
 ## Open questions
 
-- [ ] **Is a recorded sign-off enough to settle the finding, when the
+All resolved 2026-11-13 (human sign-off: vpc accepted the five drafted
+answers).
+
+- [x] **Is a recorded sign-off enough to settle the finding, when the
   validator cannot verify it?** Drafted: yes, with R-7 making the
   reliance visible. The alternative is to go on rejecting and let vpc
   overrule each time, which makes `pr-69` an expected rejection again.
-- [ ] **An unsupported sign-off: could not judge, or REJECT?** Drafted:
+- [x] **An unsupported sign-off: could not judge, or REJECT?** Drafted:
   could not judge, as an unsupported finding is. Code does not write a
   finding the model did not make.
-- [ ] **The limit on a description's length.** Drafted: 20,000
+- [x] **The limit on a description's length.** Drafted: 20,000
   characters. `pr-69`'s is about 4,000; GitHub allows 65,536.
-- [ ] **Does this need an ADR?** Drafted: yes, for the second pull
+- [x] **Does this need an ADR?** Drafted: yes, for the second pull
   request only. Taking an author's recorded sign-off on trust is a
   decision about what the validator accepts, and belongs beside ADR
   0008. The first pull request adds one more untrusted input to a region
   that already holds the diff, and needs none.
-- [ ] **A worker can edit `plan.md` today.** The handoff check refuses
+- [x] **A worker can edit `plan.md` today.** The handoff check refuses
   changes to a spec's text and to a tasks file, and not to a plan. A
   worker's summary also lands in its pull request's description.
   Drafted: out of scope here, and worth its own small spec before the
