@@ -153,6 +153,23 @@ def test_sc1_spec_is_found_from_the_changed_files_when_the_body_names_none() -> 
     assert set(contract.criterion_texts) == {"SC-1", "SC-2"}
 
 
+def test_sc1_two_changed_spec_directories_and_none_named_resolve_to_neither() -> None:
+    """SC-1 says *exactly one* spec directory among the changed files: with
+    two, the collector picks neither, and the contract says why."""
+    run = _runner(
+        _view(
+            "T-3.\n\nSatisfies: SC-1, SC-2\n",
+            ["specs/widget/spec.md", "specs/zebra/spec.md", "tests/test_widget.py"],
+        ),
+        _AT_BASE,
+    )
+
+    contract = collect_bundle(7, run=run).contract
+
+    assert contract is not None and contract.spec_slug is None
+    assert "more than one spec: widget, zebra" in contract.problem
+
+
 def test_sc2_a_spec_the_pr_introduces_is_read_at_the_head_and_says_so() -> None:
     """SC-2: no spec file at the base → the head's text, recorded as such."""
     files = {
@@ -176,8 +193,9 @@ def test_sc2_a_spec_the_pr_introduces_is_read_at_the_head_and_says_so() -> None:
         ("T-3.\n\nSatisfies: SC-1\n", ["src/widget.py", "tests/test_widget.py"],
          "spec-resolution", "SC-1"),
         # Two spec directories changed and none named: ambiguous, so unresolved.
+        # The readable spec sorts first, so picking the first would resolve it.
         ("T-3.\n\nSatisfies: SC-1\n",
-         ["specs/widget/spec.md", "specs/other/spec.md", "tests/test_widget.py"],
+         ["specs/widget/spec.md", "specs/zebra/spec.md", "tests/test_widget.py"],
          "spec-resolution", "SC-1"),
         # A resolved spec that does not define a claimed id.
         ("From `specs/widget/tasks.md`.\n\nSatisfies: SC-1, SC-7\n",

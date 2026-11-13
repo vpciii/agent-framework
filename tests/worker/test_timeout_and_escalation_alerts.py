@@ -91,7 +91,10 @@ def test_sc7_timeout_leaves_a_handoff_note_and_alerts(repo: Path) -> None:  # no
     assert isinstance(outcome, TimedOut) and outcome.handoff_path
     note = Path(outcome.handoff_path).read_text(encoding="utf-8")
     assert "T-1 (fixture) timed out" in note and "**Budget:** 5s" in note
-    assert "**elapsed:**" in note
+    # The fake session raises at once, so the time that elapsed is zero
+    # seconds — not the budget, which is what a note that never measured
+    # would print.
+    assert "**elapsed:** 0s" in note
     assert "M widget.py" in note and "widget.py | 3 ++-" in note
     assert "halfway through the widget" in note
     assert tracker.created == [("[timeout:fixture/T-1] T-1 of fixture timed out", "timeout")]
@@ -144,11 +147,20 @@ def _alive(pids: list[int]) -> list[int]:
 
 
 def test_sc6_budget_expiry_leaves_no_descendants(tmp_path: Path) -> None:
-    """SC-6: a real session that spawns long-lived children; none survive the kill."""
+    """SC-6: a real session that spawns long-lived children; none survive the kill.
+
+    The children take none of the session's pipes. A child holding one makes
+    the kill wait for it to exit by itself, and after that wait nothing is
+    left alive whoever was signalled — which is how this test once passed
+    with only the session's own process killed.
+    """
     pidfile = tmp_path / "children"
     script = (
         "import subprocess, sys, time\n"
-        f"kids = [subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)']) for _ in range(2)]\n"
+        "quiet = dict(stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,"
+        " stderr=subprocess.DEVNULL)\n"
+        "kids = [subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'],"
+        " **quiet) for _ in range(2)]\n"
         f"open({str(pidfile)!r}, 'w').write(' '.join(str(k.pid) for k in kids))\n"
         "time.sleep(60)\n"
     )
