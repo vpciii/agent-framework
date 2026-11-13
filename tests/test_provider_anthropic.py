@@ -11,11 +11,11 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import pytest
-from anthropic import AnthropicError, AsyncAnthropic
+from anthropic import AnthropicError, APIError, AsyncAnthropic, WorkloadIdentityError
 
 from agent_framework.errors import ProviderError
 from agent_framework.providers.anthropic import AnthropicProvider
@@ -100,3 +100,35 @@ async def test_credentials_that_cannot_be_loaded_are_a_provider_error(
         await AnthropicProvider().invoke(Request(prompt="x"), model="any")
 
     assert isinstance(raised.value.__cause__, AnthropicError)
+
+
+async def test_a_refused_token_exchange_is_a_provider_error() -> None:
+    """Regression (found 2026-11-13, on the validator's first run in CI):
+    with federation configured and a rule that did not match the pull
+    request's token, the SDK raised its credential error from inside the
+    request. That error is an `AnthropicError` but not an `APIError`, so it
+    escaped `invoke` — a traceback from the gate's CLI instead of "could not
+    judge". The adapter reports it as the typed error, the SDK's own chained."""
+    refusal = WorkloadIdentityError(
+        "Token exchange failed (HTTP 401): {'error': {'type': 'authentication_error', "
+        "'message': 'Authentication failed'}} Ensure your federation rule matches "
+        "your identity token.",
+        status_code=401,
+    )
+    assert not isinstance(refusal, APIError)
+
+    class _Messages:
+        async def create(self, **_: Any) -> Any:
+            raise refusal
+
+    class _Client:
+        messages = _Messages()
+
+    provider = AnthropicProvider(cast("AsyncAnthropic", _Client()))
+
+    with pytest.raises(ProviderError, match="Token exchange failed") as raised:
+        await provider.invoke(Request(prompt="x"), model="any")
+
+    assert raised.value.__cause__ is refusal
+    assert "federation rule" in str(raised.value)  # the useful sentence survives
+
