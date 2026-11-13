@@ -68,8 +68,9 @@ durable project-specific rules live in `docs/adr/` and `docs/glossary.md`.
 - **Model-agnostic — no hardcoded vendor.** Roles (chief / worker /
   validator) are slots bound to models by the **roster**; models are
   reached through provider adapters. Swapping a model is a roster edit,
-  never a code change. The validator should be a different lineage than the
-  worker it gates (ADR 0001).
+  never a code change. The validator is bound by what the eval set
+  measures; a different lineage than the worker is preferred only between
+  candidates the scorecard cannot tell apart (ADR 0009).
 
 ## What this file is not
 

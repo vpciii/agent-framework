@@ -1,6 +1,6 @@
 # ADR 0004: Role execution surfaces — subscription-backed interactive roles, API-backed programmatic roles
 
-- **Status:** Accepted
+- **Status:** Accepted — the validator's row in the decision table replaced by ADR 0009
 - **Date:** 2026-07-11
 - **Deciders:** vpc
 

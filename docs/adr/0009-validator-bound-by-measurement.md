@@ -1,13 +1,14 @@
 # ADR 0009: The validator is bound by what the eval set measures; lineage is a preference and a paid API is allowed
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Deciders:** vpc
 
-Replaces three earlier decisions in part, and leaves the rest of each ADR
-standing: ADR 0001 decision 4 and ADR 0008 decision 5 (the validator is a
-different lineage than the worker), and the validator's row in ADR 0004's
-table (direct API on the Gemini free tier).
+Accepted by vpc, 2026-11-13. Replaces three earlier decisions in part,
+and leaves the rest of each ADR standing: ADR 0001 decision 4 and ADR
+0008 decision 5 (the validator is a different lineage than the worker),
+and the validator's row in ADR 0004's table (direct API on the Gemini
+free tier).
 
 ## Context
 
@@ -132,9 +133,9 @@ move from 5 can.
 
 ## Adoption impact
 
-Project ADR. On acceptance: `CLAUDE.md`'s project rule on lineage is
-reworded to match decision 2, and ADR 0001, 0004 and 0008 each get a
-note on their status line naming the decision this replaces.
+Project ADR. With its acceptance, `CLAUDE.md`'s project rule on lineage
+is reworded to match decision 2, and ADR 0001, 0004 and 0008 each carry
+a note on their status line naming the decision this replaces.
 
 Work it forces, each its own pull request:
 

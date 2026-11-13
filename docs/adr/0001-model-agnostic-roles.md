@@ -1,6 +1,6 @@
 # ADR 0001: Model-agnostic roles, bound by a roster
 
-- **Status:** Accepted
+- **Status:** Accepted — decision 4 replaced by ADR 0009
 - **Date:** 2026-06-25
 - **Deciders:** vpc
 
