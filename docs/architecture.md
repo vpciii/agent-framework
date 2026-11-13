@@ -214,5 +214,5 @@ carries a change to one, so update this list promptly when one changes
 - `specs/role-effort/` — Implemented (frozen). This repository's roster
   uses the setting: the validator runs at effort `high` (ADR 0009).
 - `specs/pr-description-in-judgment/` — Approved; the description is shown
-  and the data region closed (SC-1 to SC-4). The sign-off rule and the
-  eval's cases (SC-5 to SC-8) are not implemented.
+  and the data region closed (SC-1 to SC-4), which is all the spec now
+  requires. The sign-off rule and the eval's cases are deferred.
