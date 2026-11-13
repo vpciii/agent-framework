@@ -32,9 +32,13 @@ from typing import Any, cast
 from ..artifacts import criterion_text, task_block, traceability
 from ..proc import Runner, run_command
 from ..project import DEFAULTS, path_matches
-from .bundle import CIEvidence, Contract, EvidenceBundle, TaskRef
+from .bundle import CIEvidence, Contract, Description, EvidenceBundle, TaskRef
 
-__all__ = ["Runner", "collect_bundle", "run_command"]
+__all__ = ["DESCRIPTION_LIMIT", "Runner", "collect_bundle", "run_command"]
+
+# The most of a PR's description the judgment is shown, in characters
+# (specs/pr-description-in-judgment R-1). GitHub allows 65,536.
+DESCRIPTION_LIMIT = 20_000
 
 _TASK_ID_RE = re.compile(r"\bT-\d+\b")
 _SC_RE = re.compile(r"\bSC-\d+\b")
@@ -234,4 +238,9 @@ def collect_bundle(
         ci=_ci_evidence(rollup, ignore_checks),
         red_evidence=_red_evidence(body, is_fix),
         contract=contract,
+        description=Description(
+            title=title,
+            text=body[:DESCRIPTION_LIMIT],
+            cut=len(body) > DESCRIPTION_LIMIT,
+        ),
     )

@@ -16,7 +16,7 @@ from typing import Any, Literal
 
 from ..errors import EvalResultError
 from ..validator import judgment
-from ..validator.bundle import CIEvidence, Contract, EvidenceBundle, TaskRef
+from ..validator.bundle import CIEvidence, Contract, Description, EvidenceBundle, TaskRef
 from ..validator.verdict import Finding
 from .case import EvalCase, Expected
 
@@ -173,6 +173,7 @@ _PLACEHOLDER = EvidenceBundle(
         task_block="(task)", cited_tests={"SC-0": ("tests/placeholder.py::test",)},
         ref="0000000",
     ),
+    description=Description(title="(title)", text="(description)"),
 )
 
 
