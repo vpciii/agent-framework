@@ -174,9 +174,9 @@ The automated tests are still transport-level only.)*
 
 ### Decisions
 
-- *2026-11-13* — **Implemented by #108.** One pull request, about 440
-  lines of code, tests and docs, where the Approach allowed two: the
-  setting merges whole or not at all.
+- *2026-11-13* — **Implemented by #108; signed off by vpc.** One pull
+  request, about 440 lines of code, tests and docs, where the Approach
+  allowed two: the setting merges whole or not at all.
 - *2026-11-13* — **An eval result records `effort` only when the roster
   set one**, so a run at the provider's default is written exactly as
   before and the stored results still load unchanged.
