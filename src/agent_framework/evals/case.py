@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal, cast, get_args
 
 from ..errors import EvalCaseError
-from ..validator.bundle import CIEvidence, Contract, EvidenceBundle, TaskRef
+from ..validator.bundle import CIEvidence, Contract, Description, EvidenceBundle, TaskRef
 from ..validator.judgment import CHECK_NAMES
 
 Kind = Literal["accepted", "seeded-defect"]
@@ -132,7 +132,32 @@ def _bundle(data: dict[str, Any], where: str) -> EvidenceBundle:
         ),
         red_evidence=_optional_string(data, "red_evidence", where),
         contract=contract,
+        description=_description(data, where),
     )
+
+
+def _description(data: dict[str, Any], where: str) -> Description | None:
+    """The PR's title and description, for a case that carries them. A case
+    stored before they were carried has no such field."""
+    if data.get("description") is None:
+        return None
+    raw = _field(data, "description", dict, where)
+    return Description(
+        title=_field(raw, "title", str, where),
+        text=_field(raw, "text", str, where),
+        cut=_field(raw, "cut", bool, where),
+    )
+
+
+def _stored(bundle: EvidenceBundle) -> dict[str, Any]:
+    """The bundle as a case file holds it and as the inputs fingerprint
+    hashes it. A description the bundle does not carry is left out, not
+    written as null — so a case from before descriptions were carried is
+    stored, and fingerprinted, exactly as it was."""
+    data = asdict(bundle)
+    if data["description"] is None:
+        del data["description"]
+    return data
 
 
 def _edit(raw: Any, where: str) -> tuple[Replacement, ...]:
@@ -264,7 +289,7 @@ def dump_case(case: EvalCase) -> str:
         data["edit"] = [{"in": r.where, "replace": r.find, "with": r.put} for r in case.edit]
     else:
         data["provenance"] = asdict(case.provenance)
-        data["bundle"] = asdict(case.bundle)
+        data["bundle"] = _stored(case.bundle)
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
 
 
@@ -285,7 +310,7 @@ def inputs_fingerprint(directory: Path) -> str:
     with the same one judged the same cases (specs/eval-rescore)."""
     digest = hashlib.sha256()
     for case in load_set(directory):
-        sent = json.dumps(asdict(case.bundle), sort_keys=True, ensure_ascii=False)
+        sent = json.dumps(_stored(case.bundle), sort_keys=True, ensure_ascii=False)
         digest.update(case.id.encode())
         digest.update(b"\0")
         digest.update(hashlib.sha256(sent.encode()).digest())
