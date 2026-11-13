@@ -2,7 +2,7 @@
 
 - **Status:** Approved
 - **Date:** 2026-11-12
-- **Amended:** 2026-11-13, proposed — the check as it was run, and ADR
+- **Amended:** 2026-11-13, signed off by vpc — the check as it was run, and ADR
   0009 in place of the drafted roster rule (R-7, *Rollout and undo*,
   *Open questions*). No requirement or criterion other than R-7 changes.
 - **Author:** Claude (draft) — vpc is author of record
