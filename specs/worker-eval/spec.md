@@ -1,7 +1,8 @@
 # Spec: An eval for the worker
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-15
+- **Approved:** 2026-11-15, signed off by vpc
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0001 (roles are bound by the roster), ADR 0004
   (the worker is headless Claude Code), ADR 0007 (the worker session is
