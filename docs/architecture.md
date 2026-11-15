@@ -216,3 +216,4 @@ carries a change to one, so update this list promptly when one changes
 - `specs/pr-description-in-judgment/` — Implemented (frozen). Its sign-off
   rule and the eval's cases with descriptions were deferred before being
   built; the spec's *Deferred* section holds them.
+- `specs/worker-spend-and-record/` — Approved (not yet implemented).
