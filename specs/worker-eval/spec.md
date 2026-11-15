@@ -92,8 +92,10 @@ an accepted result for the task looks like, not what the worker did.
   today's worker exactly as a dispatch does — the same brief builder,
   confinement profile, session seam, time budget and spend limit, through
   the roster's worker role — in a fresh worktree cut from the case's
-  start commit instead of `origin/main`. A case may be run more than
-  once in one run.
+  start commit instead of `origin/main`. Every case runs under the same
+  session paths, hosts and variable names, declared once for the case
+  set, not under its start commit's `agent-framework.toml`. A case may be
+  run more than once in one run.
 - **R-5 (MUST NOT)** An eval run never pushes, opens a pull request,
   raises an alert, or changes anything outside its own worktrees, its
   session records and its result file. It never runs in CI, and no test
@@ -104,8 +106,9 @@ an accepted result for the task looks like, not what the worker did.
   - each of the project's gate commands, run by the eval against the
     session's last commit, passed or failed;
   - the handoff check's findings;
-  - the reference tests, run against the session's code, passed or
-    failed;
+  - the reference tests, passed or failed, run on a copy of the
+    session's tree with the reference pull request's versions of those
+    test files laid over it;
   - the size of the session's diff.
 
   For every run it records the cost and turns the session record
@@ -119,7 +122,9 @@ an accepted result for the task looks like, not what the worker did.
   and in total, how many runs finished **ready for review** (completed,
   every gate command passing, no handoff finding), how many passed the
   reference tests, how many ended in each other outcome, how many could
-  not run; and the total and median reported cost and elapsed time.
+  not run; and the total and median reported cost and elapsed time. The
+  reference-test count is reported beside "ready for review", never
+  folded into it.
 - **R-9 (MUST)** A run's result says what was measured: the worker's
   model as the roster binds it, the Claude Code version, the date, the
   spend limit and time budget, a fingerprint of the brief each case was
@@ -132,9 +137,9 @@ an accepted result for the task looks like, not what the worker did.
   failed or the case is wrong. A case changes only as its own reviewed
   change.
 - **R-11 (MUST)** The initial set holds at least 6 cases from this
-  repository's merged task pull requests, including at least one of the
-  three the worker wrote (#31, #38, #73) and at least one whose reference
-  pull request changed more than 300 lines.
+  repository's merged task pull requests: #31, #38, #73 (the three the
+  worker wrote), #88 (a reference pull request of more than 300 changed
+  lines), and at least two more.
 - **R-12 (SHOULD)** The delivery records a first baseline: one run of
   every case with the roster's current worker binding, by the human,
   committed as a result file and cited, with its total reported cost.
@@ -183,9 +188,8 @@ an accepted result for the task looks like, not what the worker did.
 - **SC-10** — Every run not ready for review, and every reference-test
   failure, is listed with the paths of its session record, diff and gate
   output. (R-10)
-- **SC-11** — The case set holds at least 6 cases, at least one from
-  #31, #38 or #73 and at least one whose reference pull request changed
-  more than 300 lines. (R-11)
+- **SC-11** — The case set holds at least 6 cases, among them #31, #38,
+  #73 and #88. (R-11)
 
 ## Glossary additions (proposed with this spec)
 
@@ -206,34 +210,34 @@ Added to `docs/glossary.md` in the implementing PRs.
 
 ## Open questions
 
-- [ ] **Is this a bet to plan first?** A full run is hours of sessions:
+- [x] **Is this a bet to plan first?** A full run is hours of sessions:
   6 cases at up to 30 minutes and $10 each is up to 3 hours and $60 at
   list price, from the Max plan's allowance while the worker runs on it.
   The methodology plans an uncertain or expensive bet before its spec.
-  Proposed: go straight to a plan, since the shape follows the
-  validator's eval closely, and treat R-12's baseline as the measurement
-  of what a run costs.
-- [ ] **Reference tests against different code.** The worker's code can
+  Decided (vpc, 2026-11-15): no planning folder; go straight to a plan,
+  since the shape follows the validator's eval closely, and treat R-12's
+  baseline as the measurement of what a run costs.
+- [x] **Reference tests against different code.** The worker's code can
   be correct and still fail the reference tests, if it names things
   differently than the reference pull request did, and its own test files
-  sit at the same paths. Proposed: run the reference test files on a
-  copy of the session's tree with the reference versions of those files
-  laid over it, and report the result beside "ready for review", not
-  folded into it.
-- [ ] **Which project configuration a case runs under.** Older start
+  sit at the same paths. Decided (vpc, 2026-11-15): run the reference
+  test files on a copy of the session's tree with the reference versions
+  of those files laid over it, and report the result beside "ready for
+  review", not folded into it (R-6, R-8).
+- [x] **Which project configuration a case runs under.** Older start
   commits have an `agent-framework.toml` from before the confinement
   fields existed, so a session there cannot reach the package host its
-  gate needs. Proposed: every case runs under the session paths, hosts
-  and variable names the case set declares once, today's, so the runs
-  differ only in the task.
-- [ ] **Which cases.** Proposed starting set: #31 and #73 (worker
+  gate needs. Decided (vpc, 2026-11-15): every case runs under the
+  session paths, hosts and variable names the case set declares once,
+  today's, so the runs differ only in the task (R-4).
+- [x] **Which cases.** Decided (vpc, 2026-11-15): #31 and #73 (worker
   written, about 90 lines each), #38 (worker written, 72 lines), #88
   (688 lines), and two more medium tasks from the validator's eval set.
   For the first four, the task's block is in `tasks.md` at the start
   commit (checked 2026-11-15); the other two are chosen when frozen.
-- [ ] **Effort.** Measuring effort needs the worker to take one, which
-  it refuses today. Proposed: out of scope here; the first comparison is
-  between models, which needs only a roster edit.
+- [x] **Effort.** Measuring effort needs the worker to take one, which
+  it refuses today. Decided (vpc, 2026-11-15): out of scope here; the
+  first comparison is between models, which needs only a roster edit.
 
 ## Out of scope (for now)
 
