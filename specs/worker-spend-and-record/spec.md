@@ -1,7 +1,8 @@
 # Spec: A worker session has a spend limit and leaves a session record
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-15
+- **Approved:** 2026-11-15, signed off by vpc
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0004 (the worker is headless Claude Code, on the
   Max plan while supported, with an API-key fallback), ADR 0007 (the
