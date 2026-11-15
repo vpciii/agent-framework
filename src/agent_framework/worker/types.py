@@ -62,6 +62,19 @@ class TimedOut:
 
 
 @dataclass(frozen=True)
+class SpendLimitReached:
+    """The session reached its spend limit: no PR, worktree preserved for
+    inspection, as for a timeout (specs/worker-spend-and-record R-2)."""
+
+    worktree_path: str
+    spend_limit_usd: float
+    # What the session's record reported it spent; None when it reported nothing.
+    cost_usd: float | None
+    handoff_path: str | None = field(default=None, compare=False)
+    alerts: tuple[str, ...] = field(default=(), compare=False)
+
+
+@dataclass(frozen=True)
 class HandoffFinding:
     """One reason a handoff is refused: which rule, which path, what was wrong."""
 
@@ -80,4 +93,4 @@ class HandoffRefused:
     alerts: tuple[str, ...] = field(default=(), compare=False)
 
 
-WorkerOutcome = PrOpened | Escalated | TimedOut | HandoffRefused
+WorkerOutcome = PrOpened | Escalated | TimedOut | SpendLimitReached | HandoffRefused

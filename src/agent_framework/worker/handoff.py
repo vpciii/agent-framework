@@ -103,10 +103,16 @@ def write_handoff_note(
     budget_s: float,
     elapsed_s: float,
     run: Runner = run_command,
+    spend_limit_usd: float | None = None,
+    cost_usd: float | None = None,
+    record: Path | None = None,
 ) -> Path:
     """After a budget expiry, record what the killed session left behind (R-6).
 
     Written by the orchestrator, not the session — a killed process can't.
+    With `spend_limit_usd`, the session stopped at its spend limit instead
+    (specs/worker-spend-and-record R-2). The note stays in the worktree and
+    is never pushed, so it may name the session record.
     """
 
     def git(*args: str) -> str:
@@ -122,13 +128,21 @@ def write_handoff_note(
             progress.append(f"### `{name}`\n\n{f.read_text(encoding='utf-8')[:2000].strip()}")
     path = worktree / HANDOFF_FILE
     worktree.mkdir(parents=True, exist_ok=True)  # never let the note itself fail the timeout path
+    if spend_limit_usd is None:
+        stopped, why = "timed out", "at its budget"
+        limit = ""
+    else:
+        stopped, why = "reached its spend limit", "at its spend limit"
+        cost = "not reported" if cost_usd is None else f"${cost_usd:.2f}"
+        limit = f"- **Spend limit:** ${spend_limit_usd:.2f} — **reported cost:** {cost}\n"
+    session_record = f"- **Session record:** `{record}`\n" if record is not None else ""
     path.write_text(
-        f"""# Handoff: {task.task_id} ({task.spec_slug}) timed out
+        f"""# Handoff: {task.task_id} ({task.spec_slug}) {stopped}
 
 - **Budget:** {budget_s:.0f}s — **elapsed:** {elapsed_s:.0f}s
-- **Claimed criteria:** {", ".join(task.criteria) or "—"}
-
-The session was stopped at its budget; nothing was pushed and no PR was
+{limit}- **Claimed criteria:** {", ".join(task.criteria) or "—"}
+{session_record}
+The session was stopped {why}; nothing was pushed and no PR was
 opened. This worktree is preserved as it was left.
 
 ## Commits on the branch

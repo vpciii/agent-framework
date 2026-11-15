@@ -61,7 +61,7 @@ class FakePush:
 
 
 def _timeout_session(
-    args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str]
+    args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str], record: Path
 ) -> None:
     cwd.mkdir(parents=True, exist_ok=True)
     (cwd / ".worker-progress").write_text("halfway through the widget", encoding="utf-8")
@@ -165,7 +165,7 @@ def test_sc6_budget_expiry_leaves_no_descendants(tmp_path: Path) -> None:
         "time.sleep(60)\n"
     )
     with pytest.raises(SessionTimeoutError):
-        run_claude([sys.executable, "-c", script], tmp_path, 1.5, {})
+        run_claude([sys.executable, "-c", script], tmp_path, 1.5, {}, tmp_path / "r.jsonl")
     kids = [int(p) for p in pidfile.read_text().split()]
     assert len(kids) == 2
     deadline = time.monotonic() + 3

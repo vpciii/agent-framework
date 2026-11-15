@@ -179,7 +179,12 @@ unavailable, the session does not start.
 
 Outcomes: exit 0 = PR opened (with its `Satisfies:` declaration, facing
 the advisory gate); 2 = the worker escalated (read
-`specs/<slug>/escalations/`); 3 = timeout/error (worktree preserved);
+`specs/<slug>/escalations/`); 3 = timeout, spend limit reached, or error
+(worktree preserved; `--spend-limit USD` sets a session's limit, $10 at
+list price by default, and on the Max plan it measures the plan's
+allowance, not money); every session's output is kept locally as a
+session record in `.worktrees/records/` — read it to see what a session
+did and what it cost;
 4 = handoff refused — the session finished but its commits changed a
 spec's contract, a path in `protected_paths` (default `.github/**` and
 `agent-framework.toml`), or deleted a test file. Nothing was pushed; the

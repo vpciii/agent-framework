@@ -1,11 +1,11 @@
 """Dispatch one task to a worker session from the command line.
 
     python -m agent_framework.worker <spec-slug> <task-id>
-        [--timeout SECONDS] [--roster PATH]
+        [--timeout SECONDS] [--spend-limit USD] [--roster PATH]
 
 Prints the outcome JSON on stdout. Exit codes compose with the validator's
-(0/1) for a future chief: 0 = PR opened, 2 = escalated, 3 = timeout or
-worker error, 4 = handoff refused (the session's commits failed the
+(0/1) for a future chief: 0 = PR opened, 2 = escalated, 3 = timeout, spend
+limit reached or worker error, 4 = handoff refused (the session's commits failed the
 handoff check; nothing was pushed).
 
 There is no way to pass arguments to the session: every session runs under
@@ -26,7 +26,8 @@ from ..errors import WorkerError
 from ..project import load_project_config
 from ..roster import Roster
 from .orchestrator import work
-from .types import Escalated, HandoffRefused, PrOpened, WorkerOutcome
+from .session import DEFAULT_SPEND_LIMIT_USD
+from .types import Escalated, HandoffRefused, PrOpened, SpendLimitReached, WorkerOutcome
 
 WorkFn = Callable[..., WorkerOutcome]
 
@@ -34,6 +35,7 @@ WorkFn = Callable[..., WorkerOutcome]
 def _outcome_json(outcome: WorkerOutcome) -> str:
     kind = {
         PrOpened: "pr_opened", Escalated: "escalated", HandoffRefused: "handoff_refused",
+        SpendLimitReached: "spend_limit_reached",
     }.get(type(outcome), "timed_out")
     return json.dumps({"outcome": kind, **dataclasses.asdict(outcome)}, indent=2)
 
@@ -43,6 +45,8 @@ def main(argv: list[str] | None = None, *, work_fn: WorkFn = work) -> int:
     ap.add_argument("spec_slug", help="spec folder under specs/")
     ap.add_argument("task_id", help="task id from that spec's tasks.md (e.g. T-2)")
     ap.add_argument("--timeout", type=float, default=1800, metavar="SECONDS")
+    ap.add_argument("--spend-limit", type=float, default=DEFAULT_SPEND_LIMIT_USD,
+                    metavar="USD", help="the session's spend limit, at list price")
     ap.add_argument("--roster", type=Path, default=Path("agent-framework.toml"))
     args = ap.parse_args(argv)
 
@@ -54,6 +58,7 @@ def main(argv: list[str] | None = None, *, work_fn: WorkFn = work) -> int:
             args.task_id,
             roster,
             timeout_s=args.timeout,
+            spend_limit_usd=args.spend_limit,
             project=project,
         )
     except WorkerError as e:

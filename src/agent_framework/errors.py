@@ -74,6 +74,16 @@ class SessionTimeoutError(WorkerError):
     """The session exceeded its time budget and was killed."""
 
 
+class SpendLimitError(WorkerError):
+    """The session stopped because it reached its spend limit."""
+
+    def __init__(self, limit_usd: float, cost_usd: float | None) -> None:
+        self.limit_usd = limit_usd
+        self.cost_usd = cost_usd
+        reported = "no cost reported" if cost_usd is None else f"reported ${cost_usd:.2f}"
+        super().__init__(f"session reached its ${limit_usd:.2f} spend limit ({reported})")
+
+
 class WorktreeError(WorkerError):
     """The worktree or branch could not be created (collision or git failure)."""
 
