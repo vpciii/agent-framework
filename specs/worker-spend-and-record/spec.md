@@ -62,11 +62,11 @@ measurement of the worker needs exactly these numbers.
 
 - **R-1 (MUST)** Every worker session is launched with a spend limit. The
   limit is taken from the dispatch (`--spend-limit` on the worker CLI,
-  with a default); no session is launched without one.
+  default $10 at list price); no session is launched without one.
 - **R-2 (MUST)** A session that ends because it reached its spend limit
   opens no pull request; its worktree is kept, a handoff note naming the
-  limit and the cost reported is written into it, and an alert is
-  raised. The worker CLI exits 3, as for a timeout.
+  limit and the cost reported is written into it, and an alert labelled
+  `timeout` is raised. The worker CLI exits 3, as for a timeout.
 - **R-3 (MUST)** Every worker session's output is written, as it
   arrives, to a session record file outside the session's worktree. The
   record survives the worktree's removal.
@@ -189,6 +189,10 @@ of a full worker session's record.
 - *2026-11-15* — The stream format, not the single JSON result: a
   session killed at its time budget never reaches a final JSON result,
   so only the stream leaves a record of it (R-4).
+- *2026-11-15* — vpc settled the open questions: the default spend limit
+  is $10 a session at list price; records live in `.worktrees/records/`;
+  a spend-limit stop raises an alert labelled `timeout`, titled
+  "<task> of <spec> reached its spend limit".
 
 ## Rollout and undo
 
@@ -201,19 +205,19 @@ delete. Nothing here is irreversible.
 
 ## Open questions
 
-- [ ] **The default spend limit.** Proposed: $10 a session at list
-  price. With no records yet, this is a guess at "well above any normal
-  task"; the records this spec creates are how to replace it.
-- [ ] **Where records live.** Proposed: `.worktrees/records/`. The
-  alternative is the repository's git directory
-  (`<git common dir>/agent-framework/sessions/`), which no `.gitignore`
-  change could ever expose. A later session can read either location,
-  since both are inside the repository it may read, and a record holds
-  only what an earlier session read from that same repository.
-- [ ] **The alert's label.** Proposed: reuse `timeout`, so the resume
-  card and the nudge pick it up unchanged, with a title saying the spend
-  limit was reached. The alternative is a new `spend-limit` label, which
-  the resume card's alert query would need to learn.
+- [x] **The default spend limit.** $10 a session at list price (vpc,
+  2026-11-15). With no records yet, this is a guess at "well above any
+  normal task"; the records this spec creates are how to replace it.
+- [x] **Where records live.** `.worktrees/records/` (vpc, 2026-11-15).
+  The alternative was the repository's git directory
+  (`<git common dir>/agent-framework/sessions/`). A later session can
+  read either location, since both are inside the repository it may
+  read, and a record holds only what an earlier session read from that
+  same repository.
+- [x] **The alert's label.** Reuse `timeout` (vpc, 2026-11-15), so the
+  resume card and the nudge pick it up unchanged, with a title saying the
+  spend limit was reached. The alternative was a new `spend-limit` label,
+  which the resume card's alert query would have needed to learn.
 
 ## Out of scope (for now)
 
