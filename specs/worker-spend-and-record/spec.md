@@ -208,6 +208,10 @@ of a full worker session's record.
   its last line is a `result` entry with subtype `error_max_budget_usd`,
   which `read_end` reads as reaching the limit. The size of a full worker
   session's record is still unmeasured.
+- *2026-11-15* — vpc accepted the reading of specs/worker-confinement R-5
+  above, and kept the implementation as one PR (about 680 changed lines,
+  over the ~300 guideline), since the spend-limit check reads the session
+  record.
 
 ## Rollout and undo
 
