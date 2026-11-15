@@ -73,13 +73,15 @@ class _GitGh:
 def _session(
     payload: object,
 ) -> tuple[
-    list[tuple[list[str], Path, float]], Callable[[Sequence[str], Path, float, Mapping[str, str]], None]
+    list[tuple[list[str], Path, float]],
+    Callable[[Sequence[str], Path, float, Mapping[str, str], Path], None],
 ]:
     """A fake session seam that records its invocation and writes the result file."""
     record: list[tuple[list[str], Path, float]] = []
 
     def run(
-        args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str]
+        args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str],
+        session_record: Path,
     ) -> None:
         record.append((list(args), cwd, timeout_s))
         cwd.mkdir(parents=True, exist_ok=True)
@@ -153,7 +155,8 @@ def test_sc5_budget_expiry_times_out_with_preserved_worktree(repo: Path) -> None
     git = _GitGh()
 
     def session(
-        args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str]
+        args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str],
+        record: Path,
     ) -> None:
         raise SessionTimeoutError("over budget")
 

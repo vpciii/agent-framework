@@ -75,11 +75,12 @@ class _RealGitFakeGh:
 
 def _session(
     changes: Mapping[str, str | None],
-) -> Callable[[Sequence[str], Path, float, Mapping[str, str]], None]:
+) -> Callable[[Sequence[str], Path, float, Mapping[str, str], Path], None]:
     """A session that commits `changes` (path → new text, or None to delete)
     and reports completion — what a real one leaves behind, minus the model."""
 
-    def run(args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str]) -> None:
+    def run(args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str],
+            record: Path) -> None:
         for rel, text in changes.items():
             if text is None:
                 _git(cwd, "rm", "-q", rel)

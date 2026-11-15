@@ -35,7 +35,8 @@ def _launch(
     the session seam was handed."""
     seen: list[tuple[list[str], dict[str, str]]] = []
 
-    def session(args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str]) -> None:
+    def session(args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str],
+                record: Path) -> None:
         seen.append((list(args), dict(env)))
         cwd.mkdir(parents=True, exist_ok=True)
         (cwd / ".worker-result.json").write_text(
@@ -118,7 +119,12 @@ def test_sc3_no_caller_can_pass_arguments_to_the_session(
     args, _ = _launch(repo, ProjectConfig(), {"PATH": "/usr/bin"})
     brief = args[2]
     profile = list(profile_args(ProjectConfig(), (str(repo.resolve()),)))
-    assert args == ["claude", "-p", brief, "--model", "worker-model-x", *profile]
+    # specs/worker-spend-and-record adds two fixed things after the profile:
+    # the spend limit, a number the orchestrator checks and formats itself
+    # (a dispatch can lower or raise it, never remove it or add an argument),
+    # and the output format the session record needs.
+    assert args == ["claude", "-p", brief, "--model", "worker-model-x", *profile,
+                    "--max-budget-usd", "10.00", "--output-format", "stream-json", "--verbose"]
 
 
 def test_sc4_the_session_environment_is_an_allowlist(repo: Path) -> None:  # noqa: F811
@@ -170,7 +176,8 @@ def test_the_default_seam_hands_the_process_only_the_given_environment(tmp_path:
             "import json, os, sys\n"
             f"json.dump({{'env': dict(os.environ), 'stdin': sys.stdin.read()}}, open({str(out)!r}, 'w'))\n"
         )
-        run_claude([sys.executable, "-c", script], tmp_path, 20, {"ONLY": "this"})
+        run_claude([sys.executable, "-c", script], tmp_path, 20, {"ONLY": "this"},
+                   tmp_path / "record.jsonl")
     finally:
         del os.environ["AF_TEST_LEAK"]
 

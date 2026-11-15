@@ -62,10 +62,22 @@ and agent prompts. Add a term here before inventing a name for a concept.
   text unchanged, protected paths untouched, no test file deleted. A
   finding refuses the handoff (ADR 0007).
 - **Handoff note** — the `HANDOFF.md` the orchestrator writes into a kept
-  worktree when a worker session is stopped at its budget: task, budget,
-  elapsed time, git state and any progress notes, so the next human or
-  run can pick up without guessing. Written by the orchestrator because a
-  killed session can't write its own.
+  worktree when a worker session is stopped at its time budget or its
+  **spend limit**: task, budget, elapsed time, the spend limit and reported
+  cost when that is what stopped it, git state and any progress notes, so
+  the next human or run can pick up without guessing. Written by the
+  orchestrator because a killed session can't write its own.
+- **Spend limit** — the most a single worker session may spend, in US
+  dollars at the provider's list price, set at dispatch ($10 unless the
+  dispatch says otherwise). Claude Code measures it and checks it after
+  each turn, so a session can overrun it by up to one turn. On the Max plan
+  it measures use of the plan's allowance, not money
+  (specs/worker-spend-and-record).
+- **Session record** — the file of everything a worker session wrote to its
+  output (its turns, tool calls and results, and a final entry with its
+  cost and why it ended), kept on the dispatching machine in
+  `.worktrees/records/`, outside every worktree. Never published
+  (specs/worker-spend-and-record).
 - **Eval set** — the fixed collection of eval cases the validator's
   judgment is measured on (specs/validator-eval-set).
 - **Eval case** — one frozen evidence bundle with the outcome a human

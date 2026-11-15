@@ -194,6 +194,20 @@ of a full worker session's record.
   is $10 a session at list price; records live in `.worktrees/records/`;
   a spend-limit stop raises an alert labelled `timeout`, titled
   "<task> of <spec> reached its spend limit".
+- *2026-11-15* — Implementing: the spend limit reaches the session's
+  argument list as the value of `--max-budget-usd`. specs/worker-confinement
+  R-5 says no caller "can pass arguments to the session or otherwise widen
+  the profile at dispatch", and its SC-3 test asserted the exact launch
+  command. The limit is not an argument a caller passes: it is a number the
+  orchestrator checks (at least $0.01, finite) and formats into a fixed
+  flag, and it can only narrow what a session may do. That test now
+  asserts the launch with the two fixed flags appended; it still fails if
+  anything else is added. Flagged for vpc's acceptance in the implementing PR.
+- *2026-11-15* — Measured while implementing, with the same CLI and model:
+  a stream-format session given `--max-budget-usd 0.000001` exits 1 and
+  its last line is a `result` entry with subtype `error_max_budget_usd`,
+  which `read_end` reads as reaching the limit. The size of a full worker
+  session's record is still unmeasured.
 
 ## Rollout and undo
 
@@ -230,11 +244,11 @@ delete. Nothing here is irreversible.
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1 | *(pending)* |
-| SC-2 | R-2 | *(pending)* |
-| SC-3 | R-3 | *(pending)* |
-| SC-4 | R-4 | *(pending)* |
-| SC-5 | R-5 | *(pending)* |
-| SC-6 | R-6 | *(pending)* |
-| SC-7 | R-7 | *(pending)* |
-| SC-8 | R-8 | *(pending)* |
+| SC-1 | R-1 | `tests/worker/test_spend_and_record.py::test_sc1_every_session_carries_the_spend_limit_and_the_stream_format`, `tests/worker/test_spend_and_record.py::test_sc2_the_cli_passes_its_spend_limit_to_the_dispatch` |
+| SC-2 | R-2 | `tests/worker/test_spend_and_record.py::test_sc2_a_session_stopped_at_its_spend_limit_is_handled_as_a_timeout`, `tests/worker/test_spend_and_record.py::test_sc2_the_cli_passes_its_spend_limit_to_the_dispatch` |
+| SC-3 | R-3 | `tests/worker/test_spend_and_record.py::test_sc3_the_record_is_outside_the_worktree_and_outlives_it` |
+| SC-4 | R-4 | `tests/worker/test_spend_and_record.py::test_sc4_a_session_killed_at_its_time_budget_leaves_its_record` |
+| SC-5 | R-5 | `tests/worker/test_spend_and_record.py::test_sc5_the_record_is_never_published` |
+| SC-6 | R-6 | `tests/worker/test_spend_and_record.py::test_sc6_the_result_file_alone_decides_a_normal_ending` |
+| SC-7 | R-7 | `tests/worker/test_spend_and_record.py::test_sc7_any_other_failed_exit_is_reported_as_before` |
+| SC-8 | R-8 | `tests/worker/test_spend_and_record.py::test_sc8_cost_and_turns_are_logged_or_unknown` |
