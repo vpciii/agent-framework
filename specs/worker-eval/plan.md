@@ -1,7 +1,11 @@
 # Plan: An eval for the worker
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-15
+- **Approved:** 2026-11-17, signed off by vpc, accepting the two items
+  flagged for sign-off: the gate and reference tests run the session's
+  code outside its sandbox (see *Risks*), and the `ci` job checks out
+  full history (`fetch-depth: 0`)
 - **Author:** Claude (draft) — vpc is author of record
 - **Spec:** ./spec.md
 - **Related ADRs:** ADR 0001, ADR 0004, ADR 0007, ADR 0009
