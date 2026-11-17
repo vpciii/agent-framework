@@ -223,4 +223,4 @@ carries a change to one, so update this list promptly when one changes
   built; the spec's *Deferred* section holds them.
 - `specs/worker-spend-and-record/` — Implemented (frozen).
 - `specs/worker-eval/` — Approved, with an Approved `plan.md` (not yet
-  implemented; `tasks.md` next).
+  implemented; `tasks.md` drafted, awaiting sign-off).
