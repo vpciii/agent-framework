@@ -106,13 +106,15 @@ def write_handoff_note(
     spend_limit_usd: float | None = None,
     cost_usd: float | None = None,
     record: Path | None = None,
+    base: str = BASE_REF,
 ) -> Path:
     """After a budget expiry, record what the killed session left behind (R-6).
 
     Written by the orchestrator, not the session — a killed process can't.
     With `spend_limit_usd`, the session stopped at its spend limit instead
     (specs/worker-spend-and-record R-2). The note stays in the worktree and
-    is never pushed, so it may name the session record.
+    is never pushed, so it may name the session record. Its commit list is
+    the commits since `base` — by default, the remote's main.
     """
 
     def git(*args: str) -> str:
@@ -148,7 +150,7 @@ opened. This worktree is preserved as it was left.
 ## Commits on the branch
 
 ```
-{git("log", "--oneline", f"{BASE_REF}..HEAD")}
+{git("log", "--oneline", f"{base}..HEAD")}
 ```
 
 ## Uncommitted changes (`git status --short`)

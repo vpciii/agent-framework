@@ -257,9 +257,9 @@ marked `Implemented`.
 | SC-1 | R-1 | *(pending)* |
 | SC-2 | R-2 | *(pending)* |
 | SC-3 | R-3 | *(pending)* |
-| SC-4 | R-4 | *(pending)* |
+| SC-4 | R-4 | `tests/worker/test_worktree.py::test_sc4_a_detached_worktree_is_added_at_a_past_commit_with_the_result_file_excluded` |
 | SC-5 | R-5 | *(pending)* |
-| SC-6 | R-6 | *(pending)* |
+| SC-6 | R-6 | `tests/worker/test_handoff_check.py::test_sc6_given_a_base_findings_are_for_changes_since_it_and_none_before` |
 | SC-7 | R-7 | *(pending)* |
 | SC-8 | R-8 | *(pending)* |
 | SC-9 | R-9 | *(pending)* |
