@@ -5,6 +5,7 @@
     agent-framework-eval show <result> [--cases DIR]
     agent-framework-eval compare <result> <result> [--cases DIR]
     agent-framework-eval freeze <pr> [--repo OWNER/NAME] [--cases DIR]
+    agent-framework-eval worker freeze <pr> [--repo OWNER/NAME] [--cases DIR]
 
 `run` judges every case exactly as the gate does, prints the scorecard on
 stdout and writes the result file; it exits 0 when the run completed,
@@ -16,7 +17,10 @@ the result judged (specs/eval-rescore). `freeze` writes a merged pull request in
 accepted case, reading GitHub through `gh`; it exits 2, writing nothing,
 for one that is not merged or that the deterministic stage rejects. `run`
 is run by a human with a provider key in their shell — never by CI
-(specs/validator-eval-set).
+(specs/validator-eval-set). `worker freeze` writes a merged task pull
+request into the worker's case set; it exits 2, writing nothing, for one
+that is not merged, names no task, or whose task is not in `tasks.md` at its
+start commit (specs/worker-eval).
 """
 
 from __future__ import annotations
@@ -49,8 +53,10 @@ from .scorecard import (
     result_from_json,
     result_to_json,
 )
+from .worker.freeze import freeze_worker_case
 
 DEFAULT_CASES = Path("evals/validator/cases")
+DEFAULT_WORKER_CASES = Path("evals/worker/cases")
 CANNOT_START = 2
 
 
@@ -215,6 +221,18 @@ def _freeze(args: argparse.Namespace) -> int:
     return 0
 
 
+def _worker_freeze(args: argparse.Namespace) -> int:
+    try:
+        written = freeze_worker_case(
+            args.pr, args.cases, repo=args.repo,
+            project=load_project_config(), today=_today(),
+        )
+    except AgentFrameworkError as e:
+        return _refuse(str(e))
+    print(f"wrote {written}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="agent-framework-eval",
@@ -254,6 +272,17 @@ def main(argv: list[str] | None = None) -> int:
                      help="the repository (default: the current one)")
     frz.add_argument("--cases", type=Path, default=DEFAULT_CASES, metavar="DIR")
     frz.set_defaults(handler=_freeze)
+
+    worker = commands.add_parser("worker", help="measure the worker on past tasks")
+    worker_commands = worker.add_subparsers(dest="worker_command", required=True)
+    wfrz = worker_commands.add_parser(
+        "freeze", help="write a merged task pull request as a worker eval case"
+    )
+    wfrz.add_argument("pr", type=int, help="pull request number")
+    wfrz.add_argument("--repo", default=None, metavar="OWNER/NAME",
+                      help="the repository (default: the current one)")
+    wfrz.add_argument("--cases", type=Path, default=DEFAULT_WORKER_CASES, metavar="DIR")
+    wfrz.set_defaults(handler=_worker_freeze)
 
     args = ap.parse_args(argv)
     handler = args.handler

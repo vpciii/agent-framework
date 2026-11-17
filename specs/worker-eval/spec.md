@@ -256,7 +256,7 @@ marked `Implemented`.
 |---|---|---|
 | SC-1 | R-1 | `tests/evals/worker/test_case.py::test_sc1_a_case_round_trips_through_its_file`, `tests/evals/worker/test_case.py::test_sc1_a_file_missing_a_field_fails_naming_the_file_and_the_field` |
 | SC-2 | R-2 | `tests/evals/worker/test_case.py::test_sc2_the_brief_is_built_from_the_start_commits_artifacts`, `tests/evals/worker/test_case.py::test_sc2_a_case_whose_task_is_absent_at_its_start_fails_naming_the_case`, `tests/evals/worker/test_case.py::test_sc2_every_committed_case_builds_its_brief_at_its_start_commit` |
-| SC-3 | R-3 | *(pending)* |
+| SC-3 | R-3 | `tests/evals/worker/test_freeze.py::test_sc3_a_frozen_case_loads_with_its_start_head_and_reference_tests`, `tests/evals/worker/test_freeze.py::test_sc3_a_refused_pull_request_writes_nothing_and_says_why`, `tests/evals/worker/test_freeze.py::test_sc3_the_worker_freeze_command_refuses_with_exit_2_writing_nothing` |
 | SC-4 | R-4 | `tests/worker/test_worktree.py::test_sc4_a_detached_worktree_is_added_at_a_past_commit_with_the_result_file_excluded` |
 | SC-5 | R-5 | *(pending)* |
 | SC-6 | R-6 | `tests/worker/test_handoff_check.py::test_sc6_given_a_base_findings_are_for_changes_since_it_and_none_before` |
