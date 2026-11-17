@@ -102,6 +102,13 @@ def parse_task(spec_slug: str, task_id: str, *, specs_dir: Path = Path("specs"))
         sorted(set(_SC_RE.findall(satisfies_m.group(1) if satisfies_m else "")),
                key=lambda s: int(s[3:]))
     )
+    if not criteria:
+        # No claimed criterion means no end point anything can check: the
+        # validator would have nothing to cite. Refuse before a session starts.
+        raise UnknownTaskError(
+            f"{task_id} claims no success criterion: its section in {tasks_path} "
+            "needs a `- **Satisfies:** SC-…` line naming at least one"
+        )
 
     spec_text = spec_path.read_text(encoding="utf-8")
     criterion_texts: dict[str, str] = {}

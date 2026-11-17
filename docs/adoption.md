@@ -124,6 +124,11 @@ signed off, then from the target root:
 agent-framework-worker <slug> <task-id>
 ```
 
+The task must name what it satisfies: its section in `tasks.md` needs a
+`- **Satisfies:** SC-…` line with at least one criterion the spec
+defines. A task that claims none is refused before any session starts —
+without a criterion there is nothing for the validator to check.
+
 Every session runs **confined** (ADR 0007): its commands can write only
 inside the worktree, reach no network host, and read nothing under your
 home directory except the repository and git's user configuration. There

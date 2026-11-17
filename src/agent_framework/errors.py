@@ -63,7 +63,8 @@ class WorkerError(AgentFrameworkError):
 
 
 class UnknownTaskError(WorkerError):
-    """The requested spec slug or task id does not exist in the artifacts."""
+    """The requested task cannot be dispatched from the artifacts: the spec slug
+    or task id does not exist, or the task claims no criterion the spec defines."""
 
 
 class SessionResultError(WorkerError):

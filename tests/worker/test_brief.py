@@ -110,6 +110,25 @@ def test_task_claiming_undefined_criterion_fails_loudly(specs_dir: Path) -> None
         parse_task("fixture", "T-1", specs_dir=specs_dir)
 
 
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [
+        ("- **Satisfies:** SC-1, SC-2\n", ""),  # no Satisfies line at all
+        ("- **Satisfies:** SC-1, SC-2\n", "- **Satisfies:** —\n"),  # a line naming nothing
+    ],
+)
+def test_task_claiming_no_criterion_is_refused(specs_dir: Path, old: str, new: str) -> None:
+    """A task that claims no criterion has no end point anything can check —
+    the validator would have nothing to cite — so it is never dispatched."""
+    tasks = specs_dir / "fixture" / "tasks.md"
+    text = tasks.read_text(encoding="utf-8")
+    assert old in text
+    tasks.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+    with pytest.raises(UnknownTaskError, match="T-1 claims no success criterion"):
+        parse_task("fixture", "T-1", specs_dir=specs_dir)
+
+
 def test_sc2_brief_renders_the_configured_gate_not_the_framework_one(
     specs_dir: Path,
 ) -> None:
