@@ -1,6 +1,6 @@
 # Tasks: An eval for the worker
 
-- **Status:** Approved
+- **Status:** In progress
 - **Approved:** 2026-11-17, signed off by vpc, accepting the three
   departures from the plan's rollout described below (seven tasks; the
   `ci` checkout change in T-7; T-1 claiming SC-4 and SC-6 in part)
@@ -46,7 +46,7 @@ protected, and the baseline is the human's run (R-12).
 
 ---
 
-### [ ] T-1 — Cut a worktree at a commit; check a handoff against a base
+### [x] T-1 — Cut a worktree at a commit; check a handoff against a base (#134)
 - **Satisfies:** SC-4, SC-6
 - **Depends on:** —
 - **Touches:** `src/agent_framework/worker/{worktree,handoff_check,handoff}.py`,
