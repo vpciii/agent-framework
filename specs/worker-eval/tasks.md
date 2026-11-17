@@ -68,7 +68,7 @@ protected, and the baseline is the human's run (R-12).
   before it; a test for each seam shows the default is today's behavior;
   the worker's existing tests pass unmodified.
 
-### [ ] T-2 — The worker eval case, the settings file, and the brief check
+### [x] T-2 — The worker eval case, the settings file, and the brief check
 - **Satisfies:** SC-1, SC-2
 - **Depends on:** —
 - **Touches:** `src/agent_framework/evals/worker/{__init__,case}.py` (new),

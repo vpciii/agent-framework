@@ -1,0 +1,12 @@
+# Every worker eval case runs under this, not its start commit's
+# agent-framework.toml (specs/worker-eval R-4).
+[project]
+gate_commands = ["uv run ruff check .", "uv run mypy --strict", "uv run pytest",
+                 "uv run python scripts/check_spec_coverage.py --include-approved"]
+conventions_note = "Read CLAUDE.md and docs/glossary.md; use the glossary's terms exactly."
+session_write_paths = ["~/.cache/uv"]
+session_read_paths  = ["~/.local/share/uv"]
+session_network     = ["pypi.org", "files.pythonhosted.org"]
+
+[eval]
+reference_test_command = "uv run pytest {files}"
