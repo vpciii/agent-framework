@@ -261,7 +261,7 @@ marked `Implemented`.
 | SC-5 | R-5 | *(pending)* |
 | SC-6 | R-6 | `tests/worker/test_handoff_check.py::test_sc6_given_a_base_findings_are_for_changes_since_it_and_none_before` |
 | SC-7 | R-7 | *(pending)* |
-| SC-8 | R-8 | *(pending)* |
-| SC-9 | R-9 | *(pending)* |
-| SC-10 | R-10 | *(pending)* |
+| SC-8 | R-8 | `tests/evals/worker/test_scorecard.py::test_sc8_the_class_follows_the_plans_table`, `tests/evals/worker/test_scorecard.py::test_sc8_counts_medians_and_unstable_are_what_the_runs_say` |
+| SC-9 | R-9 | `tests/evals/worker/test_scorecard.py::test_sc9_a_result_round_trips_with_every_field`, `tests/evals/worker/test_scorecard.py::test_sc9_comparing_different_case_sets_is_refused`, `tests/evals/worker/test_scorecard.py::test_sc9_compare_names_the_cases_whose_class_or_reference_tests_changed` |
+| SC-10 | R-10 | `tests/evals/worker/test_scorecard.py::test_sc10_every_run_not_ready_and_every_reference_failure_is_listed_with_its_paths` |
 | SC-11 | R-11 | *(pending)* |
