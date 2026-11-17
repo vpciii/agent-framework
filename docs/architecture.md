@@ -195,6 +195,7 @@ carries a change to one, so update this list promptly when one changes
 | Plans | Claude Max (worker sessions, interactive chief); Anthropic API, metered (validator — ADR 0009); Gemini API free tier (the fallback validator binding and the roster currency check) — ADR 0004 | the cost model of every role; a billing change is an ADR 0004 revisit |
 | launchd agent `com.ciganik.agent-framework-nudge` | loaded on vpc's primary Mac, weekly, run from a checkout of this repo | the nudge (`specs/orientation-and-alerts`) |
 | `AF_HA_WEBHOOK_URL` | in an env file on vpc's primary Mac (not in the repo) | the phone push; unset → alerts still open issues and report the push as skipped |
+| Home Assistant automation `automation.agent_framework_alert` | local-only webhook → push to vpc's phone on every alert, then the message is stored (`input_text.agent_framework_alert_message`) and latched (`input_boolean.agent_framework_alert_active`) so it stays in the Home dashboard's Alerts section until dismissed; latest message only (latch added by vpc's word, 2026-11-17, after the weekly pushes went unseen — `planning/durable-autonomy/verdict.md`) | whether an alert or nudge is seen at all: the push alone is easy to miss, and an edit to the `status` issue sends no GitHub notification |
 
 ## Specs
 
