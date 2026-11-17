@@ -1,6 +1,9 @@
 # Tasks: An eval for the worker
 
-- **Status:** Draft
+- **Status:** Approved
+- **Approved:** 2026-11-17, signed off by vpc, accepting the three
+  departures from the plan's rollout described below (seven tasks; the
+  `ci` checkout change in T-7; T-1 claiming SC-4 and SC-6 in part)
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
