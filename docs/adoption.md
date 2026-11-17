@@ -178,6 +178,20 @@ work around it. Add what it names and dispatch again. A gate step that
 needs something a session should not have — a Docker socket, a deploy
 credential — is better left to CI than declared.
 
+**Dispatch from a checkout that is not inside another one.** A session
+may read the checkout it was dispatched from and that repository's git
+directory, and nothing above them. A toolchain that looks for project
+files in parent directories then fails when a parent holds one: on
+2026-11-17 a task dispatched from a git worktree kept under the main
+checkout (`<repo>/.claude/worktrees/<name>`) had every `uv run …` gate
+command refused with `failed to open file <repo>/pyproject.toml:
+Operation not permitted`, and the session escalated with its work
+committed and unpushed. The same task dispatched from the main checkout
+ran its gate and opened its pull request. Dispatch from the main
+checkout, or from a clone with no project above it; do not declare the
+parent in `session_read_paths` to get past it — that hands the session
+a second working copy to read.
+
 **Platform.** macOS only for now. The profile depends on Claude Code's
 restricted mode and OS sandbox and fails closed: where the sandbox is
 unavailable, the session does not start.
