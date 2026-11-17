@@ -91,6 +91,19 @@ and agent prompts. Add a term here before inventing a name for a concept.
   set sends the judgment. Two results with the same inputs fingerprint
   judged the same cases, whatever answers were expected at the time
   (specs/eval-rescore).
+- **Worker eval case** — one past task the worker is measured on: the
+  task, the commit its accepted pull request started from, that **reference
+  pull request**, and the tests it added for the task's criteria
+  (specs/worker-eval).
+- **Reference pull request** — the merged pull request that completed a
+  worker eval case's task, accepted by the human. Its start commit is
+  where the worker begins; its tests are run against what the worker
+  produced. It shows one accepted result, not the only one.
+- **Ready for review** — a worker run that completed with every gate
+  command passing and no handoff finding: a pull request the human would
+  be asked to review.
+- **Worker scorecard** — the result of running the worker over the
+  worker eval cases (the validator's is the **scorecard**).
 - **Regression claim** — the token `regression` in a PR's Satisfies
   declaration: the author's explicit claim that the PR fixes a bug with a
   cited red→green regression test. The gate verifies the evidence
