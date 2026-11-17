@@ -40,19 +40,22 @@ def check_handoff(
     *,
     specs_root: str = "specs",
     run: Runner = run_command,
+    base: str | None = None,
 ) -> tuple[HandoffFinding, ...]:
     """Every finding in the session's commits; empty means it may be pushed.
 
     `specs_root` is the specs directory relative to the repository root.
     Only commits are checked — an uncommitted edit is never pushed — and only
-    those since the tree was cut (the merge base with the remote's main).
+    those since `base` — by default, since the tree was cut (the merge base
+    with the remote's main).
     """
 
     def git(*args: str) -> str:
         # Never a repository hook: the session could have written one (R-9).
         return run(["git", *NO_HOOKS, "-C", str(worktree), *args])
 
-    base = git("merge-base", BASE_REF, "HEAD").strip()
+    if base is None:
+        base = git("merge-base", BASE_REF, "HEAD").strip()
     # --no-renames: a rename is a delete plus an add, so neither side of it
     # escapes a rule. -z: paths arrive unquoted, NUL-separated.
     fields = git("diff", "--name-status", "--no-renames", "-z", base, "HEAD").split("\0")

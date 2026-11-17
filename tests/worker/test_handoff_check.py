@@ -218,3 +218,70 @@ def test_the_check_runs_no_repository_hook(tree: Path) -> None:
     check_handoff(tree, ProjectConfig(), run=run)
 
     assert calls and all(c[:3] == ["git", "-c", "core.hooksPath=/dev/null"] for c in calls)
+
+
+def test_sc6_given_a_base_findings_are_for_changes_since_it_and_none_before(
+    tree: Path,
+) -> None:
+    """SC-6: the eval checks a session's handoff against the case's start
+    commit — a forbidden change before that commit is not the session's;
+    one after it is a finding."""
+    _commit(tree, {".github/workflows/ci.yml": "name: before the case\n"})
+    start = _git(tree, "rev-parse", "HEAD")
+    _commit(tree, {"agent-framework.toml": "[roles]\n"})
+
+    findings = check_handoff(tree, ProjectConfig(), base=start)
+
+    assert [(f.rule, f.path) for f in findings] == [
+        ("protected-path", "agent-framework.toml"),
+    ]
+
+
+def test_without_a_base_the_check_is_against_the_merge_base_with_origin_main(
+    tree: Path,
+) -> None:
+    """The default is today's behavior: every commit since the tree was cut."""
+    _commit(tree, {".github/workflows/ci.yml": "name: changed\n"})
+    _commit(tree, {"agent-framework.toml": "[roles]\n"})
+
+    assert {(f.rule, f.path) for f in _check(tree)} == {
+        ("protected-path", ".github/workflows/ci.yml"),
+        ("protected-path", "agent-framework.toml"),
+    }
+
+
+def _note_commits(tree: Path, base: str | None = None) -> str:
+    from agent_framework.worker.handoff import write_handoff_note
+    from agent_framework.worker.types import TaskSpec
+
+    task = TaskSpec(
+        spec_slug="widget", task_id="T-1", criteria=("SC-1",), section="### section",
+        criterion_texts={"SC-1": "t"}, requirements="reqs",
+    )
+    if base is None:
+        note = write_handoff_note(task, tree, budget_s=60, elapsed_s=61)
+    else:
+        note = write_handoff_note(task, tree, budget_s=60, elapsed_s=61, base=base)
+    text = note.read_text(encoding="utf-8")
+    return text.split("## Commits on the branch", 1)[1].split("## Uncommitted", 1)[0]
+
+
+def test_the_handoff_notes_commit_list_defaults_to_since_origin_main(tree: Path) -> None:
+    """The default is today's behavior: every commit not on `origin/main`."""
+    _git(tree, "commit", "-q", "--allow-empty", "-m", "feat: first")
+    _git(tree, "commit", "-q", "--allow-empty", "-m", "feat: second")
+
+    listed = _note_commits(tree)
+
+    assert "feat: first" in listed and "feat: second" in listed
+    assert "feat: seed" not in listed
+
+
+def test_the_handoff_notes_commit_list_starts_at_a_given_base(tree: Path) -> None:
+    _git(tree, "commit", "-q", "--allow-empty", "-m", "feat: first")
+    start = _git(tree, "rev-parse", "HEAD")
+    _git(tree, "commit", "-q", "--allow-empty", "-m", "feat: second")
+
+    listed = _note_commits(tree, base=start)
+
+    assert "feat: second" in listed and "feat: first" not in listed

@@ -86,6 +86,20 @@ def create_worktree(task: TaskSpec, *, run: Runner = run_command) -> tuple[Path,
     return path, branch
 
 
+def add_detached(path: Path, commit: str, *, run: Runner = run_command) -> Path:
+    """Add a detached worktree at `commit`, the result file excluded as
+    `create_worktree` excludes it; loud if the path is taken.
+
+    No branch and no fetch: the tree is at exactly the commit given (a
+    worker eval case's start commit, specs/worker-eval R-4).
+    """
+    if path.exists():
+        raise WorktreeError(f"worktree already exists: {path} — no silent reuse")
+    _ignore_result_file(run)
+    run(["git", "worktree", "add", "--detach", str(path), commit])
+    return path
+
+
 def remove_worktree(path: Path, *, run: Runner = run_command) -> None:
     """Clean up after a successful push (failures keep their tree, by design).
 

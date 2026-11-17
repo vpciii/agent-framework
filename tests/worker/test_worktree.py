@@ -222,3 +222,56 @@ def test_sc3_no_exclude_location_raises_and_adds_no_worktree() -> None:
     with pytest.raises(WorktreeError, match="exclude"):
         create_worktree(_task(), run=run)
     assert not [c for c in calls if c[:3] == ["git", "worktree", "add"]]
+
+
+def test_sc4_a_detached_worktree_is_added_at_a_past_commit_with_the_result_file_excluded(
+    stale_clone: tuple[Path, str],
+) -> None:
+    """SC-4: a worker eval case's session runs in a worktree cut from the
+    case's start commit — a past commit, not `origin/main`."""
+    from agent_framework.worker.worktree import add_detached
+
+    clone, upstream_head = stale_clone
+    _git(clone, "fetch", "-q", "origin")
+    past = _git(clone, "rev-parse", "origin/main~1")
+    assert past != upstream_head  # the precondition: genuinely a past commit
+
+    path = add_detached(Path(".worktrees/case-1"), past)
+    tree = clone / path
+
+    assert _git(tree, "rev-parse", "HEAD") == past
+    assert _git(tree, "rev-parse", "--abbrev-ref", "HEAD") == "HEAD"  # detached
+    (tree / ".worker-result.json").write_text("{}", encoding="utf-8")
+    assert ".worker-result.json" not in _git(tree, "status", "--porcelain")
+    exclude = Path(
+        _git(clone, "rev-parse", "--path-format=absolute", "--git-path", "info/exclude")
+    )
+    assert exclude.read_text(encoding="utf-8").splitlines().count(".worker-result.json") == 1
+
+
+def test_sc4_detached_worktrees_of_one_commit_are_distinct_and_a_taken_path_fails_loudly(
+    stale_clone: tuple[Path, str],
+) -> None:
+    """SC-4: a case run three times starts in three worktrees — each its own
+    path at the same commit; a path already taken is never reused."""
+    from agent_framework.worker.worktree import add_detached
+
+    clone, upstream_head = stale_clone
+    _git(clone, "fetch", "-q", "origin")
+    for n in (1, 2, 3):
+        add_detached(Path(f".worktrees/case-run-{n}"), upstream_head)
+        assert _git(clone / f".worktrees/case-run-{n}", "rev-parse", "HEAD") == upstream_head
+
+    with pytest.raises(WorktreeError, match="already exists"):
+        add_detached(Path(".worktrees/case-run-1"), upstream_head)
+
+
+def test_create_worktree_is_unchanged_by_the_detached_seam(
+    stale_clone: tuple[Path, str],
+) -> None:
+    """The default dispatch path still cuts a named branch from `origin/main`."""
+    clone, upstream_head = stale_clone
+    path, branch = create_worktree(_task())
+
+    assert _git(clone / path, "rev-parse", "HEAD") == upstream_head
+    assert _git(clone / path, "rev-parse", "--abbrev-ref", "HEAD") == branch
