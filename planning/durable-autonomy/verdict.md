@@ -1,8 +1,9 @@
 # Verdict: durable autonomy — option D's trial
 
-- **Status:** Draft — for vpc's sign-off
+- **Status:** Decided — D + A
 - **Date:** 2026-11-17
-- **Author:** Claude (draft) — the verdict is vpc's
+- **Decided:** 2026-11-17, signed off by vpc
+- **Author:** vpc (decision); Claude (draft)
 - **Bet:** [bet.md](bet.md) (Placed 2026-10-26: D first, A only on
   evidence)
 - **Trial:** 2026-10-26 to 2026-11-17 — closed six days short of the
