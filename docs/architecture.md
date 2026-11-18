@@ -258,5 +258,5 @@ carries a change to one, so update this list promptly when one changes
 - `specs/worker-spend-and-record/` — Implemented (frozen).
 - `specs/worker-eval/` — Implemented (frozen).
 - `specs/dispatch-from-issue/` — Approved, with an Approved `plan.md`
-  (not yet implemented; `tasks.md` is still to be written). ADR 0010 is
+  and `tasks.md` (not yet implemented; no task is merged). ADR 0010 is
   its trust boundary.
