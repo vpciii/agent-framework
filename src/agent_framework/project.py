@@ -69,6 +69,21 @@ def _is_session_path(entry: str) -> bool:
 
 
 @dataclass(frozen=True)
+class DispatchConfig:
+    """The `[dispatch]` table: whether a dispatch issue may start a run
+    (specs/dispatch-from-issue). Off until a project names an author."""
+
+    author: str | None = None  # the one account whose issues count; None = off
+    enabled: bool = True  # False = off, without removing the author
+    worker_cli_version: str | None = None  # None = any installed version runs
+
+    @property
+    def on(self) -> bool:
+        """Whether dispatch from an issue is switched on at all."""
+        return self.enabled and self.author is not None
+
+
+@dataclass(frozen=True)
 class ProjectConfig:
     """The target project's contract with the framework's roles.
 
@@ -91,6 +106,8 @@ class ProjectConfig:
     session_env: tuple[str, ...] = ()  # variable names passed to the session
     # Paths a session's diff may not change (the handoff check; path patterns).
     protected_paths: tuple[str, ...] = DEFAULT_PROTECTED_PATHS
+    # The `[dispatch]` table, read beside `[project]`.
+    dispatch: DispatchConfig = DispatchConfig()
 
     def __post_init__(self) -> None:
         for field in ("test_paths", "protected_paths"):
@@ -137,8 +154,41 @@ def _string_tuple(raw: object, field: str) -> tuple[str, ...]:
     return tuple(raw)
 
 
+def _load_dispatch(data: dict[str, object], path: Path) -> DispatchConfig:
+    """The `[dispatch]` table; off when absent. A wrong type fails loudly."""
+    table = data.get("dispatch")
+    if table is None:
+        return DispatchConfig()
+    if not isinstance(table, dict):
+        raise ProjectConfigError(f"{path}: [dispatch] must be a table, got {table!r}")
+    unknown = set(table) - {"author", "enabled", "worker_cli_version"}
+    if unknown:
+        raise ProjectConfigError(
+            f"{path}: unknown [dispatch] field(s): {', '.join(sorted(unknown))}"
+        )
+    optional: dict[str, str | None] = {}
+    for field in ("author", "worker_cli_version"):
+        raw = table.get(field)
+        if raw is not None and not (isinstance(raw, str) and raw.strip()):
+            raise ProjectConfigError(
+                f"{path}: [dispatch] {field} must be a non-empty string, got {raw!r}"
+            )
+        optional[field] = raw
+    enabled = table.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise ProjectConfigError(
+            f"{path}: [dispatch] enabled must be true or false, got {enabled!r}"
+        )
+    return DispatchConfig(
+        author=optional["author"],
+        enabled=enabled,
+        worker_cli_version=optional["worker_cli_version"],
+    )
+
+
 def load_project_config(root: Path = Path(".")) -> ProjectConfig:
-    """Read `agent-framework.toml`'s `[project]` table; defaults when absent."""
+    """Read `agent-framework.toml`'s `[project]` and `[dispatch]` tables;
+    defaults when absent."""
     path = root / CONFIG_FILE
     if not path.is_file():
         return DEFAULTS
@@ -146,9 +196,10 @@ def load_project_config(root: Path = Path(".")) -> ProjectConfig:
         data = tomllib.loads(path.read_text(encoding="utf-8"))
     except tomllib.TOMLDecodeError as e:
         raise ProjectConfigError(f"{path} is not valid TOML: {e}") from None
+    dispatch = _load_dispatch(data, path)
     table = data.get("project")
     if table is None:
-        return DEFAULTS
+        return ProjectConfig(dispatch=dispatch)
     if not isinstance(table, dict):
         raise ProjectConfigError(f"{path}: [project] must be a table, got {table!r}")
 
@@ -176,6 +227,7 @@ def load_project_config(root: Path = Path(".")) -> ProjectConfig:
                 if "test_pattern" in table
                 else DEFAULTS.test_pattern
             ),
+            dispatch=dispatch,
             **lists,
         )
     except ProjectConfigError as e:

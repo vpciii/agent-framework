@@ -30,6 +30,19 @@ def task_block(tasks_text: str, task_id: str) -> str | None:
     return m.group(0).strip() if m else None
 
 
+def task_done(block: str) -> bool:
+    """Whether a task block's `### [x] …` heading is marked done."""
+    return re.match(r"### \[[xX]\] ", block) is not None
+
+
+def claimed_criteria(block: str) -> tuple[str, ...]:
+    """The `SC-` ids a task block's `- **Satisfies:**` line claims, in order
+    of their number (the reading the worker's brief makes)."""
+    m = re.search(r"^- \*\*Satisfies:\*\*(.*)$", block, re.MULTILINE)
+    found = set(re.findall(r"\bSC-\d+\b", m.group(1) if m else ""))
+    return tuple(sorted(found, key=lambda s: int(s[3:])))
+
+
 def criterion_text(spec_text: str, sc_id: str) -> str | None:
     """The `**SC-n** …` entry of a spec's Success criteria section, or None."""
     m = re.search(
