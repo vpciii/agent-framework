@@ -1,6 +1,6 @@
 # Spec: A dispatch issue starts a worker run
 
-- **Status:** Draft
+- **Status:** Under review
 - **Date:** 2026-11-18
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0004 (the worker is headless Claude Code), ADR
@@ -259,33 +259,36 @@ spec is marked `Implemented`. The first three are the bet's own signal.
 
 ## Open questions
 
-- [ ] **Title or body.** The options round said the issue's *body* is
-  `<spec-slug> <task-id>`. This draft uses the *title*: GitHub requires
-  a title and not a body, so from a phone it is one field instead of
-  two, and the body is then never parsed at all. Recommended: the title.
-- [ ] **Which Mac.** The bet names defiant, and its first spike checks
-  that a session started by launchd there logs in on the Max plan, what
-  a run does to usage, and what it does to defiant's other jobs. This
-  spec is the same on either Mac; the answer goes in the plan and in
-  `docs/architecture.md`. Open until the spike is run.
-- [ ] **The tick brings its checkout to `origin/main` on its own
-  (R-8).** So a change merged to `main` — to the worker, the tick, or
-  the configuration — runs on that Mac at the next pass, with no step in
-  between. That is what makes "merged on `main`" the one line of trust
-  (ADR 0010), and it means the configuration is also the switch vpc can
-  reach from his phone. Recommended: accept it.
-- [ ] **How long without a heartbeat is too long (R-21).** With a tick
-  every ten minutes: recommended one hour while the Mac is expected to
-  be awake. The Home Assistant side is a change to vpc's own
-  configuration and needs his word.
-- [ ] **What starting afresh keeps (R-17).** This draft keeps the
-  earlier attempt's commits under another local branch name and removes
-  its worktree. The alternative is to refuse until vpc clears it by
-  hand, which needs a terminal. Recommended: as drafted.
-- [ ] **This is more than one pull request**, so it is a spec with a
-  `plan.md` and a `tasks.md` to follow, not the compact spec the options
+All six were answered by vpc on 2026-11-18, each as recommended.
+
+- [x] **Title or body.** Decided: the issue's *title* is
+  `<spec-slug> <task-id>` (R-2). The options round said the body;
+  GitHub requires a title and not a body, so from a phone it is one
+  field instead of two, and the body is never parsed at all.
+- [x] **Which Mac.** Decided: not this spec's to name. The bet names
+  defiant, and its first spike checks that a session started by launchd
+  there logs in on the Max plan, what a run does to usage, and what it
+  does to defiant's other jobs. This spec is the same on either Mac; the
+  plan names the host once the spike is run, and `docs/architecture.md`
+  records it.
+- [x] **The tick brings its checkout to `origin/main` on its own
+  (R-8).** Decided: accepted. A change merged to `main` — to the worker,
+  the tick, or the configuration — runs on that Mac at the next pass,
+  with no step in between. That is what makes "merged on `main`" the one
+  line of trust (ADR 0010), and it makes the configuration a switch vpc
+  can reach from his phone.
+- [x] **How long without a heartbeat is too long (R-21).** Decided: one
+  hour, with a tick every ten minutes. The Home Assistant side is a
+  change to vpc's own configuration and is made on his word when the
+  heartbeat exists.
+- [x] **What starting afresh keeps (R-17).** Decided: as written. The
+  earlier attempt's commits are kept under another local branch name and
+  its worktree is removed; refusing until vpc clears it by hand would
+  need a terminal.
+- [x] **This is more than one pull request.** Decided: a `plan.md` and a
+  `tasks.md` follow this spec. It is not the compact spec the options
   round and the bet called it (a compact spec is for work that fits in
-  one). The bet's count of three or four pull requests stands.
+  one pull request). The bet's count of three or four stands.
 
 ## Out of scope (for now)
 
