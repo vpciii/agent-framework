@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -90,10 +91,14 @@ def _case_set(tmp_path: Path, case: WorkerCase, extra_gate: str) -> CaseSet:
 
 
 class Session:
-    """Ends as told; a completed one commits `files` first."""
+    """Ends as told; a completed one commits `files` first, then leaves
+    `uncommitted` in its working tree."""
 
-    def __init__(self, ending: str = "completed", files: Mapping[str, str] | None = None) -> None:
-        self.ending, self.files = ending, files or {}
+    def __init__(
+        self, ending: str = "completed", files: Mapping[str, str] | None = None,
+        uncommitted: Mapping[str, str] | None = None,
+    ) -> None:
+        self.ending, self.files, self.uncommitted = ending, files or {}, uncommitted or {}
 
     def __call__(
         self, argv: Sequence[str], cwd: Path, timeout_s: float,
@@ -109,16 +114,18 @@ class Session:
             raise SessionResultError("session exited 1")
         if self.files:
             _commit(cwd, self.files, "the session's change")
+        for path, text in self.uncommitted.items():
+            (cwd / path).write_text(text)
         status = "escalated" if self.ending == "escalated" else "completed"
         (cwd / ".worker-result.json").write_text(json.dumps({"status": status, "detail": "x"}))
 
 
 def _run(
     tmp_path: Path, case: WorkerCase, session: Session, run_id: str = "r1",
-    extra_gate: str = "",
+    extra_gate: str = "", timeout_s: float = 60,
 ) -> RunRecord:
     records, _ = run_eval(
-        _case_set(tmp_path, case, extra_gate), WORKER, run_id, runs=1, timeout_s=60,
+        _case_set(tmp_path, case, extra_gate), WORKER, run_id, runs=1, timeout_s=timeout_s,
         spend_limit_usd=1.0, environ=ENVIRON, session_run=session,
     )
     (record,) = records
@@ -199,6 +206,40 @@ def test_sc6_every_other_outcome_records_cost_turns_and_time_and_no_score(
     assert r.elapsed_s is not None
     assert r.reference_tests == "not-run"
     assert r.gate == () and r.diff_lines is None
+
+
+def test_sc6_what_the_session_left_uncommitted_is_not_scored(
+    case: WorkerCase, tmp_path: Path,
+) -> None:
+    """SC-6 (regression): the gate and the reference tests run against the
+    last commit. A session that did the thing in its working tree but
+    committed something else has not done it."""
+    r = _run(tmp_path, case, Session(
+        files={"notes.txt": "started\n"},
+        uncommitted={"impl.txt": "DONE\n", "scratch.txt": "left behind\n"},
+    ))
+
+    assert r.gate[0] == GateCommand("sh gate/done.sh", False)
+    assert r.cls == "gate-failed"
+    assert r.reference_tests == "failed"
+    gate_log = Path(r.kept.gate or "").read_text()
+    assert "impl.txt" in gate_log and "scratch.txt" in gate_log  # named, then set aside
+
+
+def test_sc6_a_command_that_hangs_fails_at_the_time_budget(
+    case: WorkerCase, tmp_path: Path,
+) -> None:
+    """SC-6 (regression): a gate command that never returns is stopped at the
+    session's time budget and recorded as failed; the run goes on."""
+    started = time.monotonic()
+    r = _run(tmp_path, case, Session(files=DONE), extra_gate=', "sleep 60 & wait"', timeout_s=1)
+
+    assert time.monotonic() - started < 30
+    assert r.gate[-1] == GateCommand("sleep 60 & wait", False)
+    assert r.gate[:2] == (GateCommand("sh gate/done.sh", True), GateCommand("sh gate/env.sh", True))
+    assert r.cls == "gate-failed"
+    assert r.reference_tests == "passed"  # scoring went on after the stopped command
+    assert "timed out after 1" in Path(r.kept.gate or "").read_text()
 
 
 def test_sc6_a_scoring_that_cannot_be_set_up_could_not_run(
