@@ -25,7 +25,7 @@ from typing import Any
 from ...errors import EvalCaseError, ProjectConfigError, UnknownTaskError
 from ...proc import Runner, run_command
 from ...project import CONFIG_FILE, ProjectConfig, load_project_config
-from ...worker.brief import build_brief, parse_task
+from ...worker.brief import ArtifactUnreadableError, build_brief, parse_task_at
 
 
 @dataclass(frozen=True)
@@ -212,21 +212,12 @@ def brief_at_start(
     worker's own `parse_task` and `build_brief` from the task's `tasks.md`
     and `spec.md` as they were at the case's start commit."""
     slug, start = case.task.spec, case.reference.start
-    with tempfile.TemporaryDirectory() as tmp:
-        spec_dir = Path(tmp) / slug
-        spec_dir.mkdir()
-        for name in ("tasks.md", "spec.md"):
-            source = f"specs/{slug}/{name}"
-            try:
-                text = run(["git", "-C", str(repo), "show", f"{start}:{source}"])
-            except RuntimeError as e:
-                raise EvalCaseError(
-                    f"case {case.id}: cannot read {source} at its start commit {start}: {e}"
-                ) from None
-            (spec_dir / name).write_text(text, encoding="utf-8")
-        try:
-            task = parse_task(slug, case.task.task, specs_dir=Path(tmp))
-        except UnknownTaskError as e:
-            message = str(e).replace(tmp, "specs")
-            raise EvalCaseError(f"case {case.id}: at its start commit {start}: {message}") from None
+    try:
+        task = parse_task_at(slug, case.task.task, start, repo=repo, run=run)
+    except ArtifactUnreadableError as e:
+        raise EvalCaseError(
+            f"case {case.id}: cannot read {e.source} at its start commit {start}: {e.reason}"
+        ) from None
+    except UnknownTaskError as e:
+        raise EvalCaseError(f"case {case.id}: at its start commit {start}: {e}") from None
     return build_brief(task, settings.project)
