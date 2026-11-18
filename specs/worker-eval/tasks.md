@@ -44,6 +44,21 @@ alert fired (planning/durable-autonomy/options-a.md, option A4). **T-7
 is not for dispatch:** freezing reads GitHub, the workflow file is
 protected, and the baseline is the human's run (R-12).
 
+**Dispatch tally.** Cost is what the session record reports.
+
+| Task | Pull request | Merged without rework | Cost | Alert |
+|---|---|---|---|---|
+| T-1, first run | none | — | $0.66 | escalation (#133): dispatched from a checkout inside another one, so the gate could not run (docs/adoption.md) |
+| T-1 | #134 | yes | $0.58 | none |
+| T-2 | #136 | yes | $0.86 | none |
+| T-3 | #137 | yes | $0.79 | none |
+| T-4 | #138 | yes, over the validator's REJECT (below) | $0.89 | none |
+
+T-4's pull request was about 480 lines and kept `show` / `compare` rather
+than splitting them as its *Done when* says; the validator rejected it on
+that alone, and vpc merged it as it stood on 2026-11-17. Splitting would
+have moved about 40 lines, so the task was too large as written.
+
 ---
 
 ### [x] T-1 — Cut a worktree at a commit; check a handoff against a base (#134)
@@ -68,7 +83,7 @@ protected, and the baseline is the human's run (R-12).
   before it; a test for each seam shows the default is today's behavior;
   the worker's existing tests pass unmodified.
 
-### [x] T-2 — The worker eval case, the settings file, and the brief check
+### [x] T-2 — The worker eval case, the settings file, and the brief check (#136)
 - **Satisfies:** SC-1, SC-2
 - **Depends on:** —
 - **Touches:** `src/agent_framework/evals/worker/{__init__,case}.py` (new),
@@ -98,7 +113,7 @@ protected, and the baseline is the human's run (R-12).
   over every case in `evals/worker/cases/`, passing while the directory
   is empty. No session is started.
 
-### [ ] T-3 — Freeze a merged task pull request into a case
+### [x] T-3 — Freeze a merged task pull request into a case (#137)
 - **Satisfies:** SC-3
 - **Depends on:** T-2
 - **Touches:** `src/agent_framework/evals/worker/freeze.py` (new),
@@ -123,7 +138,7 @@ protected, and the baseline is the human's run (R-12).
   files, and each of the three refusals writes no file and names its
   reason. The validator's eval CLI tests pass unmodified.
 
-### [ ] T-4 — The worker scorecard, the result, show and compare
+### [x] T-4 — The worker scorecard, the result, show and compare (#138)
 - **Satisfies:** SC-8, SC-9, SC-10
 - **Depends on:** T-2
 - **Touches:** `src/agent_framework/evals/worker/scorecard.py` (new),
@@ -175,7 +190,10 @@ protected, and the baseline is the human's run (R-12).
   spend limit and a session record under `.worktrees/records/`. **Never
   call `work()`**, and issue no push, pull request or alert command.
   Record every run's outcome with the cost and turns its session record
-  reports (`read_end`) and the elapsed time, as T-4's run record; a
+  reports (`read_end`) and the elapsed time, as T-4's run record. That
+  record's `kept` is the three paths T-4 merged with (`Kept`: session
+  record, diff, gate output), not the single directory string in the
+  plan's example; set the session record's path here. A
   completed session is recorded as completed with its gate, handoff,
   reference-test and diff fields unset (T-6 fills them). A failure of
   the eval itself on a case — the start commit cannot be checked out —
