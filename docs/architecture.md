@@ -256,8 +256,4 @@ carries a change to one, so update this list promptly when one changes
   rule and the eval's cases with descriptions were deferred before being
   built; the spec's *Deferred* section holds them.
 - `specs/worker-spend-and-record/` — Implemented (frozen).
-- `specs/worker-eval/` — Approved, with an Approved `plan.md` (not yet
-  implemented; `tasks.md` In progress: T-1 to T-6 merged as #134, #136,
-  #137, #138, #140 and #141; T-7, the delivery, as #144 and
-  the baseline's own pull request; `tasks.md` Done. Marking the spec
-  `Implemented` is the human's sign-off, still to come).
+- `specs/worker-eval/` — Implemented (frozen).

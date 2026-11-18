@@ -1,6 +1,6 @@
 # Spec: An eval for the worker
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Date:** 2026-11-15
 - **Approved:** 2026-11-15, signed off by vpc
 - **Author:** Claude (draft) — vpc is author of record
