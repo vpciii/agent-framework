@@ -78,6 +78,16 @@ and agent prompts. Add a term here before inventing a name for a concept.
   cost and why it ended), kept on the dispatching machine in
   `.worktrees/records/`, outside every worktree. Never published
   (specs/worker-spend-and-record).
+- **Dispatch issue** — an open GitHub issue labelled `dispatch`, opened by
+  the account the project names, whose title is a spec slug and a task id.
+  It asks for one worker run. It is a pointer to a task on `main`; nothing
+  in it is read by a session (ADR 0010, specs/dispatch-from-issue).
+- **Dispatch tick** — the command, run on a schedule, that makes one pass:
+  it finds a **dispatch issue**, starts the run it asks for, and reports
+  back on the issue (specs/dispatch-from-issue).
+- **Heartbeat** — the signal a **dispatch tick** sends when a pass
+  completes, so that its absence can be noticed from outside
+  (specs/dispatch-from-issue).
 - **Eval set** — the fixed collection of eval cases the validator's
   judgment is measured on (specs/validator-eval-set).
 - **Eval case** — one frozen evidence bundle with the outcome a human
