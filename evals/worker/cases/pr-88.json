@@ -1,0 +1,20 @@
+{
+  "id": "pr-88",
+  "task": {
+    "spec": "validator-eval-set",
+    "task": "T-2"
+  },
+  "reference": {
+    "repo": "vpciii/agent-framework",
+    "pr": 88,
+    "start": "31aa9727c555bd0b11614b3f07849902323b5a5a",
+    "head": "fcdaa17aaf735215f6bd781f33138d2fca57391b"
+  },
+  "reference_tests": [
+    "tests/evals/test_scorecard.py"
+  ],
+  "provenance": {
+    "frozen": "2026-11-18",
+    "by": "agent-framework-eval worker freeze"
+  }
+}

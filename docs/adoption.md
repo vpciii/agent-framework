@@ -300,6 +300,80 @@ Copy one of this repository's as a pattern, and keep a test like
 `tests/evals/test_set.py`, which loads every case and puts it through the
 deterministic stage with no model call.
 
+## Measuring the worker (the worker eval)
+
+The worker is a model session too. The worker eval measures what it
+produces for tasks the repository has already merged, so a change to its
+model, brief, confinement profile, time budget or spend limit can be
+compared before and after. It is run by hand; no CI job runs it. Unlike
+the validator's eval it starts real worker sessions, so a run takes
+minutes per case and costs what those sessions cost.
+
+**Run it.** From a checkout that is not inside another one (see above),
+on `main`:
+
+```bash
+uv run agent-framework-eval worker run
+```
+
+For each case in `evals/worker/cases/` it cuts a worktree at the case's
+start commit, builds the brief there, and runs one worker session under
+the confinement profile with the roster's worker model. Nothing is
+pushed, no pull request is opened and no alert is raised. A completed
+session is then scored by code at its last commit: the gate commands,
+the handoff check, the reference tests, and its diff. It prints one line
+per run on stderr and the scorecard on stdout, and writes
+`evals/worker/results/<date>-<model>.json`; it never writes over an
+existing result. `--only <id> ...` runs just the named cases, `--runs N`
+runs each case N times, `--timeout` and `--spend-limit` set each
+session's limits (1800 s and $10 by default), `--roster FILE` tries
+another model without a code change, and `--keep` leaves the worktrees
+in place. Exit 0 means the run completed, whatever the score; 2 means it
+could not start.
+
+The gate commands and the reference tests run the session's code on
+your machine, outside the session's sandbox. Read
+`docs/architecture.md`'s trust boundaries before running it on a
+repository whose tasks you did not write.
+
+**Read the scorecard.** A run is *ready for review* when the session
+completed, every gate command passed and the handoff check found
+nothing — what a dispatch would have opened a pull request for. The
+reference tests are reported beside that, never in it: a correct result
+can fail them. A run the eval itself could not make is *could not run*
+and is counted on its own. A case whose runs land in different classes
+is marked unstable.
+
+**Read a stored result, and compare two.**
+
+```bash
+uv run agent-framework-eval worker show <result>.json
+```
+
+```bash
+uv run agent-framework-eval worker compare <before>.json <after>.json
+```
+
+`show` prints the scorecard, then every run that is not ready for review
+and every reference-test failure, with where its session record, patch
+and gate output are kept on the machine that made the run. `compare`
+prints the cases whose class or reference-test result changed; results
+over different case sets are not comparable, and it says so and exits 2.
+
+**Build your own set.**
+
+```bash
+uv run agent-framework-eval worker freeze <pr>
+```
+
+This writes `evals/worker/cases/pr-<n>.json` from a merged task pull
+request: the task it names, its start and head commits, and the test
+files it changed that cite the task's criteria. It refuses a pull
+request that is not merged, that names no task, whose task is not in
+`tasks.md` at its start commit, or that changed no such test. The set's
+`evals/worker/settings.toml` holds the gate commands and session
+settings every case runs under.
+
 ## What stays framework-side
 
 The framework repo owns the gate semantics (its ADR 0005), the brief
