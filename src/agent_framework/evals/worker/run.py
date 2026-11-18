@@ -12,9 +12,10 @@ run `could-not-run`, and the next one still runs (R-7).
 
 A completed session is scored by code, with no model call (R-6): each gate
 command at its last commit, the handoff check since the start commit, the
-reference tests on a copy of its tree, and its diff. The gate and the
-reference tests run with the session's allowlisted environment, never the
-caller's. The patch, the logs and the session record are kept under
+reference tests on a copy of its tree, and its diff. What the session left
+uncommitted is set aside first. The gate and the reference tests run with
+the session's allowlisted environment, never the caller's, and each command
+is stopped at the session's time budget. The patch, the logs and the session record are kept under
 `.worktrees/eval/<run>/`.
 """
 
@@ -24,6 +25,7 @@ import hashlib
 import os
 import shlex
 import shutil
+import signal
 import subprocess
 import time
 from collections.abc import Callable, Mapping
@@ -71,16 +73,30 @@ def _could_not_run(case: WorkerCase, n: int, detail: str) -> RunRecord:
     return RunRecord(case=case.id, run=n, cls="could-not-run", detail=detail)
 
 
-# A shell command run in a directory with an environment: passed, and its output.
-Shell = Callable[[str, Path, Mapping[str, str]], tuple[bool, str]]
+# A shell command run in a directory with an environment and a time limit
+# in seconds: passed, and its output.
+Shell = Callable[[str, Path, Mapping[str, str], float], tuple[bool, str]]
 
 
-def run_shell(command: str, cwd: Path, env: Mapping[str, str]) -> tuple[bool, str]:
-    done = subprocess.run(
-        ["/bin/sh", "-c", command], cwd=cwd, env=dict(env),
-        capture_output=True, text=True, check=False,
+def run_shell(
+    command: str, cwd: Path, env: Mapping[str, str], timeout_s: float,
+) -> tuple[bool, str]:
+    """A command that outlives `timeout_s` is stopped, with everything it
+    started, and has failed: it runs the session's code, which may hang."""
+    proc = subprocess.Popen(
+        ["/bin/sh", "-c", command], cwd=cwd, env=dict(env), text=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, start_new_session=True,
     )
-    return done.returncode == 0, done.stdout + done.stderr
+    try:
+        output, _ = proc.communicate(timeout=timeout_s)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)  # its own group: the shell and its children
+        except ProcessLookupError:
+            pass
+        output, _ = proc.communicate()
+        return False, f"{output}\n[timed out after {timeout_s:g} s]"
+    return proc.returncode == 0, output
 
 
 # What scoring leaves behind that the session's tree does not need.
@@ -102,12 +118,15 @@ class Score:
 
 def score(
     case: WorkerCase, worktree: Path, project: ProjectConfig, reference_test_command: str,
-    env: Mapping[str, str], *, run: Runner = run_command, shell: Shell = run_shell,
+    env: Mapping[str, str], timeout_s: float, *, run: Runner = run_command,
+    shell: Shell = run_shell,
 ) -> Score:
-    """Score a completed session in `worktree`; its files are kept beside
-    it as `<case>-<n>.patch`, `-gate.log` and `-reference.log`. Raises
-    (OSError, RuntimeError, AgentFrameworkError) when the scoring itself
-    cannot be set up."""
+    """Score a completed session in `worktree`, at its last commit: what it
+    left uncommitted is named in the gate log and set aside first, since a
+    dispatch would not ship it. Each command gets `timeout_s`. The files are
+    kept beside the worktree as `<case>-<n>.patch`, `-gate.log` and
+    `-reference.log`. Raises (OSError, RuntimeError, AgentFrameworkError)
+    when the scoring itself cannot be set up."""
     kept = worktree.parent
 
     def git(*args: str) -> str:
@@ -115,8 +134,13 @@ def score(
 
     gate: list[GateCommand] = []
     log: list[str] = []
+    uncommitted = git("status", "--porcelain", "--untracked-files=all").rstrip()
+    if uncommitted:
+        log.append(f"Not committed by the session, set aside before scoring:\n{uncommitted}\n")
+        git("reset", "-q", "--hard", "HEAD")
+        git("clean", "-q", "-fd")  # ignored files stay: the result file, caches
     for command in project.gate_commands:
-        passed, output = shell(command, worktree, env)
+        passed, output = shell(command, worktree, env, timeout_s)
         gate.append(GateCommand(command, passed))
         log.append(f"$ {command}\n{output}\n[{'passed' if passed else 'failed'}]\n")
     gate_log = kept / f"{worktree.name}-gate.log"
@@ -135,7 +159,7 @@ def score(
             target.write_text(git("show", f"{case.reference.head}:{path}"), encoding="utf-8")
         files = " ".join(shlex.quote(p) for p in case.reference_tests)
         command = reference_test_command.replace("{files}", files)
-        passed, output = shell(command, copy, env)
+        passed, output = shell(command, copy, env, timeout_s)
     finally:
         shutil.rmtree(copy, ignore_errors=True)
     (kept / f"{worktree.name}-reference.log").write_text(
@@ -213,7 +237,7 @@ def run_case(
             return measured, brief
         try:
             s = score(case, worktree, settings.project, settings.reference_test_command,
-                      env, run=run, shell=shell)
+                      env, timeout_s, run=run, shell=shell)
         except (OSError, RuntimeError, AgentFrameworkError) as e:
             return replace(
                 measured, cls="could-not-run", detail=f"cannot score the session: {e}"

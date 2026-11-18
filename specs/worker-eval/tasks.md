@@ -64,15 +64,17 @@ than splitting them as its *Done when* says; the validator rejected it on
 that alone, and vpc merged it as it stood on 2026-11-17. Splitting would
 have moved about 40 lines, so the task was too large as written.
 
-**Found reading #141, open before the baseline (T-7).** Neither is
-asked for by a task or a criterion:
+**Found reading #141, fixed before the baseline.** Two gaps in T-6's
+scoring, each with a regression test in `tests/evals/worker/test_score.py`:
 
-- The gate commands and the reference-test command run with no time
-  limit. They run the session's code, so a test that hangs would hang
-  the whole run; only the session itself has the time budget.
-- The gate runs on the session's working tree, not strictly its last
-  commit: a file the session left uncommitted is tested by the gate but
-  is absent from the diff and from the handoff check.
+- The gate commands and the reference-test command ran with no time
+  limit, so a test that hung in a session's code would have hung the
+  whole run. Each is now stopped at the session's time budget and
+  recorded as failed.
+- The gate ran on the session's working tree, not its last commit as
+  R-6 says: a file the session left uncommitted was tested by the gate
+  but absent from the diff and the handoff check. What a session leaves
+  uncommitted is now named in the gate log and set aside before scoring.
 
 ---
 
