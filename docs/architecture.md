@@ -257,6 +257,6 @@ carries a change to one, so update this list promptly when one changes
   built; the spec's *Deferred* section holds them.
 - `specs/worker-spend-and-record/` — Implemented (frozen).
 - `specs/worker-eval/` — Implemented (frozen).
-- `specs/dispatch-from-issue/` — Approved (not yet implemented; its
-  `plan.md` and `tasks.md` are still to be written). ADR 0010 is its
-  trust boundary.
+- `specs/dispatch-from-issue/` — Approved, with an Approved `plan.md`
+  (not yet implemented; `tasks.md` is still to be written). ADR 0010 is
+  its trust boundary.

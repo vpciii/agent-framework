@@ -1,7 +1,10 @@
 # Plan: A dispatch issue starts a worker run
 
-- **Status:** Draft
+- **Status:** Approved
 - **Date:** 2026-11-18
+- **Approved:** 2026-11-18, signed off by vpc, accepting the three
+  readings of the spec the plan makes and five pull requests where the
+  bet said three or four; the host stays open until the bet's spike
 - **Author:** Claude (draft) — vpc is author of record
 - **Spec:** ./spec.md
 - **Related ADRs:** ADR 0004, ADR 0007, ADR 0010
