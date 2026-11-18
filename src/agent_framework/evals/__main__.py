@@ -6,6 +6,8 @@
     agent-framework-eval compare <result> <result> [--cases DIR]
     agent-framework-eval freeze <pr> [--repo OWNER/NAME] [--cases DIR]
     agent-framework-eval worker freeze <pr> [--repo OWNER/NAME] [--cases DIR]
+    agent-framework-eval worker show <result>
+    agent-framework-eval worker compare <result> <result>
 
 `run` judges every case exactly as the gate does, prints the scorecard on
 stdout and writes the result file; it exits 0 when the run completed,
@@ -20,7 +22,10 @@ is run by a human with a provider key in their shell — never by CI
 (specs/validator-eval-set). `worker freeze` writes a merged task pull
 request into the worker's case set; it exits 2, writing nothing, for one
 that is not merged, names no task, or whose task is not in `tasks.md` at its
-start commit (specs/worker-eval).
+start commit (specs/worker-eval). `worker show` prints a worker result's
+scorecard and every run not ready for review or failing its reference tests,
+with where its files are kept; `worker compare` the cases whose class or
+reference-test result changed, exiting 2 for results over different case sets.
 """
 
 from __future__ import annotations
@@ -53,6 +58,7 @@ from .scorecard import (
     result_from_json,
     result_to_json,
 )
+from .worker import scorecard as worker_scorecard
 from .worker.freeze import freeze_worker_case
 
 DEFAULT_CASES = Path("evals/validator/cases")
@@ -233,6 +239,31 @@ def _worker_freeze(args: argparse.Namespace) -> int:
     return 0
 
 
+def _read_worker(path: Path) -> worker_scorecard.Result:
+    try:
+        return worker_scorecard.result_from_json(path.read_text(encoding="utf-8"))
+    except (OSError, EvalResultError) as e:
+        raise EvalResultError(f"{path}: {e}") from None
+
+
+def _worker_show(args: argparse.Namespace) -> int:
+    try:
+        result = _read_worker(args.result)
+    except AgentFrameworkError as e:
+        return _refuse(str(e))
+    print(worker_scorecard.render(result), end="")
+    return 0
+
+
+def _worker_compare(args: argparse.Namespace) -> int:
+    try:
+        before, after = _read_worker(args.before), _read_worker(args.after)
+    except AgentFrameworkError as e:
+        return _refuse(str(e))
+    print(worker_scorecard.render_comparison(before, after), end="")
+    return 0 if worker_scorecard.comparable(before, after) else CANNOT_START
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="agent-framework-eval",
@@ -283,6 +314,15 @@ def main(argv: list[str] | None = None) -> int:
                       help="the repository (default: the current one)")
     wfrz.add_argument("--cases", type=Path, default=DEFAULT_WORKER_CASES, metavar="DIR")
     wfrz.set_defaults(handler=_worker_freeze)
+    wshow = worker_commands.add_parser("show", help="print a stored worker result")
+    wshow.add_argument("result", type=Path)
+    wshow.set_defaults(handler=_worker_show)
+    wcmp = worker_commands.add_parser(
+        "compare", help="show which cases changed between two worker results"
+    )
+    wcmp.add_argument("before", type=Path)
+    wcmp.add_argument("after", type=Path)
+    wcmp.set_defaults(handler=_worker_compare)
 
     args = ap.parse_args(argv)
     handler = args.handler
