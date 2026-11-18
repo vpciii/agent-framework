@@ -1,6 +1,6 @@
 # Tasks: An eval for the worker
 
-- **Status:** In progress
+- **Status:** Done
 - **Approved:** 2026-11-17, signed off by vpc, accepting the three
   departures from the plan's rollout described below (seven tasks; the
   `ci` checkout change in T-7; T-1 claiming SC-4 and SC-6 in part)
@@ -75,6 +75,17 @@ scoring, each with a regression test in `tests/evals/worker/test_score.py`:
   R-6 says: a file the session left uncommitted was tested by the gate
   but absent from the diff and the handoff check. What a session leaves
   uncommitted is now named in the gate log and set aside before scoring.
+
+**The baseline (R-12).** vpc ran every case once on 2026-11-18 under the
+roster's worker binding, from the main checkout:
+`evals/worker/results/2026-11-18-claude-opus-5-5.json`. Ready for review
+6 of 6; reference tests passed 3, failed 3; could not run 0; reported
+cost $2.99 in total, median $0.47; 604 s of session time. The three
+reference-test failures (#37, #70, #88) are each a detail the task did
+not specify — an error message's wording, the order of two git
+arguments, the name of an exception class — on code whose own gate
+passed. T-7 was delivered in two pull requests because the run has to
+start from the main checkout with the cases already on `main`.
 
 ---
 
@@ -262,7 +273,7 @@ scoring, each with a regression test in `tests/evals/worker/test_score.py`:
   elapsed time; and for every other outcome, the outcome, cost, turns
   and elapsed time with the reference tests `not-run`.
 
-### [ ] T-7 — Delivery: the cases, CI's history, the docs, the baseline
+### [x] T-7 — Delivery: the cases, CI's history, the docs, the baseline (#144, and the baseline's own pull request)
 - **Satisfies:** SC-11
 - **Depends on:** T-3, T-6
 - **Touches:** `evals/worker/cases/*.json`, `evals/worker/results/*.json`,

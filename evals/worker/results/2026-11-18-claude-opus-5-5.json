@@ -1,0 +1,363 @@
+{
+  "model": "anthropic:claude-opus-5-5",
+  "claude_code": "2.1.325 (Claude Code)",
+  "date": "2026-11-18",
+  "runs": 1,
+  "time_budget_s": 1800,
+  "spend_limit_usd": 10.0,
+  "case_set": "aa709b1bb51c",
+  "briefs": {
+    "pr-31": "522803eee641",
+    "pr-37": "66389f87b20a",
+    "pr-38": "7e6f4f2fbbf4",
+    "pr-70": "bb64295d350b",
+    "pr-73": "560d3bbd0a3c",
+    "pr-88": "4d1b98157d24"
+  },
+  "results": [
+    {
+      "case": "pr-31",
+      "run": 1,
+      "class": "ready",
+      "reference_tests": "passed",
+      "gate": [
+        {
+          "command": "uv run ruff check .",
+          "passed": true
+        },
+        {
+          "command": "uv run mypy --strict",
+          "passed": true
+        },
+        {
+          "command": "uv run pytest",
+          "passed": true
+        },
+        {
+          "command": "uv run python scripts/check_spec_coverage.py --include-approved",
+          "passed": true
+        }
+      ],
+      "handoff": [],
+      "diff_lines": 95,
+      "cost_usd": 0.23868660000000003,
+      "turns": 10,
+      "elapsed_s": 45.693,
+      "kept": {
+        "record": ".worktrees/eval/2026-11-18-1/pr-31-1.jsonl",
+        "diff": ".worktrees/eval/2026-11-18-1/pr-31-1.patch",
+        "gate": ".worktrees/eval/2026-11-18-1/pr-31-1-gate.log"
+      },
+      "detail": "T-1: added pure render_verdict(Pass | Reject) -> str in validator/render.py with SC-1 tests; SC-1 Traceability row filled; ruff, mypy --strict, pytest (64 passed) and spec coverage all green"
+    },
+    {
+      "case": "pr-37",
+      "run": 1,
+      "class": "ready",
+      "reference_tests": "failed",
+      "gate": [
+        {
+          "command": "uv run ruff check .",
+          "passed": true
+        },
+        {
+          "command": "uv run mypy --strict",
+          "passed": true
+        },
+        {
+          "command": "uv run pytest",
+          "passed": true
+        },
+        {
+          "command": "uv run python scripts/check_spec_coverage.py --include-approved",
+          "passed": true
+        }
+      ],
+      "handoff": [],
+      "diff_lines": 231,
+      "cost_usd": 0.45028819999999997,
+      "turns": 15,
+      "elapsed_s": 86.409,
+      "kept": {
+        "record": ".worktrees/eval/2026-11-18-1/pr-37-1.jsonl",
+        "diff": ".worktrees/eval/2026-11-18-1/pr-37-1.patch",
+        "gate": ".worktrees/eval/2026-11-18-1/pr-37-1-gate.log"
+      },
+      "detail": "T-1: ProjectConfig + DEFAULTS + load_project_config with ProjectConfigError; SC-1 tests in tests/test_project_config.py cited in Traceability; full gate green"
+    },
+    {
+      "case": "pr-38",
+      "run": 1,
+      "class": "ready",
+      "reference_tests": "passed",
+      "gate": [
+        {
+          "command": "uv run ruff check .",
+          "passed": true
+        },
+        {
+          "command": "uv run mypy --strict",
+          "passed": true
+        },
+        {
+          "command": "uv run pytest",
+          "passed": true
+        },
+        {
+          "command": "uv run python scripts/check_spec_coverage.py --include-approved",
+          "passed": true
+        }
+      ],
+      "handoff": [],
+      "diff_lines": 58,
+      "cost_usd": 0.24294580000000005,
+      "turns": 12,
+      "elapsed_s": 53.436,
+      "kept": {
+        "record": ".worktrees/eval/2026-11-18-1/pr-38-1.jsonl",
+        "diff": ".worktrees/eval/2026-11-18-1/pr-38-1.patch",
+        "gate": ".worktrees/eval/2026-11-18-1/pr-38-1-gate.log"
+      },
+      "detail": "T-4: added agent-framework-worker/agent-framework-validate console scripts in pyproject.toml; tests/test_entry_points.py cites SC-4 (metadata + --help behavior); Traceability row filled; full gate green"
+    },
+    {
+      "case": "pr-70",
+      "run": 1,
+      "class": "ready",
+      "reference_tests": "failed",
+      "gate": [
+        {
+          "command": "uv run ruff check .",
+          "passed": true
+        },
+        {
+          "command": "uv run mypy --strict",
+          "passed": true
+        },
+        {
+          "command": "uv run pytest",
+          "passed": true
+        },
+        {
+          "command": "uv run python scripts/check_spec_coverage.py --include-approved",
+          "passed": true
+        }
+      ],
+      "handoff": [],
+      "diff_lines": 292,
+      "cost_usd": 0.725844,
+      "turns": 26,
+      "elapsed_s": 139.894,
+      "kept": {
+        "record": ".worktrees/eval/2026-11-18-1/pr-70-1.jsonl",
+        "diff": ".worktrees/eval/2026-11-18-1/pr-70-1.patch",
+        "gate": ".worktrees/eval/2026-11-18-1/pr-70-1-gate.log"
+      },
+      "detail": "T-3: check_handoff in worker/handoff_check.py plus without_section / with_checkboxes_normalized in artifacts.py; SC-5 tests against a real git repo; Traceability row filled; gate green"
+    },
+    {
+      "case": "pr-73",
+      "run": 1,
+      "class": "ready",
+      "reference_tests": "passed",
+      "gate": [
+        {
+          "command": "uv run ruff check .",
+          "passed": true
+        },
+        {
+          "command": "uv run mypy --strict",
+          "passed": true
+        },
+        {
+          "command": "uv run pytest",
+          "passed": true
+        },
+        {
+          "command": "uv run python scripts/check_spec_coverage.py --include-approved",
+          "passed": true
+        }
+      ],
+      "handoff": [],
+      "diff_lines": 114,
+      "cost_usd": 0.4839032,
+      "turns": 19,
+      "elapsed_s": 115.428,
+      "kept": {
+        "record": ".worktrees/eval/2026-11-18-1/pr-73-1.jsonl",
+        "diff": ".worktrees/eval/2026-11-18-1/pr-73-1.patch",
+        "gate": ".worktrees/eval/2026-11-18-1/pr-73-1-gate.log"
+      },
+      "detail": "create_worktree appends .worker-result.json to the repo exclude file (WorktreeError if git reports no location); SC-1..SC-3 tests added, fakes updated, Traceability filled; gate green"
+    },
+    {
+      "case": "pr-88",
+      "run": 1,
+      "class": "ready",
+      "reference_tests": "failed",
+      "gate": [
+        {
+          "command": "uv run ruff check .",
+          "passed": true
+        },
+        {
+          "command": "uv run mypy --strict",
+          "passed": true
+        },
+        {
+          "command": "uv run pytest",
+          "passed": true
+        },
+        {
+          "command": "uv run python scripts/check_spec_coverage.py --include-approved",
+          "passed": true
+        }
+      ],
+      "handoff": [],
+      "diff_lines": 467,
+      "cost_usd": 0.8501167999999999,
+      "turns": 16,
+      "elapsed_s": 162.834,
+      "kept": {
+        "record": ".worktrees/eval/2026-11-18-1/pr-88-1.jsonl",
+        "diff": ".worktrees/eval/2026-11-18-1/pr-88-1.patch",
+        "gate": ".worktrees/eval/2026-11-18-1/pr-88-1-gate.log"
+      },
+      "detail": "T-2: evals/scorecard.py (classify, scorecard, EvalResult JSON round-trip, instructions_fingerprint, render, compare) with 9 tests citing SC-7/SC-8/SC-9; Traceability rows filled; all four gate commands green"
+    }
+  ],
+  "scorecard": {
+    "total": {
+      "classes": {
+        "ready": 6,
+        "gate-failed": 0,
+        "refused": 0,
+        "escalated": 0,
+        "timed-out": 0,
+        "spend-limit": 0,
+        "error": 0,
+        "could-not-run": 0
+      },
+      "reference_tests": {
+        "passed": 3,
+        "failed": 3,
+        "not-run": 0
+      }
+    },
+    "cases": {
+      "pr-31": {
+        "classes": {
+          "ready": 1,
+          "gate-failed": 0,
+          "refused": 0,
+          "escalated": 0,
+          "timed-out": 0,
+          "spend-limit": 0,
+          "error": 0,
+          "could-not-run": 0
+        },
+        "reference_tests": {
+          "passed": 1,
+          "failed": 0,
+          "not-run": 0
+        }
+      },
+      "pr-37": {
+        "classes": {
+          "ready": 1,
+          "gate-failed": 0,
+          "refused": 0,
+          "escalated": 0,
+          "timed-out": 0,
+          "spend-limit": 0,
+          "error": 0,
+          "could-not-run": 0
+        },
+        "reference_tests": {
+          "passed": 0,
+          "failed": 1,
+          "not-run": 0
+        }
+      },
+      "pr-38": {
+        "classes": {
+          "ready": 1,
+          "gate-failed": 0,
+          "refused": 0,
+          "escalated": 0,
+          "timed-out": 0,
+          "spend-limit": 0,
+          "error": 0,
+          "could-not-run": 0
+        },
+        "reference_tests": {
+          "passed": 1,
+          "failed": 0,
+          "not-run": 0
+        }
+      },
+      "pr-70": {
+        "classes": {
+          "ready": 1,
+          "gate-failed": 0,
+          "refused": 0,
+          "escalated": 0,
+          "timed-out": 0,
+          "spend-limit": 0,
+          "error": 0,
+          "could-not-run": 0
+        },
+        "reference_tests": {
+          "passed": 0,
+          "failed": 1,
+          "not-run": 0
+        }
+      },
+      "pr-73": {
+        "classes": {
+          "ready": 1,
+          "gate-failed": 0,
+          "refused": 0,
+          "escalated": 0,
+          "timed-out": 0,
+          "spend-limit": 0,
+          "error": 0,
+          "could-not-run": 0
+        },
+        "reference_tests": {
+          "passed": 1,
+          "failed": 0,
+          "not-run": 0
+        }
+      },
+      "pr-88": {
+        "classes": {
+          "ready": 1,
+          "gate-failed": 0,
+          "refused": 0,
+          "escalated": 0,
+          "timed-out": 0,
+          "spend-limit": 0,
+          "error": 0,
+          "could-not-run": 0
+        },
+        "reference_tests": {
+          "passed": 0,
+          "failed": 1,
+          "not-run": 0
+        }
+      }
+    },
+    "cost_usd": {
+      "total": 2.9917846,
+      "median": 0.4670957,
+      "reported": 6
+    },
+    "elapsed_s": {
+      "total": 603.694,
+      "median": 100.9185,
+      "reported": 6
+    },
+    "unstable": []
+  }
+}
