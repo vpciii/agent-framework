@@ -1,6 +1,10 @@
 # Tasks: A dispatch issue starts a worker run
 
-- **Status:** Draft
+- **Status:** Approved
+- **Approved:** 2026-11-18, signed off by vpc, accepting the two
+  departures from the plan described below (eight tasks where its
+  rollout lists five; the existing `dispatch.py` moved into the new
+  package)
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
@@ -26,7 +30,7 @@ T-7, T-8 (the live half) · SC-18 → T-2 (the same commands), T-3 (still refuse
 claimed by more than one task is complete when the last of them merges;
 each adds its own test to the criterion's Traceability row.
 
-**Two departures from the plan, for sign-off with this list.**
+**Two departures from the plan, accepted with this list.**
 
 - **Eight tasks where the plan's rollout lists five.** The six tasks
   dispatched for the worker eval were each written for about 300 lines
