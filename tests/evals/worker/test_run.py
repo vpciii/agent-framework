@@ -70,6 +70,8 @@ def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, list[st
     of three commits; returns it and those commits."""
     root = tmp_path / "repo"
     (root / "specs" / "demo").mkdir(parents=True)
+    (root / "tests").mkdir()
+    (root / "tests/test_x.py").write_text("")  # the cases' reference test file
     _git(root, "init", "-q", "-b", "main")
     commits = []
     for k in (1, 2, 3):
@@ -232,14 +234,14 @@ def test_sc5_no_push_pull_request_or_alert_and_nothing_written_elsewhere(
 
     assert {r.case: r.cls for r in result.results} == {
         "completed": "ready", "escalated": "escalated", "timed-out": "timed-out",
-        "spend-limit": "spend-limit", "refused": "ready",  # scored by T-6
+        "spend-limit": "spend-limit", "refused": "refused",
     }
     for c in commands:
         assert c[0] != "gh" and "push" not in c, c
     after = _snapshot(root)
     assert {k: v for k, v in after.items() if k != "results/out.json"} == before
     assert _git(root, "for-each-ref") == refs  # no branch, no tag
-    assert sorted(p.name for p in (root / ".worktrees").iterdir()) == ["eval", "records"]
+    assert sorted(p.name for p in (root / ".worktrees").iterdir()) == ["eval"]
     assert result_from_json(out.read_text()) == result
 
 
