@@ -81,8 +81,13 @@ under `evals/worker/results/`). A change to the worker's model, its
 brief, its confinement profile, its time budget or its spend limit cites
 a run from before the change and one from after, compared with
 `agent-framework-eval worker compare`. This is a rule for the author and
-the reviewer; no code enforces it (specs/worker-eval, R-13). No run is on
-record yet: the first baseline is the human's, and follows the case set.
+the reviewer; no code enforces it (specs/worker-eval, R-13). One run is
+on record, the baseline: `2026-11-18-claude-opus-5-5.json`, one run of
+each of the six cases — ready for review 6 of 6, reference tests passed
+3 of 6, $2.99 reported. Its three reference-test failures are details
+the tasks did not specify (a message's wording, an argument order, an
+exception's name), so on this set "ready for review" is the number to
+compare and a reference-test change is a prompt to read the patch.
 
 **Changing the judgment: cite a run from before and after.** The eval
 measures the validator's judgment on a fixed set of cases
@@ -253,5 +258,6 @@ carries a change to one, so update this list promptly when one changes
 - `specs/worker-spend-and-record/` — Implemented (frozen).
 - `specs/worker-eval/` — Approved, with an Approved `plan.md` (not yet
   implemented; `tasks.md` In progress: T-1 to T-6 merged as #134, #136,
-  #137, #138, #140 and #141; of T-7, the delivery, the case set, the CI
-  checkout and the docs are in; the first baseline run is still to come).
+  #137, #138, #140 and #141; T-7, the delivery, as #144 and
+  the baseline's own pull request; `tasks.md` Done. Marking the spec
+  `Implemented` is the human's sign-off, still to come).
