@@ -62,6 +62,8 @@ dispatch through the provider adapters.
 | Worker edge | `worker/__main__.py` | CLI: `python -m agent_framework.worker <slug> <task> [--timeout S] [--spend-limit USD]` — exit 0 PR / 2 escalated / 3 timeout, spend limit or error / 4 handoff refused, composable with the validator's 0/1 |
 | Eval cases and scoring | `evals/{case,scorecard}.py` | The eval set's file format (specs/validator-eval-set): an accepted case is a frozen evidence bundle with its expected outcome and provenance; a seeded-defect case is an accepted case plus an edit of exact replacements, applied at load. Strict and pure — a malformed file, or an edit that does not match exactly once, is an `EvalCaseError` naming the file. Scoring is pure code over a case's expected outcome and the judgment's actual one — passed / wrongly rejected, caught / other reason / missed, and could-not-judge, which is never counted as right or wrong; a result records the model, the effort its roster binding asked for (absent means the provider's default), the date and three fingerprints — of the judgment's instructions, of the case set with its answers, and of what the cases sent the judgment (the **inputs fingerprint**, which an answer does not move). A stored result is re-scored against the answers as they are now by the same code (`rescore`), so correcting an answer calls for no new run; two results are compared when their inputs fingerprints match (specs/eval-rescore). |
 | Eval run, freeze + edge | `evals/{run,freeze,__main__}.py` | `agent-framework-eval run` judges every case by calling the gate's own `judge` — the same request, tool, parsing and quote check — through the roster's validator role; token counts and the number of findings reported are read from the provider's response by a recording wrapper around the adapter, so nothing in the gate changes. A provider error or an unreadable answer on one case is that case's could-not-judge and the run goes on. Prints the scorecard, writes a result file (never over an existing one). `show` prints a stored result's scorecard and `compare` the cases whose class changed between two results; both class every judgment against the answers in the case set on disk, name the cases whose answer changed since the run, write nothing, and refuse a result whose cases have since changed what they send. `run` is run by a human with a key; no workflow runs it. `freeze <pr>` writes a merged pull request into the set as an accepted case: the bundle is collected as the gate collects it (`collect_bundle` through the `gh` seam, with the project's config) and stored with its provenance; a pull request that is not merged, or that the deterministic stage rejects, is refused and nothing is written; freezing again rebuilds the bundle and keeps the expected answer already in the file. The set (`evals/validator/cases/`) holds 27 accepted cases — every merged task pull request that passes the deterministic stage today; seven of them (`pr-18`, `pr-27`, `pr-28`, `pr-39`, `pr-59`, `pr-81`, `pr-89`) carry a corrected answer, expected to be rejected, because the judgment found a real conformance defect in accepted work — and 9 seeded-defect cases, three each for test honesty, spec conformance and criteria integrity, each a hand-written edit of a few lines over an accepted case; a test puts every case through that stage with no model call, so a case that rots is caught in CI; `.gitattributes` marks the frozen bundles generated. |
+| Worker eval cases and scoring | `evals/worker/{case,scorecard}.py` + `evals/worker/settings.toml` | The worker eval's file format (specs/worker-eval): a **worker eval case** is a task this repository already merged — the task, the reference pull request, its start and head commits, and the **reference tests** that pull request changed. Strict: a file missing a field is an `EvalCaseError` naming the file and the field. Every case runs under one committed settings file, not its start commit's `agent-framework.toml`. The brief check builds each case's brief at its start commit with the worker's own `parse_task` and `build_brief`; CI runs it over the committed set with no session. Scoring is pure code over recorded runs: eight classes (`ready`, `gate-failed`, `refused`, `escalated`, `timed-out`, `spend-limit`, `error`, `could-not-run`), the reference tests as a separate passed / failed / not-run value that never changes the class, counts per case and in total, total and median reported cost and elapsed time, and a case whose runs land in different classes marked unstable. `could-not-run` is counted on its own, never as the worker's success or failure. A result records the worker's model, the Claude Code version, the date, the limits, the case-set fingerprint and each brief's fingerprint |
+| Worker eval run, freeze + edge | `evals/worker/{run,freeze}.py`, `evals/__main__.py` (`worker` group) | `agent-framework-eval worker run` runs each case's task, one session at a time: a detached worktree at the case's start commit under `.worktrees/eval/<run>/`, the brief built from that worktree's own `specs/`, and a session launched through the worker's own profile, environment and `run_session` with the roster's worker model, the time budget and the spend limit. It never calls `work()`: no push, no pull request, no escalation file, no alert. A completed session is scored by code at its last commit — what it left uncommitted is named in the gate log and set aside first: each gate command, the handoff check since the start commit, the reference tests on a copy of its tree with the reference pull request's versions laid over it, and its diff. Each of those commands is stopped at the session's time budget and then counts as failed. The patch, the logs and the session record are kept beside the worktree and never committed. A failure of the eval itself on a case is `could-not-run` and the next case runs. Prints the scorecard, writes a result file (never over an existing one). `worker show` prints a stored result's scorecard with every run not ready for review and every reference-test failure; `worker compare` the cases whose class or reference-test result changed, refusing results over different case sets. `worker freeze` writes a merged task pull request into the set, refusing one that is not merged, names no task, whose task is not in `tasks.md` at its start commit, or that changed no test citing the task's criteria. `worker run` is run by a human, never by CI |
 | Roster currency check | `currency/{check,issue,__main__}.py` + `.github/workflows/roster-currency.yml` | Weekly (and on demand): each bound model must be in its provider's catalog — failing / unchecked / advisory findings, one `roster-currency` tracking issue. Never in the per-PR gate (ADR 0005); Anthropic via Workload Identity Federation, API-key fallback |
 | Resume card | `status/{card,__main__}.py` | `python -m agent_framework.status`: where the project stands + one next action, from the artifacts (and open PRs / alert issues via `gh`, or a stated "unavailable") |
 | Alerts | `alerts.py` | One GitHub issue per alert key (labelled `escalation` / `timeout` / `refused` / `status`) as the record, plus a best-effort Home Assistant webhook push (`AF_HA_WEBHOOK_URL`, env only); never raises — each channel's outcome is reported |
@@ -71,6 +73,16 @@ dispatch through the provider adapters.
 | Project config | `project.py` + `agent-framework.toml` | Per-repo contract: gate commands, conventions note, test-citation pattern, test paths, ignore-checks, and how far worker sessions are widened (session paths, hosts, environment names; protected paths). Defaults = this repo's conventions; invalid patterns unconstructible. Adoption: `docs/adoption.md` |
 | Spec-coverage checker | `scripts/check_spec_coverage.py` | CI-enforced traceability (ADR 0003); `*(pending)*` rows allowed at `Approved`, forbidden at `Implemented` |
 | CI | `.github/workflows/ci.yml` | `uv sync --frozen` → ruff → mypy --strict → pytest → coverage check; required status check on `main`. Plus an **advisory** `validator` job: the cite-the-test gate runs on every PR (never blocking; judgment only when a credential for the validator's provider is available: Anthropic by Workload Identity Federation, or by an `ANTHROPIC_API_KEY` secret when federation is not configured; Google by the `GEMINI_API_KEY` secret), from the default branch's code, never the PR's |
+
+**Changing the worker: cite a run from before and after.** The worker
+eval measures what the worker produces for a fixed set of tasks this
+repository already merged (`agent-framework-eval worker run`, results
+under `evals/worker/results/`). A change to the worker's model, its
+brief, its confinement profile, its time budget or its spend limit cites
+a run from before the change and one from after, compared with
+`agent-framework-eval worker compare`. This is a rule for the author and
+the reviewer; no code enforces it (specs/worker-eval, R-13). No run is on
+record yet: the first baseline is the human's, and follows the case set.
 
 **Changing the judgment: cite a run from before and after.** The eval
 measures the validator's judgment on a fixed set of cases
@@ -156,6 +168,23 @@ Where untrusted input enters, and what each AI agent can reach
   the command, and a test checks that. *Output*: a scorecard on stdout and a
   result file a human commits. `freeze` reads a merged pull request through
   `gh` with the caller's token, as the collector does.
+- **Worker eval run** (`agent-framework-eval worker run`) — *reads* the
+  case set in `evals/worker/cases/` and, per case, this repository's
+  history at the case's start commit. Each session runs **under the
+  worker's confinement profile**, exactly as a dispatch launches it, and
+  the brief is **sent to the worker's provider**. What follows a session
+  is not confined: **the gate commands and the reference tests run the
+  session's code outside its sandbox**, with the access of the human who
+  started the run. They get the session's allowlisted environment (no
+  secret in it), a time limit, and only what the session committed; the
+  code is what a reviewer would run after checking out the pull request.
+  Confining them too is a follow-up. It runs **from a human's shell and
+  never from CI**: no workflow names the command, and a test checks that.
+  *Output*: a scorecard on stdout, a result file a human commits, and
+  working files under `.worktrees/eval/` that are never committed (they
+  hold whatever a session read). Nothing is pushed and no alert is
+  raised. `worker freeze` reads a merged pull request through `gh` with
+  the caller's token.
 - **CI** (`.github/workflows/ci.yml`) — the rule: **code from a pull
   request never runs in a job that holds a secret.** The `ci` job runs the
   PR's code (its tests, its locked dependencies) with no secret, a
@@ -224,5 +253,5 @@ carries a change to one, so update this list promptly when one changes
 - `specs/worker-spend-and-record/` — Implemented (frozen).
 - `specs/worker-eval/` — Approved, with an Approved `plan.md` (not yet
   implemented; `tasks.md` In progress: T-1 to T-6 merged as #134, #136,
-  #137, #138, #140 and #141; T-7, the delivery, is next and is not for
-  dispatch).
+  #137, #138, #140 and #141; of T-7, the delivery, the case set, the CI
+  checkout and the docs are in; the first baseline run is still to come).

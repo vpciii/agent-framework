@@ -264,4 +264,4 @@ marked `Implemented`.
 | SC-8 | R-8 | `tests/evals/worker/test_scorecard.py::test_sc8_the_class_follows_the_plans_table`, `tests/evals/worker/test_scorecard.py::test_sc8_counts_medians_and_unstable_are_what_the_runs_say` |
 | SC-9 | R-9 | `tests/evals/worker/test_scorecard.py::test_sc9_a_result_round_trips_with_every_field`, `tests/evals/worker/test_scorecard.py::test_sc9_comparing_different_case_sets_is_refused`, `tests/evals/worker/test_scorecard.py::test_sc9_compare_names_the_cases_whose_class_or_reference_tests_changed` |
 | SC-10 | R-10 | `tests/evals/worker/test_scorecard.py::test_sc10_every_run_not_ready_and_every_reference_failure_is_listed_with_its_paths` |
-| SC-11 | R-11 | *(pending)* |
+| SC-11 | R-11 | `tests/evals/worker/test_case_set.py::test_sc11_the_committed_set_holds_six_cases_among_them_the_four_named` |

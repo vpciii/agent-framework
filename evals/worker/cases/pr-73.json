@@ -1,0 +1,21 @@
+{
+  "id": "pr-73",
+  "task": {
+    "spec": "result-file-ignored",
+    "task": "T-1"
+  },
+  "reference": {
+    "repo": "vpciii/agent-framework",
+    "pr": 73,
+    "start": "88d8de058dab21c8bc911b02be4dbc9bc3384b42",
+    "head": "473a068aa7495cc882f514ee9ddb65396018fed4"
+  },
+  "reference_tests": [
+    "tests/worker/test_orchestrator.py",
+    "tests/worker/test_worktree.py"
+  ],
+  "provenance": {
+    "frozen": "2026-11-18",
+    "by": "agent-framework-eval worker freeze"
+  }
+}

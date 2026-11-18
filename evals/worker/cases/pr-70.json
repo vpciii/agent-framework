@@ -1,0 +1,20 @@
+{
+  "id": "pr-70",
+  "task": {
+    "spec": "worker-confinement",
+    "task": "T-3"
+  },
+  "reference": {
+    "repo": "vpciii/agent-framework",
+    "pr": 70,
+    "start": "c9e8b255e3bb224de8aa4b266b40c161d5bfb539",
+    "head": "d63070187194936a4611791cd56e2af656c1d7ae"
+  },
+  "reference_tests": [
+    "tests/worker/test_handoff_check.py"
+  ],
+  "provenance": {
+    "frozen": "2026-11-18",
+    "by": "agent-framework-eval worker freeze"
+  }
+}

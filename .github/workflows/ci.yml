@@ -21,6 +21,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          # Full history: the worker eval's case check reads each case's
+          # task at its start commit (specs/worker-eval SC-2).
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.13"

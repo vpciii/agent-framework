@@ -1,0 +1,20 @@
+{
+  "id": "pr-37",
+  "task": {
+    "spec": "project-portability",
+    "task": "T-1"
+  },
+  "reference": {
+    "repo": "vpciii/agent-framework",
+    "pr": 37,
+    "start": "c96756115cb8d4b1e26e40c77c52be6c11a8dcdc",
+    "head": "a2fb885a73021695c40d02ecc1492fcf891aed77"
+  },
+  "reference_tests": [
+    "tests/test_project_config.py"
+  ],
+  "provenance": {
+    "frozen": "2026-11-18",
+    "by": "agent-framework-eval worker freeze"
+  }
+}
