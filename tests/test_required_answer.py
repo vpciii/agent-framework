@@ -238,7 +238,7 @@ async def test_sc7_old_shaped_requests_and_responses_still_work() -> None:
     assert (response.stop, response.stop_detail, response.usage) == ("complete", "", None)
 
     src = Path(__file__).resolve().parents[1] / "src" / "agent_framework"
-    for module in ("providers/base.py", "dispatch.py", "validator/judgment.py",
+    for module in ("providers/base.py", "dispatch/__init__.py", "validator/judgment.py",
                    "validator/gate.py"):
         text = (src / module).read_text(encoding="utf-8").lower()
         for vendor in ("anthropic", "claude", "google", "gemini"):

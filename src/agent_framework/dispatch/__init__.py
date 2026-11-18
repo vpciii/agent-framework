@@ -10,9 +10,9 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from .providers.base import Request, Response
-from .providers.registry import ProviderRegistry, default_registry
-from .roster import Roster
+from ..providers.base import Request, Response
+from ..providers.registry import ProviderRegistry, default_registry
+from ..roster import Roster
 
 
 async def dispatch(

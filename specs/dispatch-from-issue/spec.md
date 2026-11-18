@@ -307,10 +307,10 @@ All six were answered by vpc on 2026-11-18, each as recommended.
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1, R-2 | *(pending)* |
-| SC-2 | R-3 | *(pending)* |
+| SC-1 | R-1, R-2 | `tests/dispatch/test_issue.py::test_sc1_accepts_the_configured_authors_title_for_an_open_task`, `tests/dispatch/test_issue.py::test_sc1_refuses_each_other_case_with_its_own_reason`, `tests/dispatch/test_issue.py::test_sc1_another_author_is_refused_before_the_title_is_looked_at`, `tests/dispatch/test_issue.py::test_sc1_a_refusal_carries_nothing_taken_from_the_issue`, `tests/dispatch/test_issue.py::test_sc1_the_oldest_of_several_issues_is_chosen` |
+| SC-2 | R-3 | `tests/dispatch/test_issue.py::test_sc2_no_author_and_disabled_are_each_reported_as_off`, `tests/test_project_config.py::test_sc2_no_author_and_enabled_false_are_each_off` |
 | SC-3 | R-4, R-5 | *(pending)* |
-| SC-4 | R-6 | *(pending)* |
+| SC-4 | R-6 | `tests/dispatch/test_issue.py::test_sc4_a_title_beyond_a_slug_and_a_task_id_is_refused`, `tests/dispatch/test_issue.py::test_sc4_only_the_matched_slug_and_task_id_come_from_the_title` |
 | SC-5 | R-7 | *(pending)* |
 | SC-6 | R-8 | *(pending)* |
 | SC-7 | R-9 | *(pending)* |

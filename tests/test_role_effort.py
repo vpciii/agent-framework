@@ -194,11 +194,11 @@ def test_sc5_no_providers_option_name_outside_the_adapters() -> None:
     """SC-5: the provider interface, dispatch, the judgment and the gate
     carry the effort as intent; no provider's name for the option is in them."""
     src = Path(__file__).resolve().parents[1] / "src" / "agent_framework"
-    for module in ("providers/base.py", "dispatch.py", "validator/judgment.py",
+    for module in ("providers/base.py", "dispatch/__init__.py", "validator/judgment.py",
                    "validator/gate.py"):
         text = (src / module).read_text(encoding="utf-8").lower()
         for option in ("thinking_level", "thinkinglevel", "thinking_config", "output_config"):
             assert option not in text, f"{module} names {option}"
     # And the intent is there to be carried.
     assert "effort" in (src / "providers" / "base.py").read_text(encoding="utf-8")
-    assert "effort" in (src / "dispatch.py").read_text(encoding="utf-8")
+    assert "effort" in (src / "dispatch" / "__init__.py").read_text(encoding="utf-8")

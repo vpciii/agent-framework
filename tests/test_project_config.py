@@ -200,3 +200,52 @@ def test_protected_paths_and_test_paths_share_one_matcher() -> None:
     assert not path_matches("src/agent-framework.toml", DEFAULTS.protected_paths)
     assert not path_matches("docs/.github.md", DEFAULTS.protected_paths)
     assert path_matches("tests/deep/test_x.py", DEFAULTS.test_paths)
+
+
+def test_dispatch_table_parses_beside_project(tmp_path: Path) -> None:
+    """specs/dispatch-from-issue: the `[dispatch]` table, with or without `[project]`."""
+    body = '[dispatch]\nauthor = "vpciii"\nworker_cli_version = "2.1.325"\n'
+    config = load_project_config(_write(tmp_path, body))
+    assert config.dispatch.author == "vpciii"
+    assert config.dispatch.enabled is True
+    assert config.dispatch.worker_cli_version == "2.1.325"
+    assert config.dispatch.on
+    with_project = load_project_config(
+        _write(tmp_path, '[project]\ngate_commands = ["make"]\n' + body)
+    )
+    assert with_project.dispatch == config.dispatch
+    assert with_project.gate_commands == ("make",)
+
+
+def test_sc2_no_author_and_enabled_false_are_each_off(tmp_path: Path) -> None:
+    """SC-2 (dispatch-from-issue): dispatch is off until a project turns it on."""
+    assert not load_project_config(tmp_path).dispatch.on  # no file
+    assert not load_project_config(_write(tmp_path, "[project]\n")).dispatch.on
+    assert not load_project_config(_write(tmp_path, "[dispatch]\n")).dispatch.on
+    no_author = load_project_config(_write(tmp_path, "[dispatch]\nenabled = true\n"))
+    assert no_author.dispatch.author is None and not no_author.dispatch.on
+    off = load_project_config(
+        _write(tmp_path, '[dispatch]\nauthor = "vpciii"\nenabled = false\n')
+    )
+    assert off.dispatch.author == "vpciii" and not off.dispatch.on
+    assert off.dispatch.worker_cli_version is None  # absent means any
+
+
+@pytest.mark.parametrize(
+    ("body", "message"),
+    [
+        ("dispatch = 1\n", r"\[dispatch\] must be a table"),
+        ("[dispatch]\nauthor = 7\n", r"\[dispatch\] author must be a non-empty string"),
+        ('[dispatch]\nauthor = ""\n', r"\[dispatch\] author must be a non-empty string"),
+        ('[dispatch]\nenabled = "no"\n', r"\[dispatch\] enabled must be true or false"),
+        ("[dispatch]\nenabled = 0\n", r"\[dispatch\] enabled must be true or false"),
+        ("[dispatch]\nworker_cli_version = 2.1\n", r"worker_cli_version must be"),
+        ("[dispatch]\nlabel = 'go'\n", r"unknown \[dispatch\] field"),
+    ],
+)
+def test_dispatch_table_of_the_wrong_type_is_refused_on_load(
+    tmp_path: Path, body: str, message: str
+) -> None:
+    """specs/dispatch-from-issue: a wrong type fails loudly, as `[project]`'s do."""
+    with pytest.raises(ProjectConfigError, match=message):
+        load_project_config(_write(tmp_path, body))
