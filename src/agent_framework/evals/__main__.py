@@ -6,6 +6,9 @@
     agent-framework-eval compare <result> <result> [--cases DIR]
     agent-framework-eval freeze <pr> [--repo OWNER/NAME] [--cases DIR]
     agent-framework-eval worker freeze <pr> [--repo OWNER/NAME] [--cases DIR]
+    agent-framework-eval worker run [--cases DIR] [--roster FILE] [--runs N] [--only ID ...]
+                                    [--timeout SECONDS] [--spend-limit USD] [--keep]
+                                    [--out FILE]
     agent-framework-eval worker show <result>
     agent-framework-eval worker compare <result> <result>
 
@@ -22,7 +25,12 @@ is run by a human with a provider key in their shell — never by CI
 (specs/validator-eval-set). `worker freeze` writes a merged task pull
 request into the worker's case set; it exits 2, writing nothing, for one
 that is not merged, names no task, or whose task is not in `tasks.md` at its
-start commit (specs/worker-eval). `worker show` prints a worker result's
+start commit (specs/worker-eval). `worker run` runs each case's task, one
+session at a time, in a detached worktree at its start commit, launched as a
+dispatch launches the worker but with nothing after the session — no push, no
+pull request, no alert; it prints one line per run, then the scorecard, writes
+the result file and exits 0 when the run completed, whatever the score. Like
+`run`, it is run by a human — never by CI. `worker show` prints a worker result's
 scorecard and every run not ready for review or failing its reference tests,
 with where its files are kept; `worker compare` the cases whose class or
 reference-test result changed, exiting 2 for results over different case sets.
@@ -36,6 +44,7 @@ import datetime
 import logging
 import re
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 from ..errors import AgentFrameworkError, EvalResultError
@@ -44,6 +53,7 @@ from ..providers.anthropic import AnthropicProvider
 from ..providers.google import GoogleProvider
 from ..providers.registry import register_provider
 from ..roster import Roster
+from ..worker.session import DEFAULT_SPEND_LIMIT_USD, check_spend_limit
 from .case import EvalCase, inputs_fingerprint, load_set, set_fingerprint
 from .freeze import freeze
 from .run import run_eval
@@ -58,7 +68,9 @@ from .scorecard import (
     result_from_json,
     result_to_json,
 )
+from .worker import run as worker_run
 from .worker import scorecard as worker_scorecard
+from .worker.case import load_case_set
 from .worker.freeze import freeze_worker_case
 
 DEFAULT_CASES = Path("evals/validator/cases")
@@ -239,6 +251,51 @@ def _worker_freeze(args: argparse.Namespace) -> int:
     return 0
 
 
+def _worker_progress(r: worker_scorecard.RunRecord) -> None:
+    cost = "cost unknown" if r.cost_usd is None else f"${r.cost_usd:.2f}"
+    elapsed = "" if r.elapsed_s is None else f"  {r.elapsed_s:.0f} s"
+    why = f"  ({r.detail})" if r.detail else ""
+    print(f"{r.case:<16} run {r.run}  {r.cls}  reference tests {r.reference_tests}  "
+          f"{cost}{elapsed}{why}", file=sys.stderr)
+
+
+def _worker_run(args: argparse.Namespace) -> int:
+    if args.runs < 1:
+        return _refuse("--runs must be at least 1")
+    try:
+        check_spend_limit(args.spend_limit)
+        case_set = load_case_set(args.cases)
+        worker = Roster.from_file(args.roster).resolve("worker")
+    except AgentFrameworkError as e:
+        return _refuse(str(e))
+    if worker.effort is not None:
+        return _refuse(f"the worker's roster binding sets effort = {worker.effort!r}, "
+                       "which the worker session does not take")
+    if not case_set.cases:
+        return _refuse(f"no worker eval cases in {args.cases}")
+    if args.only:
+        unknown = sorted(set(args.only) - {c.id for c in case_set.cases})
+        if unknown:
+            return _refuse(f"--only names no case in {args.cases}: {', '.join(unknown)}")
+        case_set = replace(case_set, cases=tuple(c for c in case_set.cases if c.id in args.only))
+    date = _today()
+    out: Path = args.out or (
+        args.cases.parent / "results"
+        / f"{date}-{re.sub(r'[^A-Za-z0-9._-]+', '-', worker.model)}.json"
+    )
+    if out.exists():
+        # Checked before a single session: a recorded run is never replaced.
+        return _refuse(f"{out} already holds a result; name another file with --out")
+    result = worker_run.run_and_write(
+        case_set, worker, out, date=date, claude_code=worker_run.claude_code_version(),
+        runs=args.runs, timeout_s=args.timeout, spend_limit_usd=args.spend_limit,
+        keep=args.keep, on_run=_worker_progress,
+    )
+    print(worker_scorecard.render(result), end="")
+    print(f"result written to {out}", file=sys.stderr)
+    return 0
+
+
 def _read_worker(path: Path) -> worker_scorecard.Result:
     try:
         return worker_scorecard.result_from_json(path.read_text(encoding="utf-8"))
@@ -314,6 +371,25 @@ def main(argv: list[str] | None = None) -> int:
                       help="the repository (default: the current one)")
     wfrz.add_argument("--cases", type=Path, default=DEFAULT_WORKER_CASES, metavar="DIR")
     wfrz.set_defaults(handler=_worker_freeze)
+    wrun = worker_commands.add_parser(
+        "run", help="run the worker on every case and write a result"
+    )
+    wrun.add_argument("--cases", type=Path, default=DEFAULT_WORKER_CASES, metavar="DIR")
+    wrun.add_argument("--roster", type=Path, default=Path("agent-framework.toml"),
+                      metavar="FILE")
+    wrun.add_argument("--runs", type=int, default=1, metavar="N",
+                      help="sessions per case (default 1)")
+    wrun.add_argument("--only", nargs="+", default=[], metavar="ID",
+                      help="run only these cases")
+    wrun.add_argument("--timeout", type=float, default=1800, metavar="SECONDS",
+                      help="each session's time budget (default 1800)")
+    wrun.add_argument("--spend-limit", type=float, default=DEFAULT_SPEND_LIMIT_USD,
+                      metavar="USD", help="each session's spend limit (default 10)")
+    wrun.add_argument("--keep", action="store_true",
+                      help="keep each run's worktree instead of removing it")
+    wrun.add_argument("--out", type=Path, default=None, metavar="FILE",
+                      help="result file (default: results/<date>-<model>.json beside the cases)")
+    wrun.set_defaults(handler=_worker_run)
     wshow = worker_commands.add_parser("show", help="print a stored worker result")
     wshow.add_argument("result", type=Path)
     wshow.set_defaults(handler=_worker_show)
