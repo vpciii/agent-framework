@@ -257,10 +257,10 @@ marked `Implemented`.
 | SC-1 | R-1 | `tests/evals/worker/test_case.py::test_sc1_a_case_round_trips_through_its_file`, `tests/evals/worker/test_case.py::test_sc1_a_file_missing_a_field_fails_naming_the_file_and_the_field` |
 | SC-2 | R-2 | `tests/evals/worker/test_case.py::test_sc2_the_brief_is_built_from_the_start_commits_artifacts`, `tests/evals/worker/test_case.py::test_sc2_a_case_whose_task_is_absent_at_its_start_fails_naming_the_case`, `tests/evals/worker/test_case.py::test_sc2_every_committed_case_builds_its_brief_at_its_start_commit` |
 | SC-3 | R-3 | `tests/evals/worker/test_freeze.py::test_sc3_a_frozen_case_loads_with_its_start_head_and_reference_tests`, `tests/evals/worker/test_freeze.py::test_sc3_a_refused_pull_request_writes_nothing_and_says_why`, `tests/evals/worker/test_freeze.py::test_sc3_the_worker_freeze_command_refuses_with_exit_2_writing_nothing` |
-| SC-4 | R-4 | `tests/worker/test_worktree.py::test_sc4_a_detached_worktree_is_added_at_a_past_commit_with_the_result_file_excluded` |
-| SC-5 | R-5 | *(pending)* |
+| SC-4 | R-4 | `tests/worker/test_worktree.py::test_sc4_a_detached_worktree_is_added_at_a_past_commit_with_the_result_file_excluded`, `tests/evals/worker/test_run.py::test_sc4_each_session_gets_its_start_commits_brief_profile_limits_and_model`, `tests/evals/worker/test_run.py::test_sc4_three_runs_of_a_case_start_three_sessions_in_three_worktrees` |
+| SC-5 | R-5 | `tests/evals/worker/test_run.py::test_sc5_no_push_pull_request_or_alert_and_nothing_written_elsewhere`, `tests/evals/worker/test_run.py::test_sc5_no_workflow_names_the_eval_command` |
 | SC-6 | R-6 | `tests/worker/test_handoff_check.py::test_sc6_given_a_base_findings_are_for_changes_since_it_and_none_before` |
-| SC-7 | R-7 | *(pending)* |
+| SC-7 | R-7 | `tests/evals/worker/test_run.py::test_sc7_an_unknown_start_commit_could_not_run_and_the_next_case_runs` |
 | SC-8 | R-8 | `tests/evals/worker/test_scorecard.py::test_sc8_the_class_follows_the_plans_table`, `tests/evals/worker/test_scorecard.py::test_sc8_counts_medians_and_unstable_are_what_the_runs_say` |
 | SC-9 | R-9 | `tests/evals/worker/test_scorecard.py::test_sc9_a_result_round_trips_with_every_field`, `tests/evals/worker/test_scorecard.py::test_sc9_comparing_different_case_sets_is_refused`, `tests/evals/worker/test_scorecard.py::test_sc9_compare_names_the_cases_whose_class_or_reference_tests_changed` |
 | SC-10 | R-10 | `tests/evals/worker/test_scorecard.py::test_sc10_every_run_not_ready_and_every_reference_failure_is_listed_with_its_paths` |
