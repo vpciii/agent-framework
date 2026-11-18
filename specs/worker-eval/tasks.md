@@ -53,11 +53,26 @@ protected, and the baseline is the human's run (R-12).
 | T-2 | #136 | yes | $0.86 | none |
 | T-3 | #137 | yes | $0.79 | none |
 | T-4 | #138 | yes, over the validator's REJECT (below) | $0.89 | none |
+| T-5 | #140 | yes | $1.46 | none |
+| T-6 | #141 | yes | $1.10 | none |
+
+Six tasks, six pull requests merged with no interactive rework, $5.68
+reported for those six sessions; one alert, on T-1's first run.
 
 T-4's pull request was about 480 lines and kept `show` / `compare` rather
 than splitting them as its *Done when* says; the validator rejected it on
 that alone, and vpc merged it as it stood on 2026-11-17. Splitting would
 have moved about 40 lines, so the task was too large as written.
+
+**Found reading #141, open before the baseline (T-7).** Neither is
+asked for by a task or a criterion:
+
+- The gate commands and the reference-test command run with no time
+  limit. They run the session's code, so a test that hangs would hang
+  the whole run; only the session itself has the time budget.
+- The gate runs on the session's working tree, not strictly its last
+  commit: a file the session left uncommitted is tested by the gate but
+  is absent from the diff and from the handoff check.
 
 ---
 
@@ -172,7 +187,7 @@ have moved about 40 lines, so the task was too large as written.
   `show` / `compare` into a follow-up task and say so in the pull
   request.
 
-### [ ] T-5 — Run a case: worktree, brief, session, and nothing after it
+### [x] T-5 — Run a case: worktree, brief, session, and nothing after it (#140)
 - **Satisfies:** SC-4, SC-5, SC-7
 - **Depends on:** T-1, T-4
 - **Touches:** `src/agent_framework/evals/worker/run.py` (new),
@@ -215,7 +230,7 @@ have moved about 40 lines, so the task was too large as written.
   `could-not-run`, the next case runs, and the scorecard counts it in
   neither successes nor failures.
 
-### [ ] T-6 — Score a completed session
+### [x] T-6 — Score a completed session (#141)
 - **Satisfies:** SC-6
 - **Depends on:** T-5
 - **Touches:** `src/agent_framework/evals/worker/run.py`,
