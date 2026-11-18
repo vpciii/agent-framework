@@ -1,6 +1,6 @@
 # ADR 0010: Only vpc's dispatch issue starts an unattended run, and only `main` steers it
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-18
 - **Deciders:** vpc
 

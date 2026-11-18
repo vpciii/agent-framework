@@ -1,11 +1,12 @@
 # Spec: A dispatch issue starts a worker run
 
-- **Status:** Under review
+- **Status:** Approved
 - **Date:** 2026-11-18
+- **Approved:** 2026-11-18, signed off by vpc
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0004 (the worker is headless Claude Code), ADR
   0007 (the worker session is confined; the orchestrator holds the
-  credentials), ADR 0010 (proposed with this spec: what may start and
+  credentials), ADR 0010 (accepted with this spec: what may start and
   steer a run with no one at the keyboard)
 - **Planning:** `planning/durable-autonomy/` — option A1
   (`options-a.md`, Converged 2026-11-17) under the bet `bet-a1.md`
@@ -229,8 +230,8 @@ that no longer fires (pre-mortem spikes 6 and 7).
 
 ## Glossary additions (proposed with this spec)
 
-Three terms this spec needs and `docs/glossary.md` does not hold. They
-are proposals until the spec is approved.
+Three terms this spec needs. They were proposals until the spec was
+approved, and are in `docs/glossary.md` from that change on.
 
 - **Dispatch issue** — an open GitHub issue labelled `dispatch`, opened
   by the account the project names, whose title is a spec slug and a
