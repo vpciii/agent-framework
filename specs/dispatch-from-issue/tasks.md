@@ -499,8 +499,9 @@ Names the later tasks rely on, fixed here so each brief stands alone:
 - **Brief:** Not for dispatch; done with vpc. In order: (1) the bet's
   spike on the host — a session started by launchd logs in on the Max
   plan, what a run does to usage, what it does to the host's other
-  jobs, and whether the session lock is held while a real session runs
-  (T-9) — with the bet's first no-go applying if it fails; (2) turn the
+  jobs — with the bet's first no-go applying if it fails; and, apart
+  from the bet, whether the session lock is held while a real session
+  runs (T-9), recorded here either way; (2) turn the
   CLI's self-update off on that Mac; (3) this repository's `[dispatch]`
   table, by vpc's own pull request, since the file is a protected path;
   (4) the `dispatch` and `failed` labels; (5) the launchd agent, every
