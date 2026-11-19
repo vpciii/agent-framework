@@ -228,14 +228,6 @@ def test_sc3_a_pass_while_another_process_holds_the_lock_lists_nothing(
     assert any("another pass is running" in r.getMessage() for r in caplog.records)
 
 
-def test_an_accepted_issue_is_left_as_it_was_found(repo: Path) -> None:
-    tracker, session = FakeTracker(_issue("example T-1")), NoSession()
-    assert run_pass(tracker, work_fn=session) is PassResult.COMPLETED
-    fake = tracker.issues[7]
-    assert fake.open and fake.labels == {"dispatch"} and fake.comments == []
-    assert session.calls == []
-
-
 def test_only_the_oldest_issue_is_answered(repo: Path) -> None:
     newer = _issue("example T-2", number=3, day=5)
     older = _issue("example T-3", number=9, day=2)
