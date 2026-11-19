@@ -61,6 +61,33 @@ def open_pr(
     return url
 
 
+def open_pr_url(branch: str, *, run: Runner = run_command) -> str | None:
+    """The address of the open pull request for `branch`, if there is one."""
+    url = run(
+        ["gh", "pr", "list", "--head", branch, "--state", "open",
+         "--json", "url", "--jq", ".[0].url // empty"]
+    ).strip()
+    return url or None
+
+
+_INTERRUPTED = (
+    "This pull request was opened after an interrupted run: the branch had "
+    "been pushed, but no pull request was opened for it."
+)
+
+
+def open_pr_for_pushed(
+    task: TaskSpec, result: SessionResult | None, branch: str, *, run: Runner = run_command
+) -> str:
+    """Open the declared PR for a branch already on the remote; nothing is
+    pushed. The body is the result file's when one survives, otherwise it
+    says the run was interrupted (specs/dispatch-from-issue R-16)."""
+    body = _pr_body(task, result or SessionResult("completed", _INTERRUPTED))
+    return run(
+        ["gh", "pr", "create", "--head", branch, "--title", _pr_title(task), "--body", body]
+    ).strip()
+
+
 def write_escalation(
     task: TaskSpec, result: SessionResult, *, specs_dir: Path = Path("specs")
 ) -> Path:

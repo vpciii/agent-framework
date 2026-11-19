@@ -11,6 +11,7 @@ sketch) — task ids repeat across specs, and isolation must hold globally.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 from ..errors import WorktreeError
@@ -116,6 +117,33 @@ def add_detached(path: Path, commit: str, *, run: Runner = run_command) -> Path:
     _ignore_result_file(run)
     run(["git", "worktree", "add", "--detach", str(path), commit])
     return path
+
+
+def branch_exists(branch: str, *, run: Runner = run_command) -> bool:
+    """Whether the branch exists locally."""
+    return bool(run(["git", "branch", "--list", branch]).strip())
+
+
+def on_remote(branch: str, *, run: Runner = run_command) -> bool:
+    """Whether the branch exists on the base remote (asked of the remote itself)."""
+    return bool(run(["git", "ls-remote", "--heads", BASE_REMOTE, branch]).strip())
+
+
+def set_aside(task: TaskSpec, *, run: Runner = run_command) -> str | None:
+    """Keep an earlier attempt and clear the way for a fresh one: the task's
+    branch, if any, is renamed `attempt/<slug>-<task>-<UTC time>` and its
+    worktree, if any, removed. Nothing committed is deleted
+    (specs/dispatch-from-issue R-17). Returns the new branch name, if renamed.
+    """
+    path, branch = derive(task)
+    kept = None
+    if branch_exists(branch, run=run):
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        kept = f"attempt/{task.spec_slug}-{task.task_id.lower()}-{stamp}"
+        run(["git", *NO_HOOKS, "branch", "-m", branch, kept])
+    if path.exists():
+        remove_worktree(path, run=run)
+    return kept
 
 
 def remove_worktree(path: Path, *, run: Runner = run_command) -> None:

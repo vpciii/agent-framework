@@ -13,34 +13,53 @@ import time
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Literal
 
 from ..alerts import GhIssueTracker, IssueTracker, Push, notify, push_from_env
-from ..errors import SessionTimeoutError, SpendLimitError, WorkerError
+from ..errors import SessionResultError, SessionTimeoutError, SpendLimitError, WorkerError
 from ..proc import Runner, run_command
 from ..project import DEFAULTS, ProjectConfig
 from ..roster import Roster
-from .brief import build_brief, parse_task, parse_task_at
+from .brief import build_brief, parse_task, parse_task_at, resume_brief
 from .confinement import profile_args, session_env
-from .handoff import open_pr, write_escalation, write_handoff_note
+from .handoff import (
+    HANDOFF_FILE,
+    open_pr,
+    open_pr_for_pushed,
+    open_pr_url,
+    write_escalation,
+    write_handoff_note,
+)
 from .handoff_check import check_handoff
 from .session import (
     DEFAULT_SPEND_LIMIT_USD,
+    RESULT_FILE,
     SessionRunner,
     check_spend_limit,
     read_end,
+    read_result,
     run_claude,
     run_session,
 )
 from .types import (
     Escalated,
     HandoffRefused,
+    PrAlreadyOpen,
     PrOpened,
+    SessionResult,
     SpendLimitReached,
     TaskSpec,
     TimedOut,
     WorkerOutcome,
 )
-from .worktree import WORKTREES_DIR, create_worktree, remove_worktree
+from .worktree import (
+    WORKTREES_DIR,
+    create_worktree,
+    derive,
+    on_remote,
+    remove_worktree,
+    set_aside,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +109,56 @@ def _read_roots(run: Runner) -> tuple[str, ...]:
     return tuple(roots)
 
 
+def _surviving_result(worktree: Path) -> SessionResult | None:
+    """The result file an earlier session left, if the worktree holds a valid one."""
+    if not (worktree / RESULT_FILE).is_file():
+        return None
+    try:
+        return read_result(worktree)
+    except SessionResultError:
+        return None
+
+
+def _start_again(
+    task: TaskSpec, brief: str, *, run: Runner
+) -> PrOpened | PrAlreadyOpen | tuple[Path, str, str] | None:
+    """Decide from the remote and the disk what starting the task again does,
+    in the order of the plan's table (specs/dispatch-from-issue):
+
+    an open PR → `PrAlreadyOpen`; the branch pushed with none → the PR is
+    opened, `PrOpened`; a worktree holding a handoff note → (worktree,
+    branch, brief with the note) to resume in; a worktree or branch with no
+    note → set aside, then None; nothing → None (a fresh worktree, as ever).
+    """
+    worktree, branch = derive(task)
+    tag = f"worker {task.spec_slug}/{task.task_id}"
+    url = open_pr_url(branch, run=run)
+    if url is not None:
+        logger.info("%s: PR ALREADY OPEN %s — no session", tag, url)
+        return PrAlreadyOpen(url=url, branch=branch, task_id=task.task_id)
+    if on_remote(branch, run=run):
+        url = open_pr_for_pushed(task, _surviving_result(worktree), branch, run=run)
+        if worktree.exists():
+            remove_worktree(worktree, run=run)
+        logger.info("%s: branch already pushed — PR OPENED %s, no session", tag, url)
+        return PrOpened(url=url, branch=branch, task_id=task.task_id)
+    note = worktree / HANDOFF_FILE
+    if note.is_file():
+        # The note joins the brief, then leaves the tree with any old result
+        # file: the resumed session can neither commit the one nor be judged
+        # by the other. The branch keeps its base; the note and the handoff
+        # check measure from its merge base with the remote's main.
+        resumed = resume_brief(brief, note.read_text(encoding="utf-8"))
+        note.unlink()
+        (worktree / RESULT_FILE).unlink(missing_ok=True)
+        logger.info("%s: resuming in %s on %s", tag, worktree, branch)
+        return worktree, branch, resumed
+    kept = set_aside(task, run=run)
+    if kept is not None:
+        logger.info("%s: earlier attempt kept on %s — starting afresh", tag, kept)
+    return None
+
+
 def work(
     spec_slug: str,
     task_id: str,
@@ -105,6 +174,7 @@ def work(
     tracker: IssueTracker | None = None,
     push_factory: Callable[[], Push | None] = push_from_env,
     at: str | None = None,
+    existing: Literal["refuse", "continue"] = "refuse",
 ) -> WorkerOutcome:
     """Dispatch one task to one headless session; return its outcome.
 
@@ -112,7 +182,13 @@ def work(
     they are at that commit (never the working files) and the worktree is
     cut there, with no fetch (specs/dispatch-from-issue R-7). Without it,
     the working files and the freshly fetched remote main, as ever (R-22).
+
+    `existing` says what to do with what an earlier run left for the task:
+    `"refuse"` (the default) refuses a worktree or branch left behind, as
+    ever (R-22); `"continue"` starts again (`_start_again`, R-14, R-16, R-17).
     """
+    if existing not in ("refuse", "continue"):
+        raise WorkerError(f"existing must be 'refuse' or 'continue', not {existing!r}")
     worker = roster.resolve("worker")
     check_spend_limit(spend_limit_usd)  # refused before anything runs
     if worker.effort is not None:
@@ -130,7 +206,16 @@ def work(
     brief = build_brief(task, project)
     logger.info("worker %s/%s: brief built (%d criteria)", spec_slug, task_id, len(task.criteria))
 
-    worktree, branch = create_worktree(task, at=at, run=run)
+    if existing == "continue":
+        again = _start_again(task, brief, run=run)
+        if isinstance(again, PrOpened | PrAlreadyOpen):
+            return again
+        if again is not None:
+            worktree, branch, brief = again
+        else:
+            worktree, branch = create_worktree(task, at=at, run=run)
+    else:
+        worktree, branch = create_worktree(task, at=at, run=run)
     logger.info("worker %s/%s: worktree %s on %s", spec_slug, task_id, worktree, branch)
 
     model = worker.model

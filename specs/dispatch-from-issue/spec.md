@@ -317,11 +317,11 @@ All six were answered by vpc on 2026-11-18, each as recommended.
 | SC-8 | R-10 | *(pending)* |
 | SC-9 | R-11, R-12 | *(pending)* |
 | SC-10 | R-13 | *(pending)* |
-| SC-11 | R-14 | *(pending)* |
+| SC-11 | R-14 | `tests/worker/test_starting_again.py::test_sc11_a_stopped_run_resumes_in_its_worktree_with_the_note` |
 | SC-12 | R-15 | *(pending)* |
-| SC-13 | R-16 | *(pending)* |
-| SC-14 | R-17 | *(pending)* |
+| SC-13 | R-16 | `tests/worker/test_starting_again.py::test_sc13_a_pushed_branch_without_a_pr_gets_one_and_no_session`, `tests/worker/test_starting_again.py::test_sc13_with_no_worktree_left_the_pr_says_the_run_was_interrupted`, `tests/worker/test_starting_again.py::test_sc13_an_open_pr_is_named_and_no_session_starts` |
+| SC-14 | R-17 | `tests/worker/test_starting_again.py::test_sc14_a_run_left_by_an_escalation_or_refusal_starts_afresh` |
 | SC-15 | R-18 | *(pending)* |
 | SC-16 | R-19 | *(pending)* |
 | SC-17 | R-20 | *(pending)* |
-| SC-18 | R-22 | `tests/worker/test_at_commit.py::test_sc18_with_no_commit_work_issues_the_commands_it_issued_before`, `tests/worker/test_at_commit.py::test_sc18_an_existing_worktree_or_branch_is_still_refused` |
+| SC-18 | R-22 | `tests/worker/test_at_commit.py::test_sc18_with_no_commit_work_issues_the_commands_it_issued_before`, `tests/worker/test_at_commit.py::test_sc18_an_existing_worktree_or_branch_is_still_refused`, `tests/worker/test_starting_again.py::test_sc18_by_default_a_worktree_or_branch_left_behind_is_refused` |
