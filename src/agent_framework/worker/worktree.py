@@ -30,6 +30,12 @@ BASE_REF = f"{BASE_REMOTE}/{BASE_BRANCH}"
 # has been in it carries this: the session could have written a hook, and
 # the orchestrator must never execute one (ADR 0007, worker-confinement R-9).
 NO_HOOKS = ("-c", "core.hooksPath=/dev/null")
+# The note a stopped session's worktree carries for the next session —
+# `handoff.HANDOFF_FILE`, named here because `handoff` imports this module.
+HANDOFF_FILE = "HANDOFF.md"
+# What the exclude file must list: files the orchestrator writes into a
+# worker's tree that no commit should carry.
+EXCLUDED = (RESULT_FILE, HANDOFF_FILE)
 
 
 def derive(task: TaskSpec) -> tuple[Path, str]:
@@ -39,10 +45,11 @@ def derive(task: TaskSpec) -> tuple[Path, str]:
 
 
 def _ignore_result_file(run: Runner) -> None:
-    """Record RESULT_FILE in the repository's exclude file, once.
+    """Record each of EXCLUDED in the repository's exclude file, once.
 
     The exclude file is shared by every worktree and tracked by nothing, so
-    the result file is ignored without touching any tracked file.
+    the result file and the handoff note are ignored without touching any
+    tracked file.
     """
     located = run(
         ["git", "rev-parse", "--path-format=absolute", "--git-path", "info/exclude"]
@@ -54,21 +61,32 @@ def _ignore_result_file(run: Runner) -> None:
         )
     exclude = Path(located)
     existing = exclude.read_text(encoding="utf-8") if exclude.exists() else ""
-    if RESULT_FILE in existing.splitlines():
+    missing = [e for e in EXCLUDED if e not in existing.splitlines()]
+    if not missing:
         return
     exclude.parent.mkdir(parents=True, exist_ok=True)
     if existing and not existing.endswith("\n"):
         existing += "\n"
-    exclude.write_text(existing + RESULT_FILE + "\n", encoding="utf-8")
+    exclude.write_text(existing + "".join(f"{e}\n" for e in missing), encoding="utf-8")
 
 
-def create_worktree(task: TaskSpec, *, run: Runner = run_command) -> tuple[Path, str]:
-    """Create the task's fresh worktree + branch; loud on any collision."""
+def create_worktree(
+    task: TaskSpec, *, at: str | None = None, run: Runner = run_command
+) -> tuple[Path, str]:
+    """Create the task's fresh worktree + branch; loud on any collision.
+
+    With `at`, the tree is cut at exactly that commit and nothing is fetched
+    (the caller already holds the commit it read the task at).
+    """
     path, branch = derive(task)
     if path.exists():
         raise WorktreeError(f"worktree already exists: {path} — remove it or finish the task")
     if run(["git", "branch", "--list", branch]).strip():
         raise WorktreeError(f"branch already exists: {branch} — no silent reuse")
+    if at is not None:
+        _ignore_result_file(run)
+        run(["git", "worktree", "add", "--no-track", str(path), "-b", branch, at])
+        return path, branch
     # Cut from the freshly fetched remote main, never from the orchestrator's
     # checkout or its local `main` — a worker PR must contain only its own
     # work, on top of what is actually merged.

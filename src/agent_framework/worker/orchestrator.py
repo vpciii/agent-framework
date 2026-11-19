@@ -19,7 +19,7 @@ from ..errors import SessionTimeoutError, SpendLimitError, WorkerError
 from ..proc import Runner, run_command
 from ..project import DEFAULTS, ProjectConfig
 from ..roster import Roster
-from .brief import build_brief, parse_task
+from .brief import build_brief, parse_task, parse_task_at
 from .confinement import profile_args, session_env
 from .handoff import open_pr, write_escalation, write_handoff_note
 from .handoff_check import check_handoff
@@ -104,8 +104,15 @@ def work(
     session_run: SessionRunner = run_claude,
     tracker: IssueTracker | None = None,
     push_factory: Callable[[], Push | None] = push_from_env,
+    at: str | None = None,
 ) -> WorkerOutcome:
-    """Dispatch one task to one headless session; return its outcome."""
+    """Dispatch one task to one headless session; return its outcome.
+
+    With `at`, a commit, the task is read from `tasks.md` and `spec.md` as
+    they are at that commit (never the working files) and the worktree is
+    cut there, with no fetch (specs/dispatch-from-issue R-7). Without it,
+    the working files and the freshly fetched remote main, as ever (R-22).
+    """
     worker = roster.resolve("worker")
     check_spend_limit(spend_limit_usd)  # refused before anything runs
     if worker.effort is not None:
@@ -115,11 +122,15 @@ def work(
             f"the worker's roster binding sets effort = {worker.effort!r}, which the "
             "worker session does not take; remove it from the worker's binding"
         )
-    task = parse_task(spec_slug, task_id, specs_dir=specs_dir)
+    if at is None:
+        task = parse_task(spec_slug, task_id, specs_dir=specs_dir)
+    else:
+        # Refused here, before any worktree exists, if either is missing at `at`.
+        task = parse_task_at(spec_slug, task_id, at, specs_root=_specs_root(specs_dir), run=run)
     brief = build_brief(task, project)
     logger.info("worker %s/%s: brief built (%d criteria)", spec_slug, task_id, len(task.criteria))
 
-    worktree, branch = create_worktree(task, run=run)
+    worktree, branch = create_worktree(task, at=at, run=run)
     logger.info("worker %s/%s: worktree %s on %s", spec_slug, task_id, worktree, branch)
 
     model = worker.model

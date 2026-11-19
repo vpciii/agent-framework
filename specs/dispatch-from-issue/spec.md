@@ -311,7 +311,7 @@ All six were answered by vpc on 2026-11-18, each as recommended.
 | SC-2 | R-3 | `tests/dispatch/test_issue.py::test_sc2_no_author_and_disabled_are_each_reported_as_off`, `tests/test_project_config.py::test_sc2_no_author_and_enabled_false_are_each_off` |
 | SC-3 | R-4, R-5 | *(pending)* |
 | SC-4 | R-6 | `tests/dispatch/test_issue.py::test_sc4_a_title_beyond_a_slug_and_a_task_id_is_refused`, `tests/dispatch/test_issue.py::test_sc4_only_the_matched_slug_and_task_id_come_from_the_title` |
-| SC-5 | R-7 | *(pending)* |
+| SC-5 | R-7 | `tests/worker/test_at_commit.py::test_sc5_the_brief_and_the_worktree_come_from_the_commit_not_the_working_files`, `tests/worker/test_at_commit.py::test_sc5_with_a_commit_nothing_is_fetched_and_the_tree_is_cut_there`, `tests/worker/test_at_commit.py::test_sc5_a_commit_without_the_spec_or_the_task_is_refused_before_any_worktree` |
 | SC-6 | R-8 | *(pending)* |
 | SC-7 | R-9 | *(pending)* |
 | SC-8 | R-10 | *(pending)* |
@@ -324,4 +324,4 @@ All six were answered by vpc on 2026-11-18, each as recommended.
 | SC-15 | R-18 | *(pending)* |
 | SC-16 | R-19 | *(pending)* |
 | SC-17 | R-20 | *(pending)* |
-| SC-18 | R-22 | *(pending)* |
+| SC-18 | R-22 | `tests/worker/test_at_commit.py::test_sc18_with_no_commit_work_issues_the_commands_it_issued_before`, `tests/worker/test_at_commit.py::test_sc18_an_existing_worktree_or_branch_is_still_refused` |

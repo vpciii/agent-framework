@@ -8,10 +8,12 @@ conversation context. Everything else in the brief is fixed convention text.
 from __future__ import annotations
 
 import re
+import tempfile
 from pathlib import Path
 
 from ..artifacts import criterion_text, section, task_block
 from ..errors import UnknownTaskError
+from ..proc import Runner, run_command
 from ..project import DEFAULTS, ProjectConfig
 from .types import TaskSpec
 
@@ -128,6 +130,48 @@ def parse_task(spec_slug: str, task_id: str, *, specs_dir: Path = Path("specs"))
         criterion_texts=criterion_texts,
         requirements=section(spec_text, "Requirements"),
     )
+
+
+class ArtifactUnreadableError(UnknownTaskError):
+    """A spec artifact could not be read at the commit given (`git show` failed)."""
+
+    def __init__(self, source: str, commit: str, reason: str) -> None:
+        super().__init__(f"cannot read {source} at {commit}: {reason}")
+        self.source = source
+        self.commit = commit
+        self.reason = reason
+
+
+def parse_task_at(
+    spec_slug: str,
+    task_id: str,
+    commit: str,
+    *,
+    specs_root: str = "specs",
+    repo: Path = Path("."),
+    run: Runner = run_command,
+) -> TaskSpec:
+    """`parse_task` over `tasks.md` and `spec.md` as they are at `commit`,
+    read with `git show` — never from the working files.
+
+    An artifact git cannot show raises `ArtifactUnreadableError`; any other
+    gap is `parse_task`'s own `UnknownTaskError`, its paths given under
+    `specs_root`.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        spec_dir = Path(tmp) / spec_slug
+        spec_dir.mkdir()
+        for name in ("tasks.md", "spec.md"):
+            source = f"{specs_root}/{spec_slug}/{name}"
+            try:
+                text = run(["git", "-C", str(repo), "show", f"{commit}:{source}"])
+            except RuntimeError as e:
+                raise ArtifactUnreadableError(source, commit, str(e)) from None
+            (spec_dir / name).write_text(text, encoding="utf-8")
+        try:
+            return parse_task(spec_slug, task_id, specs_dir=Path(tmp))
+        except UnknownTaskError as e:
+            raise UnknownTaskError(str(e).replace(tmp, specs_root)) from None
 
 
 def branch_name(task: TaskSpec) -> str:
