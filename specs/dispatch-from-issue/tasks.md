@@ -5,6 +5,9 @@
   departures from the plan described below (eight tasks where its
   rollout lists five; the existing `dispatch.py` moved into the new
   package)
+- **Amended:** 2026-11-19 — T-9 added after T-6's review, and T-8 made
+  to wait for it (*One task added*, below). Proposed; awaiting vpc's
+  sign-off.
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
@@ -17,14 +20,14 @@ and name `specs/dispatch-from-issue/` in their body.
 **DAG:** one at a time, in order. T-1 and T-2 touch different code but
 neighbouring Traceability rows, so they are not run side by side. T-2 →
 T-3; T-1 → T-4; T-5 after T-3 and T-4; T-5 → T-6 → T-7 (all three change
-`tick.py`); T-8 after T-7.
+`tick.py`); T-9 after T-7 (it changes `tick.py` too); T-8 after T-9.
 
 **Criterion coverage:** SC-1 → T-1 (the decision), T-4 (no session for a
 refused issue), T-5 (a session for the accepted one, the oldest only) ·
 SC-2 → T-1 (the configuration), T-4 · SC-3 → T-4 (the lock), T-5 (the
 claim) · SC-4 → T-1 (the longer title), T-5 (the marker text) · SC-5 →
 T-2 · SC-6 → T-6 · SC-7, SC-8 → T-5 · SC-9 → T-4 (refusals), T-5
-(endings) · SC-10 → T-7 · SC-11, SC-14 → T-3 · SC-12 → T-6 · SC-13 → T-3
+(endings) · SC-10 → T-7 · SC-11, SC-14 → T-3 · SC-12 → T-6, T-9 (recovery made safe) · SC-13 → T-3
 (the worker's half), T-5 (the comment) · SC-15, SC-16 → T-7 · SC-17 →
 T-7, T-8 (the live half) · SC-18 → T-2 (the same commands), T-3 (still refuses). A criterion
 claimed by more than one task is complete when the last of them merges;
@@ -67,13 +70,61 @@ and which alert fired. **T-8 is not for dispatch:** it needs the host,
 `agent-framework.toml` is a protected path, and the Home Assistant
 change is made on vpc's word.
 
+**Dispatch tally.** Cost and time are what the session record reports.
+
+| Task | Pull request | Merged without rework | Time | Cost | Alert |
+|---|---|---|---|---|---|
+| T-1 | #151 | yes | 3m 40s | $1.05 | none |
+| T-2 | #152 | yes | 3m 19s | $0.97 | none |
+| T-3 | #153 | yes | 3m 34s | $1.21 | none |
+| T-4 | #154 | yes | 4m 12s | $1.24 | none |
+| T-5 | #156, opened by hand | yes — the worker's changes, unchanged | 5m 31s | $1.48 | escalation (#155): the session's own permission layer refused `git commit` |
+| T-6 | #157 | yes | 7m 18s | $2.13 | none |
+| T-7 | #158 | yes | 5m 37s | $1.60 | none |
+
+Seven tasks, seven pull requests merged with none of the worker's code
+reworked, $9.68, about 33 minutes of session time, one alert.
+
+- **T-5's escalation was not about the contract.** The work was done
+  and the gate green, but the commit command was refused: its message
+  held text the CLI's shell check wants a person to approve (angle
+  brackets, braces beside quotes), a headless session has nobody to
+  approve, and the refusal told the session not to try again. On vpc's
+  word the chief committed the worker's changes from its worktree,
+  unchanged, ran `check_handoff` on the commit (no findings) and the
+  gate (green), and opened #156. T-6 and T-7 met the same refusal and
+  worked round it. An unattended run that does not work round it ends
+  as T-5 did: an alert and no pull request. Not yet fixed.
+- **Sizes.** Lines added, tests included: 289 (T-2) to 701 (T-4); five
+  of the seven passed 400. The validator rejected none for size.
+- **Found in review, not by a test.** T-6's recovery trusts two things
+  the plan did not question; T-9 below is the fix. `worker/__main__.py`
+  prints an outcome it does not know as `timed_out`, and it does not
+  know `PrAlreadyOpen`; nothing reaches that today, since the command
+  never passes `existing="continue"`.
+
+**One task added (2026-11-19).** T-6 does what the plan's step 2 says,
+and reading it showed two cases the plan did not consider. Neither can
+happen until the schedule is on, so T-9 fixes both before T-8.
+
+- **The recorded process group may no longer be the session's.** A run
+  most often dies because the Mac restarts or sleeps, and after a
+  restart the number in the lock file may belong to another program,
+  which recovery would stop. The plan guards the lock against a reused
+  process id (*Alternatives considered*) but not the stop.
+- **A run can die before its worktree exists.** The run is recorded
+  before `work()` cuts the worktree. Recovery then creates the folder to
+  hold the handoff note, and the next dispatch issue takes that folder
+  for a worktree to resume in — a plain folder inside the checkout,
+  where the session's git commands act on the checkout itself.
+
 Names the later tasks rely on, fixed here so each brief stands alone:
 `work(..., at=None, existing="refuse")`; the outcome `PrAlreadyOpen`;
 `agent_framework.dispatch.issue.decide`; `agent_framework.dispatch.tick.run_pass`.
 
 ---
 
-### [ ] T-1 — The decision: the `[dispatch]` table, the title, and whether an issue may start a run
+### [x] T-1 — The decision: the `[dispatch]` table, the title, and whether an issue may start a run (#151)
 - **Satisfies:** SC-1, SC-2, SC-4
 - **Depends on:** —
 - **Touches:** `src/agent_framework/dispatch.py` →
@@ -112,7 +163,7 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   another separator, with other letter case, and with leading or
   trailing space is refused. The gate passes.
 
-### [ ] T-2 — The worker reads its task at a commit
+### [x] T-2 — The worker reads its task at a commit (#152)
 - **Satisfies:** SC-5, SC-18
 - **Depends on:** —
 - **Touches:** `src/agent_framework/worker/orchestrator.py`,
@@ -144,7 +195,7 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   written out in the test. The worker's and the eval's existing tests
   pass unmodified. The gate passes.
 
-### [ ] T-3 — Starting again: resume, afresh, and a branch already pushed
+### [x] T-3 — Starting again: resume, afresh, and a branch already pushed (#153)
 - **Satisfies:** SC-11, SC-13, SC-14, SC-18
 - **Depends on:** T-2
 - **Touches:** `src/agent_framework/worker/orchestrator.py`,
@@ -190,7 +241,7 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   existing worktree and an existing branch with today's messages. The
   gate passes.
 
-### [ ] T-4 — A pass that refuses: the command, the lock, the list, the comment and the close
+### [x] T-4 — A pass that refuses: the command, the lock, the list, the comment and the close (#154)
 - **Satisfies:** SC-1, SC-2, SC-3, SC-9
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/dispatch/tick.py` (new),
@@ -233,7 +284,7 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   marker text carried in the issue's title is not in the comment. The
   entry-point test covers the new command. The gate passes.
 
-### [ ] T-5 — A pass that runs: the claim, the session, the outcome on the issue
+### [x] T-5 — A pass that runs: the claim, the session, the outcome on the issue (#156)
 - **Satisfies:** SC-1, SC-3, SC-4, SC-7, SC-8, SC-9, SC-13
 - **Depends on:** T-3, T-4
 - **Touches:** `src/agent_framework/dispatch/tick.py`,
@@ -276,7 +327,7 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   closed issue; a test citing SC-13 shows the comment for an open pull
   request names it. The gate passes.
 
-### [ ] T-6 — The checkout, and a run that died
+### [x] T-6 — The checkout, and a run that died (#157)
 - **Satisfies:** SC-6, SC-12
 - **Depends on:** T-5
 - **Touches:** `src/agent_framework/dispatch/tick.py`,
@@ -318,7 +369,7 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   dispatch issue for the same task then resumes in that worktree. The
   gate passes.
 
-### [ ] T-7 — When it stops working: the `failed` alert, the CLI version, three failed passes, the heartbeat
+### [x] T-7 — When it stops working: the `failed` alert, the CLI version, three failed passes, the heartbeat (#158)
 - **Satisfies:** SC-10, SC-15, SC-16, SC-17
 - **Depends on:** T-6
 - **Touches:** `src/agent_framework/dispatch/tick.py`,
@@ -366,9 +417,46 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   an issue, none for a failed pass, and the same outcome and exit
   status with no address and with one that refuses. The gate passes.
 
+### [ ] T-9 — Recovery stops only its own session, and resumes only a real worktree
+- **Satisfies:** SC-12
+- **Depends on:** T-7
+- **Touches:** `src/agent_framework/dispatch/tick.py`,
+  `src/agent_framework/dispatch/lock.py`,
+  `src/agent_framework/worker/session.py`,
+  `tests/dispatch/test_recovery.py`,
+  `specs/dispatch-from-issue/spec.md` (Traceability rows)
+- **Brief:** Two changes to the recovery T-6 built (`_Pass.recover` in
+  `tick.py`); nothing else about a pass changes. **Stop only the
+  session.** When the session starts, record beside its process group
+  the time the operating system gives for when that process started
+  (what `ps -o lstart= -p <pid>` prints, read once in the callback
+  `run_claude` already calls). At recovery, ask the same of the recorded
+  number: stop the group only when a process with that number exists
+  and reports the same start time. Otherwise send no signal and log
+  that the session is already gone. A lock file written before this
+  change, with a group and no start time, is treated as already gone.
+  **Resume only a real worktree.** At recovery, write the handoff note
+  only when the run's recorded worktree is one of the repository's
+  worktrees (`git worktree list --porcelain` names it). When it is not —
+  the run died before its worktree was cut — create nothing: raise the
+  `timeout` alert, comment on and close the issue, and clear the record
+  as now, with the alert and the comment saying the run stopped before
+  it started work and that a new dispatch issue starts it afresh. That
+  wording is fixed, in `report.py`'s style, and carries nothing from the
+  issue. Tests use a real repository and real processes, as T-6's do.
+- **Done when:** tests citing SC-12 show that recovery sends no signal
+  to a live process that has the recorded number but another start
+  time, and does stop a live session whose number and start time both
+  match; that a lock file with a group and no start time stops nothing;
+  that for a run whose worktree was never cut, recovery leaves no folder
+  at the worktree's path, raises the alert, comments on and closes the
+  issue and clears the record, and a dispatch issue for the same task
+  then runs in a fresh worktree cut from `origin/main`; and T-6's
+  existing SC-12 tests pass unmodified. The gate passes.
+
 ### [ ] T-8 — Delivery: the host, the switch, the schedule, the heartbeat check, the docs, the live check
 - **Satisfies:** SC-17
-- **Depends on:** T-7
+- **Depends on:** T-7, T-9
 - **Touches:** `agent-framework.toml`, `docs/architecture.md`,
   `docs/adoption.md`, `specs/dispatch-from-issue/spec.md` (Status),
   `specs/dispatch-from-issue/tasks.md`; outside the repository: a
