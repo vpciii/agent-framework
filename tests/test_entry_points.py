@@ -13,12 +13,14 @@ import importlib.metadata
 
 import pytest
 
+from agent_framework.dispatch.__main__ import main as dispatch_main
 from agent_framework.validator.__main__ import main as validator_main
 from agent_framework.worker.__main__ import main as worker_main
 
 _EXPECTED = {
     "agent-framework-worker": "agent_framework.worker.__main__:main",
     "agent-framework-validate": "agent_framework.validator.__main__:main",
+    "agent-framework-dispatch": "agent_framework.dispatch.__main__:main",
 }
 
 
@@ -28,7 +30,7 @@ def _entry_points() -> dict[str, importlib.metadata.EntryPoint]:
 
 
 def test_sc4_entry_points_declared_in_packaging_metadata() -> None:
-    """SC-4: both console commands are registered and map to the documented targets."""
+    """SC-4: the console commands are registered and map to the documented targets."""
     found = _entry_points()
     assert set(found) == set(_EXPECTED)
     assert {name: ep.value for name, ep in found.items()} == _EXPECTED
@@ -66,3 +68,16 @@ def test_sc4_validate_entry_point_help_behaves_like_python_dash_m(
         loaded(["--help"])
     assert exc_info.value.code == 0
     capsys.readouterr()
+
+
+def test_dispatch_entry_point_loads_the_same_main_as_python_dash_m(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """`agent-framework-dispatch` loads dispatch.__main__.main itself, and its
+    --help exits 0 as `python -m agent_framework.dispatch --help` does."""
+    loaded = _entry_points()["agent-framework-dispatch"].load()
+    assert loaded is dispatch_main
+    with pytest.raises(SystemExit) as exc_info:
+        loaded(["--help"])
+    assert exc_info.value.code == 0
+    assert "--spend-limit" in capsys.readouterr().out
