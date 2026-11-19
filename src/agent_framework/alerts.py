@@ -54,10 +54,16 @@ def notify(
     tracker: IssueTracker,
     push: Push | None,
     update_existing: bool = False,
+    quiet_if_open: bool = False,
 ) -> AlertReport:
-    """Record the alert as a GitHub issue, then push; report each outcome."""
+    """Record the alert as a GitHub issue, then push; report each outcome.
+
+    With `quiet_if_open`, a condition whose issue is already open is not
+    pushed again: a check that raises it on every pass reaches the phone once.
+    """
     tag = marker(kind, key)
     url: str | None = None
+    already_open: int | None = None
     try:
         found = tracker.find_open(kind, tag)
         if found is None:
@@ -65,6 +71,7 @@ def notify(
             issue = f"opened #{url.rsplit('/', 1)[-1]}"
         else:
             number, url = found
+            already_open = number
             if update_existing:
                 tracker.update(number, body)
                 issue = f"updated #{number}"
@@ -73,6 +80,8 @@ def notify(
     except Exception as e:  # noqa: BLE001 — a failed channel is reported, never fatal (R-7)
         issue = f"failed: {_one_line(e)}"
 
+    if quiet_if_open and already_open is not None:
+        return AlertReport(issue, f"skipped: already reported in #{already_open}", url)
     if push is None:
         return AlertReport(issue, f"skipped: {WEBHOOK_ENV} not set", url)
     try:

@@ -15,6 +15,13 @@ run marked finished.
 Every step logs one line. A fetch or a listing that fails is a failed pass; a
 checkout that cannot be used is a refused one; anything else that ends the
 pass early (another pass running, dispatch off, no issue) is a completed one.
+
+When it stops working (R-13, R-18 to R-20): a run that raised an error raises
+a `failed` alert naming its kind; a configured CLI version the installed CLI
+does not report starts no session and raises one; failed passes are counted
+in `.worktrees/dispatch-state.json` and the third in a row raises one; a
+completed pass sends the heartbeat. The alerts the tick raises about itself
+reach the phone once per condition, not once per pass.
 """
 
 from __future__ import annotations
@@ -37,18 +44,32 @@ from ..project import ProjectConfig, load_project_config
 from ..roster import Roster
 from ..worker.brief import parse_task_at
 from ..worker.handoff import write_handoff_note
-from ..worker.orchestrator import work
-from ..worker.session import DEFAULT_SPEND_LIMIT_USD, run_claude, stop_group
+from ..worker.orchestrator import RECORDS_DIR, work
+from ..worker.session import (
+    DEFAULT_SPEND_LIMIT_USD,
+    claude_code_version,
+    last_line,
+    run_claude,
+    stop_group,
+)
 from ..worker.types import TaskSpec, WorkerOutcome
 from ..worker.worktree import BASE_BRANCH, BASE_REF, BASE_REMOTE, WORKTREES_DIR
 from . import lock
 from .issue import Accepted, Issue, decide, oldest, parse_title
 from .report import (
+    FAILED_PASSES_ALERT_AT,
     CheckoutRefusal,
     checkout_alert,
+    count_failed_pass,
     dead_run_comment,
+    failed_passes_alert,
+    failure_alert,
     refusal_comment,
+    reported_version,
+    reset_failed_passes,
     run_comment,
+    send_heartbeat,
+    version_alert,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,6 +80,11 @@ LABEL = "dispatch"
 LIST_FIELDS = "number,title,author,createdAt"
 # The kind and key every refused-checkout alert is raised under: one issue.
 CHECKOUT_ALERT = ("failed", "dispatch/checkout")
+# Likewise for a CLI version mismatch and for failed passes in a row.
+CLI_VERSION_ALERT = ("failed", "dispatch/cli-version")
+FAILED_PASSES_ALERT = ("failed", "dispatch/failed-passes")
+# The failed-pass count, beside the lock file (R-19).
+STATE_FILE = WORKTREES_DIR / "dispatch-state.json"
 
 WorkFn = Callable[..., WorkerOutcome]
 # `run_claude`'s shape: the session seam plus `on_start`, a keyword told the
@@ -133,6 +159,7 @@ def run_pass(
     session_run: StartingSessionRunner = run_claude,
     alert_tracker: IssueTracker | None = None,
     push_factory: Callable[[], Push | None] = push_from_env,
+    heartbeat: Callable[[], str] = send_heartbeat,
     restarted: bool = False,
 ) -> PassResult:
     """One pass; held under the lock for its whole length (R-1, R-5).
@@ -141,23 +168,33 @@ def run_pass(
     pass that only refuses never uses them. A pass whose fast-forward moved
     the checkout returns `RESTART` before reading anything else, unless
     `restarted` marks it as the pass the command already started again.
+    A completed pass then sends `heartbeat`, whose outcome is only logged.
     """
     with lock.hold(repo / lock.LOCK_FILE) as taken:
         if not taken:
             logger.info("dispatch: another pass is running — nothing to do")
-            return PassResult.COMPLETED
-        logger.info("dispatch: lock taken")
-        p = _Pass(tracker, repo, run, limits, work_fn, session_run, alert_tracker,
-                  push_factory)
-        if not p.recover():
-            return PassResult.FAILED
-        refused = p.checkout()
-        if refused is not None:
-            return refused
-        if p.moved and not restarted:
-            logger.info("dispatch: the checkout moved — starting again on the fetched code")
-            return PassResult.RESTART
-        return _locked_pass(p)
+            result = PassResult.COMPLETED
+        else:
+            logger.info("dispatch: lock taken")
+            p = _Pass(tracker, repo, run, limits, work_fn, session_run, alert_tracker,
+                      push_factory)
+            result = _steps(p, restarted)
+            p.count(result)
+    if result is PassResult.COMPLETED:
+        logger.info("dispatch: heartbeat — %s", heartbeat())
+    return result
+
+
+def _steps(p: _Pass, restarted: bool) -> PassResult:
+    if not p.recover():
+        return PassResult.FAILED
+    refused = p.checkout()
+    if refused is not None:
+        return refused
+    if p.moved and not restarted:
+        logger.info("dispatch: the checkout moved — starting again on the fetched code")
+        return PassResult.RESTART
+    return _locked_pass(p)
 
 
 @dataclass
@@ -179,13 +216,28 @@ class _Pass:
     def git(self, *args: str) -> str:
         return self.run(["git", "-C", str(self.repo), *args])
 
-    def alert(self, kind: str, key: str, title: str, body: str) -> tuple[str, ...]:
+    def alert(self, kind: str, key: str, title: str, body: str,
+              *, quiet: bool = False) -> tuple[str, ...]:
         # notify never raises: a failed channel is in its report, not the pass's.
+        # `quiet`: a condition the tick raises on every pass is pushed once.
         report = notify(kind, key, title, body, f"{title}.",
                         tracker=self.alert_tracker or GhIssueTracker(self.run),
-                        push=self.push_factory(), update_existing=True)
+                        push=self.push_factory(), update_existing=True,
+                        quiet_if_open=quiet)
         logger.info("dispatch: %s alert — %s", kind, "; ".join(report.lines()))
         return report.lines()
+
+    def count(self, result: PassResult) -> None:
+        """R-19: a failed pass adds one to the count, and the third in a row
+        alerts; a completed pass starts it again. Others leave it alone."""
+        state = self.repo / STATE_FILE
+        if result is PassResult.COMPLETED:
+            reset_failed_passes(state)
+        elif result is PassResult.FAILED:
+            n = count_failed_pass(state)
+            logger.info("dispatch: %d failed pass(es) in a row", n)
+            if n == FAILED_PASSES_ALERT_AT:
+                self.alert(*FAILED_PASSES_ALERT, *failed_passes_alert(n), quiet=True)
 
     def recover(self) -> bool:
         """Step 2 (R-15): a run recorded and not finished died with its pass —
@@ -258,7 +310,8 @@ class _Pass:
 
     def refuse(self, reason: CheckoutRefusal) -> PassResult:
         logger.error("dispatch: REFUSED — the checkout cannot be used: %s", reason.value)
-        self.alert(*CHECKOUT_ALERT, *checkout_alert(reason, str(self.repo.resolve())))
+        self.alert(*CHECKOUT_ALERT, *checkout_alert(reason, str(self.repo.resolve())),
+                   quiet=True)
         return PassResult.REFUSED
 
 
@@ -333,6 +386,15 @@ def _claim_and_run(
     process group in the lock file (R-15); never any text of the tick's own.
     """
     tracker, repo, limits = p.tracker, p.repo, p.limits
+    wanted = project.dispatch.worker_cli_version
+    if wanted is not None:
+        installed = reported_version(claude_code_version(p.run))
+        if installed != wanted:  # R-18: no claim, no session; the issue waits
+            logger.error("dispatch: the worker CLI reports %s, not the configured %s — "
+                         "no session", installed, wanted)
+            p.alert(*CLI_VERSION_ALERT, *version_alert(wanted, installed), quiet=True)
+            return PassResult.COMPLETED
+        logger.info("dispatch: the worker CLI is the configured %s", wanted)
     try:
         tracker.remove_label(number)
     except Exception as e:  # noqa: BLE001 — an unclaimed issue starts nothing (R-4)
@@ -355,6 +417,9 @@ def _claim_and_run(
         lock.write_run(started, lock_file)
         logger.info("dispatch: #%d session's process group %d recorded", number, pgid)
 
+    records = repo / RECORDS_DIR
+    pattern = f"{task.spec_slug}-{task.task_id.lower()}-*.jsonl"
+    before = set(records.glob(pattern))
     try:
         outcome = p.work_fn(
             task.spec_slug, task.task_id, Roster.from_file(repo / limits.roster),
@@ -364,7 +429,11 @@ def _claim_and_run(
         )
     except Exception as e:  # noqa: BLE001 — a run that raises is still answered
         logger.error("dispatch: #%d run ended in an error — %s", number, e)
-        comment = run_comment(None)
+        record = max(set(records.glob(pattern)) - before, default=None)
+        alerts = p.alert("failed", f"{task.spec_slug}/{task.task_id}", *failure_alert(
+            task.spec_slug, task.task_id, str(e), record,
+            last_line(record) if record is not None else ""))
+        comment = run_comment(None, alerts)
     else:
         logger.info("dispatch: #%d run ended — %s", number, type(outcome).__name__)
         comment = run_comment(outcome)

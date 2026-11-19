@@ -27,6 +27,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..errors import SessionResultError, SessionTimeoutError, SpendLimitError, WorkerError
+from ..proc import Runner, run_command
 from .types import SessionResult
 
 RESULT_FILE = ".worker-result.json"
@@ -147,16 +148,30 @@ def stop_group(pgid: int, grace_s: float = 5.0) -> None:
             time.sleep(0.05)
 
 
-def read_end(record: Path) -> SessionEnd | None:
-    """The record's final entry, when it is a readable `result` entry; else None."""
+def claude_code_version(run: Runner = run_command) -> str:
+    """What `claude --version` reports, or "unknown"."""
+    try:
+        return run(["claude", "--version"]).strip() or "unknown"
+    except (RuntimeError, OSError):
+        return "unknown"
+
+
+def last_line(record: Path) -> str:
+    """The record's last non-empty line, or "" when there is none to read."""
     try:
         with record.open("rb") as f:
             f.seek(max(0, record.stat().st_size - _TAIL_BYTES))
             tail = f.read().decode("utf-8", errors="replace")
     except OSError:
-        return None
+        return ""
     lines = [line for line in tail.splitlines() if line.strip()]
-    if not lines:
+    return lines[-1] if lines else ""
+
+
+def read_end(record: Path) -> SessionEnd | None:
+    """The record's final entry, when it is a readable `result` entry; else None."""
+    lines = [last_line(record)]
+    if not lines[0]:
         return None
     try:
         entry = json.loads(lines[-1])

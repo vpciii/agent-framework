@@ -53,7 +53,7 @@ from ..providers.anthropic import AnthropicProvider
 from ..providers.google import GoogleProvider
 from ..providers.registry import register_provider
 from ..roster import Roster
-from ..worker.session import DEFAULT_SPEND_LIMIT_USD, check_spend_limit
+from ..worker.session import DEFAULT_SPEND_LIMIT_USD, check_spend_limit, claude_code_version
 from .case import EvalCase, inputs_fingerprint, load_set, set_fingerprint
 from .freeze import freeze
 from .run import run_eval
@@ -287,7 +287,7 @@ def _worker_run(args: argparse.Namespace) -> int:
         # Checked before a single session: a recorded run is never replaced.
         return _refuse(f"{out} already holds a result; name another file with --out")
     result = worker_run.run_and_write(
-        case_set, worker, out, date=date, claude_code=worker_run.claude_code_version(),
+        case_set, worker, out, date=date, claude_code=claude_code_version(),
         runs=args.runs, timeout_s=args.timeout, spend_limit_usd=args.spend_limit,
         keep=args.keep, on_run=_worker_progress,
     )
