@@ -8,6 +8,9 @@
 - **Amended:** 2026-11-19 — T-9 added after T-6's review, and T-8 made
   to wait for it (*One task added*, below). Signed off by vpc
   2026-11-19.
+- **Corrected:** 2026-11-19 — T-9's *Done when* contradicted itself and
+  the worker escalated (#160); one sentence changed (the tally's last
+  row). Signed off by vpc 2026-11-19.
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
@@ -81,9 +84,11 @@ change is made on vpc's word.
 | T-5 | #156, opened by hand | yes — the worker's changes, unchanged | 5m 31s | $1.48 | escalation (#155): the session's own permission layer refused `git commit` |
 | T-6 | #157 | yes | 7m 18s | $2.13 | none |
 | T-7 | #158 | yes | 5m 37s | $1.60 | none |
+| T-9, first run | none | — | 29s | $0.29 | escalation (#160): the task as written could not be met — a lock file with no start time was to stop nothing, and T-6's test, which writes one and expects its group stopped, was to pass unmodified |
 
-Seven tasks, seven pull requests merged with none of the worker's code
-reworked, $9.68, about 33 minutes of session time, one alert.
+T-1 to T-7: seven tasks, seven pull requests merged with none of the
+worker's code reworked, $9.68, about 33 minutes of session time, one
+alert. T-9's first run adds $0.29 and a second alert, and no code.
 
 - **T-5's escalation was not about the contract.** The work was done
   and the gate green, but the commit command was refused: its message
@@ -97,6 +102,10 @@ reworked, $9.68, about 33 minutes of session time, one alert.
   as T-5 did: an alert and no pull request. Not yet fixed.
 - **Sizes.** Lines added, tests included: 289 (T-2) to 701 (T-4); five
   of the seven passed 400. The validator rejected none for size.
+- **T-9's escalation was about the contract, and was right.** The
+  chief wrote a *Done when* that asked for two things at once. The
+  session stopped before writing code and asked which gives way. The
+  safety rule stays; the sentence about T-6's tests is the one changed.
 - **Found in review, not by a test.** T-6's recovery trusts two things
   the plan did not question; T-9 below is the fix. `worker/__main__.py`
   prints an outcome it does not know as `timed_out`, and it does not
@@ -452,7 +461,10 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   at the worktree's path, raises the alert, comments on and closes the
   issue and clears the record, and a dispatch issue for the same task
   then runs in a fresh worktree cut from `origin/main`; and T-6's
-  existing SC-12 tests pass unmodified. The gate passes.
+  existing SC-12 tests keep every assertion they make, with one change
+  to their setup: the helper in `tests/dispatch/test_recovery.py` that
+  writes a lock file by hand records the session's start time beside
+  its group, as the tick now does. The gate passes.
 
 ### [ ] T-8 — Delivery: the host, the switch, the schedule, the heartbeat check, the docs, the live check
 - **Satisfies:** SC-17
