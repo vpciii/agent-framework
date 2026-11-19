@@ -249,3 +249,33 @@ def test_dispatch_table_of_the_wrong_type_is_refused_on_load(
     """specs/dispatch-from-issue: a wrong type fails loudly, as `[project]`'s do."""
     with pytest.raises(ProjectConfigError, match=message):
         load_project_config(_write(tmp_path, body))
+
+
+def test_sc5_alerts_push_detail_defaults_to_pointer_and_parses_full(tmp_path: Path) -> None:
+    """SC-5 (pushover-push): no file, no `[alerts]` table and an empty one
+    each mean "pointer"; `"full"` is read beside `[project]` or alone."""
+    assert load_project_config(tmp_path).alerts.push_detail == "pointer"
+    assert load_project_config(_write(tmp_path, "[project]\n")).alerts.push_detail == "pointer"
+    assert load_project_config(_write(tmp_path, "[alerts]\n")).alerts.push_detail == "pointer"
+    full = '[alerts]\npush_detail = "full"\n'
+    assert load_project_config(_write(tmp_path, full)).alerts.push_detail == "full"
+    beside = load_project_config(_write(tmp_path, f"[project]\n{full}"))
+    assert beside.alerts.push_detail == "full"
+
+
+@pytest.mark.parametrize(
+    ("body", "message"),
+    [
+        ('[alerts]\npush_detail = "everything"\n', r"\[alerts\] push_detail must be"),
+        ("[alerts]\npush_detail = 1\n", r"\[alerts\] push_detail must be"),
+        ('[alerts]\nchannel = "pushover"\n', r"unknown \[alerts\] field"),
+        ("alerts = 1\n", r"\[alerts\] must be a table"),
+    ],
+)
+def test_sc5_alerts_push_detail_of_anything_else_is_refused_on_load(
+    tmp_path: Path, body: str, message: str
+) -> None:
+    """SC-5 (pushover-push): any other value, a wrong type or an unknown
+    field in `[alerts]` is refused when the configuration is loaded."""
+    with pytest.raises(ProjectConfigError, match=message):
+        load_project_config(_write(tmp_path, body))

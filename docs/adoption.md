@@ -209,6 +209,40 @@ spec's contract, a path in `protected_paths` (default `.github/**` and
 `agent-framework.toml`), or deleted a test file. Nothing was pushed; the
 outcome and a `refused` issue name each finding, and the worktree is kept.
 
+**Alerts and the phone push.** An escalation, a timeout, a spend limit
+or a refused handoff opens a GitHub issue in the project's repository,
+the alert's record. A phone push is optional and comes only from the
+environment of the machine that runs the worker, never from the repo:
+
+- `AF_HA_WEBHOOK_URL` — a Home Assistant webhook. Unset, the push is
+  reported as skipped and the issue is still opened.
+- `AF_PUSHOVER_TOKEN`, `AF_PUSHOVER_USER` and `AF_PUSHOVER_KEY` — the
+  Pushover application token, user key and end-to-end encryption key
+  (64 hexadecimal characters). The Pushover push is off until all three
+  are set; with some set it is reported as skipped, naming what is
+  missing. Every field is encrypted on the machine before it is sent.
+  None of the three ever reaches a worker session.
+
+With both configured, both are sent and each has its own line in the
+alert's report. What a push says is set per project in an optional
+`[alerts]` table in `agent-framework.toml`:
+
+```toml
+[alerts]
+push_detail = "pointer"   # the default; or "full"
+```
+
+`"pointer"` — the default, and what an absent table means — says only
+the kind of alert, the spec and the task, with a link to the issue.
+`"full"` adds the worker's question to an escalation's Pushover push,
+which is encrypted; the Home Assistant push, which is not, says only the
+pointer whatever the setting, and no other alert carries more. Any other
+value, or an unknown field, is refused when the configuration is loaded.
+A worker's question is text the session wrote about the code it was
+reading, and may quote a table name, a path or a line of a fixture: a
+project that handles sensitive data leaves `push_detail` alone and
+reads the question in the issue (ADR 0011).
+
 Task-brief authoring lessons (paid for in this framework's own repo):
 put **all** expected file changes in `Touches` — including the spec's
 Traceability row — or the worker won't make them; name the test-harness

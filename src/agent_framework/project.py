@@ -15,6 +15,7 @@ import re
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal, cast
 
 from .errors import ProjectConfigError
 
@@ -83,6 +84,25 @@ class DispatchConfig:
         return self.enabled and self.author is not None
 
 
+PUSH_DETAILS = ("pointer", "full")
+
+
+@dataclass(frozen=True)
+class AlertsConfig:
+    """The `[alerts]` table: what a phone push may say (specs/pushover-push,
+    ADR 0011). `"pointer"`, the default, says only the kind of alert, the spec
+    and the task; `"full"` lets an escalation's Pushover push, which is
+    encrypted, also carry the worker's question."""
+
+    push_detail: Literal["pointer", "full"] = "pointer"
+
+    def __post_init__(self) -> None:
+        if self.push_detail not in PUSH_DETAILS:
+            raise ProjectConfigError(
+                f'[alerts] push_detail must be "pointer" or "full", got {self.push_detail!r}'
+            )
+
+
 @dataclass(frozen=True)
 class ProjectConfig:
     """The target project's contract with the framework's roles.
@@ -108,6 +128,8 @@ class ProjectConfig:
     protected_paths: tuple[str, ...] = DEFAULT_PROTECTED_PATHS
     # The `[dispatch]` table, read beside `[project]`.
     dispatch: DispatchConfig = DispatchConfig()
+    # The `[alerts]` table, read beside `[project]`.
+    alerts: AlertsConfig = AlertsConfig()
 
     def __post_init__(self) -> None:
         for field in ("test_paths", "protected_paths"):
@@ -186,9 +208,30 @@ def _load_dispatch(data: dict[str, object], path: Path) -> DispatchConfig:
     )
 
 
+def _load_alerts(data: dict[str, object], path: Path) -> AlertsConfig:
+    """The `[alerts]` table; `push_detail = "pointer"` when absent. An unknown
+    field, a wrong type or any other value fails loudly."""
+    table = data.get("alerts")
+    if table is None:
+        return AlertsConfig()
+    if not isinstance(table, dict):
+        raise ProjectConfigError(f"{path}: [alerts] must be a table, got {table!r}")
+    unknown = set(table) - {"push_detail"}
+    if unknown:
+        raise ProjectConfigError(
+            f"{path}: unknown [alerts] field(s): {', '.join(sorted(unknown))}"
+        )
+    raw = table.get("push_detail", "pointer")
+    if not isinstance(raw, str) or raw not in PUSH_DETAILS:
+        raise ProjectConfigError(
+            f'{path}: [alerts] push_detail must be "pointer" or "full", got {raw!r}'
+        )
+    return AlertsConfig(push_detail=cast(Literal["pointer", "full"], raw))
+
+
 def load_project_config(root: Path = Path(".")) -> ProjectConfig:
-    """Read `agent-framework.toml`'s `[project]` and `[dispatch]` tables;
-    defaults when absent."""
+    """Read `agent-framework.toml`'s `[project]`, `[dispatch]` and `[alerts]`
+    tables; defaults when absent."""
     path = root / CONFIG_FILE
     if not path.is_file():
         return DEFAULTS
@@ -197,9 +240,10 @@ def load_project_config(root: Path = Path(".")) -> ProjectConfig:
     except tomllib.TOMLDecodeError as e:
         raise ProjectConfigError(f"{path} is not valid TOML: {e}") from None
     dispatch = _load_dispatch(data, path)
+    alerts = _load_alerts(data, path)
     table = data.get("project")
     if table is None:
-        return ProjectConfig(dispatch=dispatch)
+        return ProjectConfig(dispatch=dispatch, alerts=alerts)
     if not isinstance(table, dict):
         raise ProjectConfigError(f"{path}: [project] must be a table, got {table!r}")
 
@@ -228,6 +272,7 @@ def load_project_config(root: Path = Path(".")) -> ProjectConfig:
                 else DEFAULTS.test_pattern
             ),
             dispatch=dispatch,
+            alerts=alerts,
             **lists,
         )
     except ProjectConfigError as e:
