@@ -1,14 +1,21 @@
-"""What the dispatch tick writes back on an issue (specs/dispatch-from-issue).
+"""What the dispatch tick writes back (specs/dispatch-from-issue).
 
 Every comment is fixed wording plus values the code computed; none carries
 text taken from an issue — not its title, body, comments, labels or author
-(R-11, R-12).
+(R-11, R-12). Here too: the one table that names a failed run's kind, the
+`failed` alerts' wordings, the failed-pass count and the heartbeat.
 """
 
 from __future__ import annotations
 
+import json
+import os
 import re
+import urllib.request
+from collections.abc import Callable, Mapping
 from enum import StrEnum
+from pathlib import Path
+from typing import Any
 
 from ..worker.types import (
     Escalated,
@@ -55,9 +62,10 @@ def _alert(alerts: tuple[str, ...]) -> str:
     return "No alert issue could be recorded; the worker's log has the details."
 
 
-def run_comment(outcome: WorkerOutcome | None) -> str:
+def run_comment(outcome: WorkerOutcome | None, alerts: tuple[str, ...] = ()) -> str:
     """The one comment an accepted issue gets once its run has ended; None
-    is a run that raised an error. Names the pull request or the alert."""
+    is a run that raised an error, and `alerts` its `failed` alert's report.
+    Names the pull request or the alert."""
     if isinstance(outcome, PrOpened):
         return f"The worker run opened a pull request: {outcome.url}\n\n{_CLOSED}"
     if isinstance(outcome, PrAlreadyOpen):
@@ -83,7 +91,7 @@ def run_comment(outcome: WorkerOutcome | None) -> str:
         alerts = outcome.alerts
     else:
         return ("The worker run ended in an error: no pull request was opened.\n\n"
-                f"{_CLOSED}")
+                f"{_alert(alerts)} {_CLOSED}")
     return f"The worker run {why}\n\n{_alert(alerts)} {_CLOSED}"
 
 
@@ -118,3 +126,135 @@ def checkout_alert(reason: CheckoutRefusal, checkout: str) -> tuple[str, str]:
          f"\n\nCheckout: `{checkout}`. Reason code: `{reason.value}`. Nothing was listed, "
          "claimed or started."),
     )
+
+
+class FailureKind(StrEnum):
+    """What a run that raised an error is named as (R-13)."""
+
+    LOGIN = "login"
+    USAGE_LIMIT = "usage limit"
+    CLI_VERSION = "CLI version"
+    OTHER = "other"
+
+
+# The one table: what the session's exit or its record's last line says, by
+# kind, tried in order. Corrected from real failures; anything else is OTHER.
+FAILURE_PATTERNS: tuple[tuple[FailureKind, re.Pattern[str]], ...] = (
+    (FailureKind.LOGIN, re.compile(
+        r"not logged in|please run /login|invalid api key|authentication_error|"
+        r"oauth token (?:has )?expired|login (?:has )?expired", re.IGNORECASE)),
+    (FailureKind.USAGE_LIMIT, re.compile(
+        r"usage limit|rate_limit_error|limit will reset|out of (?:extra )?usage",
+        re.IGNORECASE)),
+    (FailureKind.CLI_VERSION, re.compile(
+        r"newer version|please update|unsupported (?:cli )?version|"
+        r"version .{0,40}(?:no longer|not) supported|minimum (?:required )?version",
+        re.IGNORECASE)),
+)
+_EXIT_STATUS = re.compile(r"\bsession exited (-?[0-9]+)")
+
+
+def failure_kind(exit_text: str, record_end: str) -> FailureKind:
+    """The kind a failed run is named as, from its exit and its record's end."""
+    for kind, pattern in FAILURE_PATTERNS:
+        if pattern.search(exit_text) or pattern.search(record_end):
+            return kind
+    return FailureKind.OTHER
+
+
+def failure_alert(
+    spec: str, task: str, exit_text: str, record: Path | None, record_end: str
+) -> tuple[str, str]:
+    """The (title, body) of a run's `failed` alert: the kind, the exit status
+    and where the record is on this Mac — never the record or the output."""
+    kind = failure_kind(exit_text, record_end)
+    m = _EXIT_STATUS.search(exit_text)
+    status = f"`{m.group(1)}`" if m else "none (the session did not exit with a status)"
+    where = f"`{record.resolve()}`" if record is not None else "none was written"
+    return (
+        f"{task} of {spec} failed: {kind.value}",
+        (f"The worker run ended in an error with no pull request.\n\nKind: {kind.value}. "
+        f"Exit status: {status}. Session record on the tick's Mac: {where}."),
+    )
+
+
+def version_alert(configured: str, installed: str) -> tuple[str, str]:
+    """The (title, body) of the alert a CLI version mismatch raises (R-18)."""
+    return (
+        "dispatch tick: the worker CLI version differs",
+        (f"No session was started. Kind: {FailureKind.CLI_VERSION.value}. The configuration "
+        f"names version `{configured}`; the installed CLI reports `{installed}`. The "
+        "dispatch issue is left open; a pass after the two agree runs it."),
+    )
+
+
+def reported_version(text: str) -> str:
+    """The version number in what `claude --version` printed, else all of it."""
+    m = re.search(r"[0-9]+(?:\.[0-9]+)+", text)
+    return m.group(0) if m else text.strip()
+
+
+FAILED_PASSES_ALERT_AT = 3
+
+
+def failed_passes_alert(count: int) -> tuple[str, str]:
+    """The (title, body) of the alert the third failed pass in a row raises."""
+    return (
+        "dispatch tick: passes are failing",
+        (f"{count} dispatch passes in a row have failed: they could not list the issues, "
+        "fetch, or answer an issue. The tick's log has the details. No further alert is "
+        "raised until a pass completes."),
+    )
+
+
+def count_failed_pass(state: Path) -> int:
+    """Add one failed pass to the state file's count; the count now."""
+    count = _failed_passes(state) + 1
+    _write_failed_passes(state, count)
+    return count
+
+
+def reset_failed_passes(state: Path) -> None:
+    """A completed pass: the count starts again."""
+    if _failed_passes(state):
+        _write_failed_passes(state, 0)
+
+
+def _failed_passes(state: Path) -> int:
+    try:
+        value: Any = json.loads(state.read_text(encoding="utf-8")).get("failed_passes")
+    except (OSError, ValueError, AttributeError):
+        return 0
+    return value if isinstance(value, int) and value >= 0 else 0
+
+
+def _write_failed_passes(state: Path, count: int) -> None:
+    state.parent.mkdir(parents=True, exist_ok=True)
+    state.write_text(json.dumps({"failed_passes": count}) + "\n", encoding="utf-8")
+
+
+HEARTBEAT_ENV = "AF_HA_HEARTBEAT_URL"
+
+# Opens a request with a timeout in seconds; the shape of `urlopen`.
+Opener = Callable[[urllib.request.Request, float], Any]
+
+
+def _urlopen(req: urllib.request.Request, timeout_s: float) -> Any:
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+        return resp.status
+
+
+def send_heartbeat(
+    env: Mapping[str, str] = os.environ, *, opener: Opener = _urlopen, timeout_s: float = 10.0
+) -> str:
+    """One request to the heartbeat address (R-20). Never raises: what
+    happened comes back as one line for the log."""
+    url = env.get(HEARTBEAT_ENV, "").strip()
+    if not url:
+        return f"skipped: {HEARTBEAT_ENV} not set"
+    try:
+        opener(urllib.request.Request(url, b"{}", {"Content-Type": "application/json"},
+                                      method="POST"), timeout_s)
+    except Exception as e:  # noqa: BLE001 — a heartbeat never changes the pass (R-20)
+        return f"failed: {(str(e).splitlines() or [type(e).__name__])[0]}"
+    return "sent"

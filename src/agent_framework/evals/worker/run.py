@@ -317,10 +317,3 @@ def run_and_write(
     out.write_text(result_to_json(result), encoding="utf-8")
     return result
 
-
-def claude_code_version(run: Runner = run_command) -> str:
-    """What `claude --version` reports, or "unknown"."""
-    try:
-        return run(["claude", "--version"]).strip() or "unknown"
-    except (RuntimeError, OSError):
-        return "unknown"
