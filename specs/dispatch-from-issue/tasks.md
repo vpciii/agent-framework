@@ -14,8 +14,7 @@
 - **Corrected again:** 2026-11-19 — T-9 named `ps` as how to tell the
   session's process from another, and the worker's sandbox cannot run
   `ps`; the worker escalated (#162). The session now holds a lock
-  instead (vpc's choice, 2026-11-19). Proposed wording; awaiting vpc's
-  sign-off.
+  instead (vpc's choice, 2026-11-19). Signed off by vpc 2026-11-19.
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
