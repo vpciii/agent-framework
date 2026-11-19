@@ -6,8 +6,8 @@
   rollout lists five; the existing `dispatch.py` moved into the new
   package)
 - **Amended:** 2026-11-19 — T-9 added after T-6's review, and T-8 made
-  to wait for it (*One task added*, below). Proposed; awaiting vpc's
-  sign-off.
+  to wait for it (*One task added*, below). Signed off by vpc
+  2026-11-19.
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
