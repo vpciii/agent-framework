@@ -264,6 +264,7 @@ carries a change to one, so update this list promptly when one changes
   runs it: no schedule exists and this repository has no `[dispatch]`
   table, so no issue can start a run. ADR 0010 is its
   trust boundary.
-- `specs/pushover-push/` — Approved (not yet implemented; no code). The
+- `specs/pushover-push/` — Approved, with a draft `tasks.md` (not yet
+  implemented; no code). The
   phone push through Pushover, encrypted on the machine; ADR 0011 is its
   rule for what alert text may leave.
