@@ -26,3 +26,10 @@ ignore_checks = ["validator"]
 session_write_paths = ["~/.cache/uv"]         # uv's cache
 session_read_paths  = ["~/.local/share/uv"]   # uv-managed Python builds
 session_network     = ["pypi.org", "files.pythonhosted.org"]
+
+# What a phone push may say (ADR 0011, specs/pushover-push). "full" lets an
+# escalation's Pushover push, which is encrypted on this machine, carry the
+# worker's question. This repository is public and holds nothing sensitive.
+# The previous setting, by removing this table: "pointer".
+[alerts]
+push_detail = "full"
