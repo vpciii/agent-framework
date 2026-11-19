@@ -181,7 +181,8 @@ def test_sc18_an_existing_worktree_or_branch_is_still_refused(repo: Path) -> Non
 
 
 def test_the_handoff_note_is_excluded_beside_the_result_file(tmp_path: Path) -> None:
-    """The exclude file lists `HANDOFF.md` beside the result file, each once."""
+    """The exclude file lists `HANDOFF.md` and the commit-message file beside
+    the result file, each once."""
     exclude = tmp_path / "info" / "exclude"
     exclude.parent.mkdir()
     exclude.write_text(".worker-result.json\n", encoding="utf-8")
@@ -191,5 +192,5 @@ def test_the_handoff_note_is_excluded_beside_the_result_file(tmp_path: Path) -> 
     worktree._ignore_result_file(run)
     worktree._ignore_result_file(run)
     lines = exclude.read_text(encoding="utf-8").splitlines()
-    assert lines == [".worker-result.json", "HANDOFF.md"]
+    assert lines == [".worker-result.json", "HANDOFF.md", ".worker-commit-msg"]
     assert worktree.HANDOFF_FILE == handoff.HANDOFF_FILE

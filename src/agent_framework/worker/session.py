@@ -31,6 +31,9 @@ from ..proc import Runner, run_command
 from .types import SessionResult
 
 RESULT_FILE = ".worker-result.json"
+# Where a session writes its commit message, so the commit command has one
+# fixed shape whatever the message holds (see `brief._COMMANDS`).
+COMMIT_MESSAGE_FILE = ".worker-commit-msg"
 
 # The spend limit a session gets when the dispatch names none: US dollars at
 # list price, measured by Claude Code after each turn (vpc, 2026-11-15).
