@@ -15,6 +15,12 @@
   session's process from another, and the worker's sandbox cannot run
   `ps`; the worker escalated (#162). The session now holds a lock
   instead (vpc's choice, 2026-11-19). Signed off by vpc 2026-11-19.
+- **Corrected a third time:** 2026-11-19 — the brief had the tick take
+  the session lock and did not say what a pass does when it cannot. The
+  worker chose to fail the pass; the validator rejected #164 for
+  behaviour the brief did not ask for and no test covered. The brief
+  now states it and asks for the test. vpc asked for this amendment on
+  2026-11-19; the wording awaits his sign-off.
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
@@ -450,7 +456,8 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   `tests/dispatch/test_recovery.py`,
   `specs/dispatch-from-issue/spec.md` (Traceability rows)
 - **Brief:** Two changes to the recovery T-6 built (`_Pass.recover` in
-  `tick.py`); nothing else about a pass changes. **Stop only the
+  `tick.py`), and the one thing they bring with them where a run is
+  started; nothing else about a pass changes. **Stop only the
   session.** The session holds a second lock for as long as it lives.
   Before starting a session the tick opens
   `.worktrees/dispatch-session.lock` and takes an advisory lock on it
@@ -459,7 +466,12 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   the tick passes this one through the `session_run` argument it
   already uses for the process-group callback; the tick then closes its
   own copy, so the lock is held by the session and what it starts, and
-  the operating system frees it when the last of them is gone. At
+  the operating system frees it when the last of them is gone. When
+  that lock cannot be taken — a session, or something one started, is
+  still alive — the pass starts nothing: the issue is left open and
+  labelled, no run is recorded, and the pass ends as a failed one, so
+  that passes held up this way reach the alert for failed passes in a
+  row. At
   recovery, try to take that lock without waiting. Taken: no session is
   left, so release it, send no signal, and log that the session is
   already gone. Held: the session is alive, so stop the recorded process
@@ -479,7 +491,10 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   that it does stop a live stand-in session that holds the session lock
   and leads the recorded group; that after a stand-in session's launcher
   is killed the lock is still held, and is free once the session is
-  stopped; that for a run whose worktree was never cut, recovery leaves no folder
+  stopped; that a pass which finds the session lock held starts no
+  session, leaves its issue open and labelled with no comment, records
+  no run and ends as a failed pass, and that a pass after the lock is
+  freed runs the issue; that for a run whose worktree was never cut, recovery leaves no folder
   at the worktree's path, raises the alert, comments on and closes the
   issue and clears the record, and a dispatch issue for the same task
   then runs in a fresh worktree cut from `origin/main`; and T-6's
