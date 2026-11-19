@@ -248,7 +248,7 @@ All five were answered by vpc on 2026-11-19, each as recommended.
 | SC-2 | R-3 | `tests/orientation/test_pushover.py::test_sc2_no_plain_text_and_a_bad_key_makes_no_request` |
 | SC-3 | R-4 | `tests/orientation/test_pushover.py::test_sc3_the_three_values_appear_in_no_log_report_or_issue`, `tests/worker/test_confinement.py::test_pushover_sc3_the_session_environment_holds_none_of_pushovers_names` |
 | SC-4 | R-5 | `tests/orientation/test_pushover.py::test_sc4_the_link_is_the_issue_and_not_in_the_message` |
-| SC-5 | R-6, R-7 | *(pending)* |
+| SC-5 | R-6, R-7 | `tests/worker/test_push_detail.py::test_sc5_by_default_the_escalation_push_holds_none_of_the_question`, `tests/worker/test_push_detail.py::test_sc5_full_carries_the_question_to_pushover_and_not_home_assistant`, `tests/worker/test_push_detail.py::test_sc5_with_full_a_timeout_push_holds_only_the_short_line`, `tests/worker/test_push_detail.py::test_sc5_with_full_a_refused_handoff_push_holds_only_the_short_line`, `tests/test_project_config.py::test_sc5_alerts_push_detail_defaults_to_pointer_and_parses_full`, `tests/test_project_config.py::test_sc5_alerts_push_detail_of_anything_else_is_refused_on_load` |
 | SC-6 | R-8 | `tests/orientation/test_pushover.py::test_sc6_a_refused_limited_or_silent_pushover_is_one_failed_line`, `tests/orientation/test_pushover.py::test_sc6_a_failing_pushover_does_not_change_a_worker_run` |
 | SC-7 | R-9 | `tests/orientation/test_pushover.py::test_sc7_only_the_webhook_set_gives_todays_two_lines`, `tests/orientation/test_pushover.py::test_sc7_both_configured_both_are_sent_with_a_line_each` |
 | SC-8 | R-10 | `tests/orientation/test_pushover.py::test_sc8_a_long_detail_is_cut_to_the_limit_with_the_mark` |

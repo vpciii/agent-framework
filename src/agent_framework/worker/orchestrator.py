@@ -230,11 +230,12 @@ def work(
         spec_slug, task_id, model, timeout_s, spend_limit_usd, len(project.session_network),
         len(project.session_write_paths), len(project.session_read_paths), len(env),
     )
-    def alert(kind: str, title: str, body: str) -> tuple[str, ...]:
+    def alert(kind: str, title: str, body: str, detail: str | None = None) -> tuple[str, ...]:
         # A failed notification never changes the outcome (R-7): notify never raises.
+        # `detail` reaches only Pushover, which encrypts it (specs/pushover-push R-7).
         report = notify(
             kind, f"{spec_slug}/{task_id}", title, body, f"{title}.",
-            tracker=tracker or GhIssueTracker(run), push=push_factory(),
+            tracker=tracker or GhIssueTracker(run), push=push_factory(), detail=detail,
         )
         logger.info("worker %s/%s: %s alert — %s", spec_slug, task_id, kind, "; ".join(report.lines()))
         return report.lines()
@@ -291,6 +292,9 @@ def work(
         alerts = alert(
             "escalation", f"{task_id} of {spec_slug} needs a decision",
             f"{result.detail}\n\nEscalation artifact: `{artifact}`.",
+            # The worker's question reaches the phone only when the project
+            # asks for it (specs/pushover-push R-6); no other alert passes one.
+            detail=result.detail if project.alerts.push_detail == "full" else None,
         )
         return Escalated(artifact_path=str(artifact), detail=result.detail, alerts=alerts)
 
