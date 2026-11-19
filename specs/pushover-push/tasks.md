@@ -38,6 +38,21 @@ this Mac with a throwaway key before this list was drafted: the
 T-2 needs a program the worker's sandbox refuses, or any network beyond
 the package index.
 
+**Dispatch tally.** Cost and time are what the session record reports.
+
+| Task | Pull request | Merged without rework | Time | Cost | Alert |
+|---|---|---|---|---|---|
+| T-1 | #168 | yes | 4m 9s | $1.16 | none |
+| T-2 | #169 | yes | 3m 1s | $0.97 | none |
+
+Two tasks, two pull requests merged with none of the worker's code
+reworked, $2.13, about 7 minutes of session time, no alert and no
+escalation. Both briefs were checked before dispatch in the way the
+T-9 escalations of `specs/dispatch-from-issue` taught: the mechanism
+run where the worker runs, every branch stated, every named file
+confirmed to exist. T-3 was done with vpc: #171 is this repository's
+setting, and the live check is recorded in the spec.
+
 **Names fixed here so each brief stands alone:** the environment names
 `AF_PUSHOVER_TOKEN`, `AF_PUSHOVER_USER`, `AF_PUSHOVER_KEY`; the
 endpoint `https://api.pushover.net/1/messages.json`; the report line's
@@ -46,7 +61,7 @@ label `pushover`; the setting `[alerts] push_detail`, `"pointer"` or
 
 ---
 
-### [ ] T-1 — The Pushover sender: encrypted, reported on its own line, never able to change an outcome
+### [x] T-1 — The Pushover sender: encrypted, reported on its own line, never able to change an outcome (#168)
 - **Satisfies:** SC-1, SC-2, SC-3, SC-4, SC-6, SC-7, SC-8
 - **Depends on:** —
 - **Touches:** `src/agent_framework/alerts.py`, `pyproject.toml`,
@@ -127,7 +142,7 @@ label `pushover`; the setting `[alerts] push_detail`, `"pointer"` or
   SC-8 shows a detail of 3,000 characters decrypts to a message of at
   most 1,024 characters ending with the cut mark. The gate passes.
 
-### [ ] T-2 — What a push may say: `push_detail`, and the worker's question
+### [x] T-2 — What a push may say: `push_detail`, and the worker's question (#169)
 - **Satisfies:** SC-5
 - **Depends on:** T-1
 - **Touches:** `src/agent_framework/project.py`,
@@ -161,7 +176,7 @@ label `pushover`; the setting `[alerts] push_detail`, `"pointer"` or
   `push_detail = 1` and an unknown field in `[alerts]` are each refused
   when the configuration is loaded. The gate passes.
 
-### [ ] T-3 — Delivery: the three values, this repository's setting, the docs, the live check
+### [x] T-3 — Delivery: the three values, this repository's setting, the docs, the live check (this PR)
 - **Satisfies:** SC-1
 - **Depends on:** T-2
 - **Touches:** `agent-framework.toml`, `docs/architecture.md`,
