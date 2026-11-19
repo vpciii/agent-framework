@@ -4,7 +4,10 @@ In order: take the lock; read the configuration; fetch `origin/main` and
 resolve the commit; list the open `dispatch` issues; take the oldest; read
 the named spec's `tasks.md` at that commit; `decide`. A refused issue loses
 its `dispatch` label, gets one comment and is closed. An accepted issue is
-left as it was found — starting its run is the next step's.
+claimed by removing its label, written into the lock file as the run in
+progress, run through `work()` exactly as a hand dispatch runs it (but at
+the fetched commit, starting again if need be), then answered with one
+comment, closed, and its run marked finished.
 
 Every step logs one line. A fetch or a listing that fails is a failed pass;
 anything else that ends the pass early (another pass running, dispatch off,
@@ -15,23 +18,25 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from collections.abc import Callable
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import dataclass, replace
+from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import Protocol
 
 from ..errors import ProjectConfigError
 from ..proc import Runner, run_command
-from ..project import load_project_config
+from ..project import ProjectConfig, load_project_config
+from ..roster import Roster
 from ..worker.orchestrator import work
 from ..worker.session import DEFAULT_SPEND_LIMIT_USD
 from ..worker.types import WorkerOutcome
-from ..worker.worktree import BASE_BRANCH, BASE_REF, BASE_REMOTE
+from ..worker.worktree import BASE_BRANCH, BASE_REF, BASE_REMOTE, WORKTREES_DIR
 from . import lock
 from .issue import Accepted, Issue, decide, oldest, parse_title
-from .report import refusal_comment
+from .report import refusal_comment, run_comment
 
 logger = logging.getLogger(__name__)
 
@@ -116,12 +121,15 @@ def run_pass(
             logger.info("dispatch: another pass is running — nothing to do")
             return PassResult.COMPLETED
         logger.info("dispatch: lock taken")
-        return _locked_pass(tracker, repo=repo, run=run)
+        return _locked_pass(tracker, repo=repo, run=run, limits=limits, work_fn=work_fn)
 
 
-def _locked_pass(tracker: DispatchTracker, *, repo: Path, run: Runner) -> PassResult:
+def _locked_pass(
+    tracker: DispatchTracker, *, repo: Path, run: Runner, limits: Limits, work_fn: WorkFn
+) -> PassResult:
     try:
-        config = load_project_config(repo).dispatch
+        project = load_project_config(repo)
+        config = project.dispatch
     except ProjectConfigError as e:
         logger.error("dispatch: cannot read the configuration — %s", e)
         return PassResult.FAILED
@@ -166,9 +174,10 @@ def _locked_pass(tracker: DispatchTracker, *, repo: Path, run: Runner) -> PassRe
 
     decision = decide(issue, config, tasks_text)
     if isinstance(decision, Accepted):
-        logger.info("dispatch: #%d accepted (%s %s) — left for a run", issue.number,
+        logger.info("dispatch: #%d accepted (%s %s)", issue.number,
                     decision.spec_slug, decision.task_id)
-        return PassResult.COMPLETED
+        return _claim_and_run(tracker, issue.number, decision, commit=commit, repo=repo,
+                              project=project, limits=limits, work_fn=work_fn)
 
     logger.info("dispatch: #%d refused — %s", issue.number, decision.reason.value)
     try:
@@ -180,3 +189,62 @@ def _locked_pass(tracker: DispatchTracker, *, repo: Path, run: Runner) -> PassRe
         return PassResult.FAILED
     logger.info("dispatch: #%d label removed, commented and closed", issue.number)
     return PassResult.COMPLETED
+
+
+def _claim_and_run(
+    tracker: DispatchTracker,
+    number: int,
+    task: Accepted,
+    *,
+    commit: str,
+    repo: Path,
+    project: ProjectConfig,
+    limits: Limits,
+    work_fn: WorkFn,
+) -> PassResult:
+    """Claim the issue, run its task, answer it (R-4, R-9, R-10, R-11).
+
+    `work()` gets what a hand dispatch gives it — the roster, the limits and
+    the project's configuration — plus only the fetched commit and
+    `existing="continue"`; never any seam or text of the tick's own.
+    """
+    try:
+        tracker.remove_label(number)
+    except Exception as e:  # noqa: BLE001 — an unclaimed issue starts nothing (R-4)
+        logger.error("dispatch: FAILED — cannot claim #%d: %s", number, e)
+        return PassResult.FAILED
+    logger.info("dispatch: #%d claimed — label removed", number)
+
+    lock_file = repo / lock.LOCK_FILE
+    worktree = WORKTREES_DIR / f"{task.spec_slug}-{task.task_id.lower()}"
+    started = lock.Run(
+        pid=os.getpid(), started=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        issue=number, spec=task.spec_slug, task=task.task_id, worktree=worktree.as_posix(),
+    )
+    lock.write_run(started, lock_file)
+    logger.info("dispatch: #%d run written to the lock file", number)
+
+    try:
+        outcome = work_fn(
+            task.spec_slug, task.task_id, Roster.from_file(repo / limits.roster),
+            timeout_s=limits.timeout_s, spend_limit_usd=limits.spend_limit_usd,
+            project=project, at=commit, existing="continue",
+        )
+    except Exception as e:  # noqa: BLE001 — a run that raises is still answered
+        logger.error("dispatch: #%d run ended in an error — %s", number, e)
+        comment = run_comment(None)
+    else:
+        logger.info("dispatch: #%d run ended — %s", number, type(outcome).__name__)
+        comment = run_comment(outcome)
+
+    result = PassResult.COMPLETED
+    try:
+        tracker.comment(number, comment)
+        tracker.close(number)
+        logger.info("dispatch: #%d commented and closed", number)
+    except Exception as e:  # noqa: BLE001 — reported as a failed pass, never raised
+        logger.error("dispatch: FAILED — cannot answer #%d: %s", number, e)
+        result = PassResult.FAILED
+    lock.write_run(replace(started, finished=True), lock_file)
+    logger.info("dispatch: #%d run marked finished", number)
+    return result
