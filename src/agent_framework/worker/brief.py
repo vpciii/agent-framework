@@ -203,3 +203,17 @@ Your PR body will declare: Satisfies: {", ".join(task.criteria) or "—"}
 {_conventions(project)}
 
 {_RESULT_CONTRACT}"""
+
+
+def resume_brief(brief: str, note: str) -> str:
+    """The usual brief plus the earlier session's handoff note under its own
+    heading, for a session resuming a stopped run (specs/dispatch-from-issue
+    R-14). The note is the orchestrator's own writing, never an issue's."""
+    return f"""\
+{brief}
+
+== HANDOFF NOTE (an earlier session on this task was stopped; resume its work) ==
+The worktree and branch are as it left them; the orchestrator wrote this
+note when it stopped.
+
+{note.strip()}"""

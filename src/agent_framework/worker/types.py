@@ -41,6 +41,16 @@ class PrOpened:
 
 
 @dataclass(frozen=True)
+class PrAlreadyOpen:
+    """Starting again found the task's branch already has an open pull request:
+    no session, nothing changed (specs/dispatch-from-issue R-16)."""
+
+    url: str
+    branch: str
+    task_id: str
+
+
+@dataclass(frozen=True)
 class Escalated:
     """The worker challenged the contract: no PR, a durable escalation artifact."""
 
@@ -93,4 +103,6 @@ class HandoffRefused:
     alerts: tuple[str, ...] = field(default=(), compare=False)
 
 
-WorkerOutcome = PrOpened | Escalated | TimedOut | SpendLimitReached | HandoffRefused
+WorkerOutcome = (
+    PrOpened | PrAlreadyOpen | Escalated | TimedOut | SpendLimitReached | HandoffRefused
+)
