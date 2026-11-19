@@ -11,6 +11,10 @@
 - **Corrected:** 2026-11-19 — T-9's *Done when* contradicted itself and
   the worker escalated (#160); one sentence changed (the tally's last
   row). Signed off by vpc 2026-11-19.
+- **Corrected again:** 2026-11-19 — T-9 named `ps` as how to tell the
+  session's process from another, and the worker's sandbox cannot run
+  `ps`; the worker escalated (#162). The session now holds a lock
+  instead (vpc's choice, 2026-11-19). Signed off by vpc 2026-11-19.
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
@@ -85,10 +89,11 @@ change is made on vpc's word.
 | T-6 | #157 | yes | 7m 18s | $2.13 | none |
 | T-7 | #158 | yes | 5m 37s | $1.60 | none |
 | T-9, first run | none | — | 29s | $0.29 | escalation (#160): the task as written could not be met — a lock file with no start time was to stop nothing, and T-6's test, which writes one and expects its group stopped, was to pass unmodified |
+| T-9, second run | none | — | 44s | $0.44 | escalation (#162): the brief had the start time read from `ps`, which is setuid and cannot run in the worker's sandbox, so its own tests could not pass there |
 
 T-1 to T-7: seven tasks, seven pull requests merged with none of the
 worker's code reworked, $9.68, about 33 minutes of session time, one
-alert. T-9's first run adds $0.29 and a second alert, and no code.
+alert. T-9's first two runs add $0.73 and two more alerts, and no code.
 
 - **T-5's escalation was not about the contract.** The work was done
   and the gate green, but the commit command was refused: its message
@@ -102,10 +107,13 @@ alert. T-9's first run adds $0.29 and a second alert, and no code.
   as T-5 did: an alert and no pull request. Not yet fixed.
 - **Sizes.** Lines added, tests included: 289 (T-2) to 701 (T-4); five
   of the seven passed 400. The validator rejected none for size.
-- **T-9's escalation was about the contract, and was right.** The
-  chief wrote a *Done when* that asked for two things at once. The
-  session stopped before writing code and asked which gives way. The
-  safety rule stays; the sentence about T-6's tests is the one changed.
+- **T-9's escalations were about the contract, and were right.** The
+  chief first wrote a *Done when* that asked for two things at once,
+  then a brief that named a program the sandbox cannot run. Each time
+  the session stopped before writing code and asked. Letting `ps` out
+  of the sandbox was weighed and not done: the profile forbids any
+  unsandboxed command (ADR 0007). The lesson for a brief: name a
+  mechanism only after running it where the worker will.
 - **Found in review, not by a test.** T-6's recovery trusts two things
   the plan did not question; T-9 below is the fix. `worker/__main__.py`
   prints an outcome it does not know as `timed_out`, and it does not
@@ -120,7 +128,14 @@ happen until the schedule is on, so T-9 fixes both before T-8.
   most often dies because the Mac restarts or sleeps, and after a
   restart the number in the lock file may belong to another program,
   which recovery would stop. The plan guards the lock against a reused
-  process id (*Alternatives considered*) but not the stop.
+  process id (*Alternatives considered*) but not the stop. T-9 has the
+  session hold a lock of its own: free means the session is gone, and
+  after a restart it is always free. It errs towards doing nothing — a
+  child that outlives the session's main process and no longer holds
+  the lock is left running, not stopped. Whether the real CLI keeps the
+  inherited lock open is not something a test with a stand-in can show;
+  it is checked in T-8, and if it does not, recovery stops nothing,
+  which is the safe failure.
 - **A run can die before its worktree exists.** The run is recorded
   before `work()` cuts the worktree. Recovery then creates the folder to
   hold the handoff note, and the next dispatch issue takes that folder
@@ -436,15 +451,20 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   `specs/dispatch-from-issue/spec.md` (Traceability rows)
 - **Brief:** Two changes to the recovery T-6 built (`_Pass.recover` in
   `tick.py`); nothing else about a pass changes. **Stop only the
-  session.** When the session starts, record beside its process group
-  the time the operating system gives for when that process started
-  (what `ps -o lstart= -p <pid>` prints, read once in the callback
-  `run_claude` already calls). At recovery, ask the same of the recorded
-  number: stop the group only when a process with that number exists
-  and reports the same start time. Otherwise send no signal and log
-  that the session is already gone. A lock file written before this
-  change, with a group and no start time, is treated as already gone.
-  **Resume only a real worktree.** At recovery, write the handoff note
+  session.** The session holds a second lock for as long as it lives.
+  Before starting a session the tick opens
+  `.worktrees/dispatch-session.lock` and takes an advisory lock on it
+  (`fcntl.flock`, as for the tick's own lock); `run_claude` takes an
+  optional argument naming file descriptors the session inherits, and
+  the tick passes this one through the `session_run` argument it
+  already uses for the process-group callback; the tick then closes its
+  own copy, so the lock is held by the session and what it starts, and
+  the operating system frees it when the last of them is gone. At
+  recovery, try to take that lock without waiting. Taken: no session is
+  left, so release it, send no signal, and log that the session is
+  already gone. Held: the session is alive, so stop the recorded process
+  group as now. Nothing is read from `ps` or any other program, and no
+  process is asked when it started. **Resume only a real worktree.** At recovery, write the handoff note
   only when the run's recorded worktree is one of the repository's
   worktrees (`git worktree list --porcelain` names it). When it is not —
   the run died before its worktree was cut — create nothing: raise the
@@ -454,17 +474,19 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   wording is fixed, in `report.py`'s style, and carries nothing from the
   issue. Tests use a real repository and real processes, as T-6's do.
 - **Done when:** tests citing SC-12 show that recovery sends no signal
-  to a live process that has the recorded number but another start
-  time, and does stop a live session whose number and start time both
-  match; that a lock file with a group and no start time stops nothing;
-  that for a run whose worktree was never cut, recovery leaves no folder
+  to a live process group that has the recorded number but does not
+  hold the session lock, and that the group is still alive afterwards;
+  that it does stop a live stand-in session that holds the session lock
+  and leads the recorded group; that after a stand-in session's launcher
+  is killed the lock is still held, and is free once the session is
+  stopped; that for a run whose worktree was never cut, recovery leaves no folder
   at the worktree's path, raises the alert, comments on and closes the
   issue and clears the record, and a dispatch issue for the same task
   then runs in a fresh worktree cut from `origin/main`; and T-6's
   existing SC-12 tests keep every assertion they make, with one change
   to their setup: the helper in `tests/dispatch/test_recovery.py` that
-  writes a lock file by hand records the session's start time beside
-  its group, as the tick now does. The gate passes.
+  stands in for a dead pass gives its stand-in session the session
+  lock, as the tick now does. The gate passes.
 
 ### [ ] T-8 — Delivery: the host, the switch, the schedule, the heartbeat check, the docs, the live check
 - **Satisfies:** SC-17
@@ -476,7 +498,9 @@ Names the later tasks rely on, fixed here so each brief stands alone:
 - **Brief:** Not for dispatch; done with vpc. In order: (1) the bet's
   spike on the host — a session started by launchd logs in on the Max
   plan, what a run does to usage, what it does to the host's other
-  jobs — with the bet's first no-go applying if it fails; (2) turn the
+  jobs — with the bet's first no-go applying if it fails; and, apart
+  from the bet, whether the session lock is held while a real session
+  runs (T-9), recorded here either way; (2) turn the
   CLI's self-update off on that Mac; (3) this repository's `[dispatch]`
   table, by vpc's own pull request, since the file is a protected path;
   (4) the `dispatch` and `failed` labels; (5) the launchd agent, every
