@@ -16,6 +16,8 @@ Verifies:
   the session keeps the lock after its launcher dies and frees it when it is
   stopped. A run whose worktree was never cut gets no worktree and no note,
   is answered and closed, and the next issue starts afresh from `origin/main`.
+  A pass that finds the session lock held starts nothing and fails; the pass
+  after the lock is freed runs the issue.
 """
 
 from __future__ import annotations
@@ -299,3 +301,30 @@ def test_sc12_a_run_that_died_before_its_worktree_was_cut_is_closed_and_started_
     assert _git(repo, "log", "--format=%s", BRANCH).splitlines()[0] == "feat: work"
     assert _git(repo, "rev-parse", f"{BRANCH}~1") == _git(repo, "rev-parse", "origin/main")
     assert not tracker.issues[8].open
+
+
+def test_sc12_a_pass_that_finds_the_session_lock_held_starts_nothing(
+    repo: Path, no_webhook: None
+) -> None:
+    """SC-12: while a session (here, this test) holds the session lock, a pass
+    starts no session, leaves its issue open and labelled with no comment,
+    records no run and ends as a failed pass. Once the lock is freed, the
+    next pass runs the issue."""
+    held = lock.take_session(repo / lock.SESSION_LOCK_FILE)
+    assert held is not None
+    events: list[str] = []
+    tracker, alerts = Tracker(events, _issue()), Alerts()
+    before = len(tracker.issues[7].comments)
+    session, runner = Session(events), Runner()
+    try:
+        assert _pass(tracker, alerts, session, runner) is PassResult.FAILED
+    finally:
+        os.close(held)
+    assert session.seen == [] and events == []
+    fake = tracker.issues[7]
+    assert fake.open and "dispatch" in fake.labels and len(fake.comments) == before
+    assert lock.read_run(repo / lock.LOCK_FILE) is None
+    assert alerts.raised == []
+
+    assert _pass(tracker, alerts, session, runner) is PassResult.COMPLETED
+    assert len(session.seen) == 1 and not tracker.issues[7].open
