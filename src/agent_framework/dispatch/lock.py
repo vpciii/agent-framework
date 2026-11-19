@@ -8,6 +8,12 @@ never rests on guessing whether a process id is still the same process.
 The file's content is the run in progress, or nothing — in the plan's shape,
 plus whether that run finished. It is always rewritten in place, never
 replaced: a new file would be a new inode, and the lock is held on the old.
+
+The session holds a second lock, on `.worktrees/dispatch-session.lock`, for
+as long as it lives: the tick takes it, hands the descriptor to the session,
+and closes its own copy, so the operating system frees it when the session
+and the last process it started are gone. Whether a recorded session is
+still alive is asked of that lock, never of a process id (R-15).
 """
 
 from __future__ import annotations
@@ -22,6 +28,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 LOCK_FILE = Path(".worktrees") / "dispatch.lock"
+SESSION_LOCK_FILE = Path(".worktrees") / "dispatch-session.lock"
 
 
 @contextmanager
@@ -42,6 +49,29 @@ def hold(path: Path = LOCK_FILE) -> Iterator[bool]:
         yield taken
     finally:
         os.close(fd)  # closing the only descriptor releases the lock
+
+
+def take_session(path: Path = SESSION_LOCK_FILE) -> int | None:
+    """Take the session lock without waiting: the open descriptor holding
+    it, for the session to inherit, or None when a session still holds it."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o644)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        os.close(fd)
+        return None
+    return fd
+
+
+def session_alive(path: Path = SESSION_LOCK_FILE) -> bool:
+    """Whether a session holds the session lock. When none does, the lock
+    is taken and released at once; nothing is signalled or asked."""
+    fd = take_session(path)
+    if fd is None:
+        return True
+    os.close(fd)
+    return False
 
 
 @dataclass(frozen=True)

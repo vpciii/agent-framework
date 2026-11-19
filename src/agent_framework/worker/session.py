@@ -71,7 +71,7 @@ def check_spend_limit(limit_usd: float) -> float:
 
 def run_claude(
     args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str], record: Path,
-    *, on_start: Callable[[int], None] | None = None,
+    *, on_start: Callable[[int], None] | None = None, pass_fds: Sequence[int] = (),
 ) -> None:
     """Default seam: run the CLI in the worktree, kill on budget expiry.
 
@@ -81,7 +81,8 @@ def run_claude(
     its own process group, so a budget expiry stops it and every child it
     started (test runs, shells) — none outlive it. `on_start`, when given, is
     told that group as soon as the session has started (the dispatch tick
-    records it, so a later pass can stop what a dead run left).
+    records it, so a later pass can stop what a dead run left). `pass_fds`
+    names open descriptors the session inherits (the tick's session lock).
     """
     record.parent.mkdir(parents=True, exist_ok=True)
     with record.open("w", encoding="utf-8") as out:
@@ -89,7 +90,7 @@ def run_claude(
             proc = subprocess.Popen(
                 list(args), cwd=cwd, env=dict(env), stdin=subprocess.DEVNULL,
                 stdout=out, stderr=subprocess.PIPE,
-                text=True, start_new_session=True,
+                text=True, start_new_session=True, pass_fds=tuple(pass_fds),
             )
         except FileNotFoundError:
             raise SessionResultError(

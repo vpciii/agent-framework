@@ -190,7 +190,8 @@ class Session:
 
     def __call__(self, args: Sequence[str], cwd: Path, timeout_s: float,
                  env: Mapping[str, str], record: Path,
-                 on_start: Callable[[int], None] | None = None) -> None:
+                 on_start: Callable[[int], None] | None = None,
+                 pass_fds: Sequence[int] = ()) -> None:
         self.events.append("session")
         argv = list(args)
         self.seen.append({"argv": argv, "brief": argv[argv.index("-p") + 1],
@@ -338,7 +339,8 @@ def test_sc7_work_gets_nothing_of_the_ticks_own_but_the_commit_and_continue(
     assert set(kwargs) == {"timeout_s", "spend_limit_usd", "project", "at", "existing",
                            "session_run"}
     seam = kwargs["session_run"]
-    assert seam.func is run_claude and seam.args == () and set(seam.keywords) == {"on_start"}
+    assert seam.func is run_claude and seam.args == () and set(seam.keywords) == {"on_start",
+                                                                     "pass_fds"}
     assert (kwargs["timeout_s"], kwargs["spend_limit_usd"]) == (600, 3.0)
     assert kwargs["existing"] == "continue"
     assert kwargs["at"] == _git(repo, "rev-parse", "origin/main")

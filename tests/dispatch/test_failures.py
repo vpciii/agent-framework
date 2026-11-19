@@ -57,7 +57,8 @@ class FailingSession(Session):
 
     def __call__(self, args: Sequence[str], cwd: Path, timeout_s: float,
                  env: Mapping[str, str], record: Path,
-                 on_start: Callable[[int], None] | None = None) -> None:
+                 on_start: Callable[[int], None] | None = None,
+                 pass_fds: Sequence[int] = ()) -> None:
         self.events.append("session")
         self.seen.append({"argv": list(args)})
         record.parent.mkdir(parents=True, exist_ok=True)

@@ -103,6 +103,22 @@ def dead_run_comment(alerts: tuple[str, ...]) -> str:
             f"resumes it.\n\n{_alert(alerts)} {_CLOSED}")
 
 
+_UNSTARTED = ("stopped before it started work: the pass that started it ended before its "
+              "worktree was cut. Nothing was kept; a new dispatch issue starts it afresh.")
+
+
+def unstarted_run_alert(spec: str, task: str) -> tuple[str, str]:
+    """The (title, body) of the `timeout` alert for a run that died before
+    its worktree was cut (R-15): fixed wording and the matched slug and id."""
+    return f"{task} of {spec} stopped", f"The worker run {_UNSTARTED}"
+
+
+def unstarted_run_comment(alerts: tuple[str, ...]) -> str:
+    """The one comment an issue gets whose run died before its worktree was
+    cut: no note, no worktree, and a new issue starts the task afresh."""
+    return f"The worker run {_UNSTARTED}\n\n{_alert(alerts)} {_CLOSED}"
+
+
 class CheckoutRefusal(StrEnum):
     """Why a pass will not use its checkout (R-8)."""
 
