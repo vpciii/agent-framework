@@ -1,6 +1,6 @@
 # ADR 0011: Alert text leaves the machine as a pointer, or encrypted with a key only vpc holds
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-19
 - **Deciders:** vpc
 

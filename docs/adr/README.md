@@ -7,7 +7,7 @@ See `$METHODOLOGY_HOME/methodology.md` §1 for when an ADR is required, and
 Newest first when browsing. Never edit an accepted ADR — supersede it with a
 new one and mark the old one `Superseded by NNNN`.
 
-- **0011** — *(Proposed)* Alert text leaves the machine as a pointer, or encrypted with a key only vpc holds.
+- **0011** — Alert text leaves the machine as a pointer, or encrypted with a key only vpc holds.
 - **0010** — Only vpc's dispatch issue starts an unattended run, and only `main` steers it.
 - **0009** — The validator is bound by what the eval set measures; lineage is a preference and a paid API is allowed. Replaces in part: 0001 decision 4, 0004's validator row, 0008 decision 5.
 - **0008** — The validator judges conformance to the contract; it does not hunt for unstated defects. Supersedes 0005.

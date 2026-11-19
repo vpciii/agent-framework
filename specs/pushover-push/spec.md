@@ -1,10 +1,11 @@
 # Spec: The phone push goes through Pushover, encrypted before it leaves the Mac
 
-- **Status:** Draft
+- **Status:** Approved
+- **Approved:** 2026-11-19, signed off by vpc
 - **Date:** 2026-11-19
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0011 (alert text leaves the machine as a
-  pointer or encrypted — proposed with this spec), ADR 0001 (artifacts
+  pointer or encrypted — accepted with this spec), ADR 0001 (artifacts
   are the coordination protocol — the GitHub issue stays the record),
   ADR 0007 (worker session
   confinement — the session's environment is an allowlist), ADR 0010
@@ -210,7 +211,7 @@ They cannot prove a phone can read it. That is the live check below.
 
 All five were answered by vpc on 2026-11-19, each as recommended.
 
-- [x] **Does this need an ADR?** Decided: yes — ADR 0011, proposed
+- [x] **Does this need an ADR?** Decided: yes — ADR 0011, accepted
   with this spec. The rule "alert text leaves the machine either as a
   pointer or encrypted with a key only vpc holds" constrains every
   later channel and every adopting project, which is more than this
