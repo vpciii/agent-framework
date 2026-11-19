@@ -307,15 +307,15 @@ All six were answered by vpc on 2026-11-18, each as recommended.
 
 | Criterion | Requirement(s) | Verified by (test) |
 |---|---|---|
-| SC-1 | R-1, R-2 | `tests/dispatch/test_issue.py::test_sc1_accepts_the_configured_authors_title_for_an_open_task`, `tests/dispatch/test_issue.py::test_sc1_refuses_each_other_case_with_its_own_reason`, `tests/dispatch/test_issue.py::test_sc1_another_author_is_refused_before_the_title_is_looked_at`, `tests/dispatch/test_issue.py::test_sc1_a_refusal_carries_nothing_taken_from_the_issue`, `tests/dispatch/test_issue.py::test_sc1_the_oldest_of_several_issues_is_chosen` |
-| SC-2 | R-3 | `tests/dispatch/test_issue.py::test_sc2_no_author_and_disabled_are_each_reported_as_off`, `tests/test_project_config.py::test_sc2_no_author_and_enabled_false_are_each_off` |
-| SC-3 | R-4, R-5 | *(pending)* |
+| SC-1 | R-1, R-2 | `tests/dispatch/test_issue.py::test_sc1_accepts_the_configured_authors_title_for_an_open_task`, `tests/dispatch/test_issue.py::test_sc1_refuses_each_other_case_with_its_own_reason`, `tests/dispatch/test_issue.py::test_sc1_another_author_is_refused_before_the_title_is_looked_at`, `tests/dispatch/test_issue.py::test_sc1_a_refusal_carries_nothing_taken_from_the_issue`, `tests/dispatch/test_issue.py::test_sc1_the_oldest_of_several_issues_is_chosen`, `tests/dispatch/test_pass_refuses.py::test_sc1_a_refused_issue_starts_no_session` |
+| SC-2 | R-3 | `tests/dispatch/test_issue.py::test_sc2_no_author_and_disabled_are_each_reported_as_off`, `tests/test_project_config.py::test_sc2_no_author_and_enabled_false_are_each_off`, `tests/dispatch/test_pass_refuses.py::test_sc2_with_dispatch_off_the_tracker_is_never_asked_and_the_pass_says_why` |
+| SC-3 | R-4, R-5 | `tests/dispatch/test_pass_refuses.py::test_sc3_a_pass_while_another_process_holds_the_lock_lists_nothing` |
 | SC-4 | R-6 | `tests/dispatch/test_issue.py::test_sc4_a_title_beyond_a_slug_and_a_task_id_is_refused`, `tests/dispatch/test_issue.py::test_sc4_only_the_matched_slug_and_task_id_come_from_the_title` |
 | SC-5 | R-7 | `tests/worker/test_at_commit.py::test_sc5_the_brief_and_the_worktree_come_from_the_commit_not_the_working_files`, `tests/worker/test_at_commit.py::test_sc5_with_a_commit_nothing_is_fetched_and_the_tree_is_cut_there`, `tests/worker/test_at_commit.py::test_sc5_a_commit_without_the_spec_or_the_task_is_refused_before_any_worktree` |
 | SC-6 | R-8 | *(pending)* |
 | SC-7 | R-9 | *(pending)* |
 | SC-8 | R-10 | *(pending)* |
-| SC-9 | R-11, R-12 | *(pending)* |
+| SC-9 | R-11, R-12 | `tests/dispatch/test_pass_refuses.py::test_sc9_each_refusal_leaves_one_comment_no_label_and_a_closed_issue`, `tests/dispatch/test_pass_refuses.py::test_sc9_marker_text_in_the_title_is_not_in_the_comment` |
 | SC-10 | R-13 | *(pending)* |
 | SC-11 | R-14 | `tests/worker/test_starting_again.py::test_sc11_a_stopped_run_resumes_in_its_worktree_with_the_note` |
 | SC-12 | R-15 | *(pending)* |
