@@ -177,3 +177,28 @@ def test_sc9_brief_states_the_limits_and_says_to_escalate(specs_dir: Path) -> No
 
     no_network = build_brief(parse_task("fixture", "T-1", specs_dir=specs_dir))
     assert "no network host" in no_network
+
+
+def test_brief_says_how_to_write_files_and_commit_so_no_command_shape_is_refused(
+    specs_dir: Path,
+) -> None:
+    """Regression (dispatch-from-issue T-5, issue 155): a session whose commit
+    commands were refused for their shape — a result file written by heredoc,
+    a message passed with `-m` — concluded it could not commit and escalated
+    finished work. The brief names the one shape that holds for any message,
+    and says a refusal is of the command, not of the commit."""
+    brief = build_brief(parse_task("fixture", "T-1", specs_dir=specs_dir))
+
+    commands = brief[brief.index("HOW TO WRITE FILES AND COMMIT"):]
+    assert "git commit -q -F .worker-commit-msg" in commands
+    assert "write the message with the Write tool" in commands
+    assert "`.worker-commit-msg`" in commands and "git ignores it" in commands
+    assert "Do\n  not pass the message with `-m` or a heredoc" in commands
+    # The result file too: a heredoc holding its JSON is a refused shape.
+    assert "Write and Edit tools" in commands and "`.worker-result.json`" in commands
+    # What stopped the T-5 session was reading a refusal as final.
+    assert "does not mean you cannot commit" in commands
+    assert "nobody\n  can approve one for you" in commands
+    # It comes before the result contract's last statement, after the conventions.
+    assert brief.index("CONVENTIONS") < brief.index("HOW TO WRITE FILES AND COMMIT")
+    assert brief.rindex("RESULT CONTRACT") > brief.index("HOW TO WRITE FILES AND COMMIT")

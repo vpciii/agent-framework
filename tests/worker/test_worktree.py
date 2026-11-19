@@ -275,3 +275,26 @@ def test_create_worktree_is_unchanged_by_the_detached_seam(
 
     assert _git(clone / path, "rev-parse", "HEAD") == upstream_head
     assert _git(clone / path, "rev-parse", "--abbrev-ref", "HEAD") == branch
+
+
+def test_the_commit_message_file_is_ignored_in_a_worker_tree(
+    stale_clone: tuple[Path, str],
+) -> None:
+    """Regression (dispatch-from-issue T-5, issue 155): the brief has a session
+    write its commit message to a file so the commit command has one fixed
+    shape. That file must never be committed, even by `git add -A`."""
+    from agent_framework.worker.session import COMMIT_MESSAGE_FILE
+    from agent_framework.worker.worktree import EXCLUDED, add_detached
+
+    clone, upstream_head = stale_clone
+    _git(clone, "fetch", "-q", "origin")
+    tree = clone / add_detached(Path(".worktrees/case-msg"), upstream_head)
+
+    assert COMMIT_MESSAGE_FILE == ".worker-commit-msg" and COMMIT_MESSAGE_FILE in EXCLUDED
+    (tree / COMMIT_MESSAGE_FILE).write_text("feat: x\n", encoding="utf-8")
+    (tree / "new.txt").write_text("x\n", encoding="utf-8")
+    _git(tree, "add", "-A")
+    assert _git(tree, "diff", "--cached", "--name-only").split() == ["new.txt"]
+    _git(tree, "commit", "-q", "-F", COMMIT_MESSAGE_FILE)
+    assert _git(tree, "log", "-1", "--format=%s") == "feat: x"
+    assert COMMIT_MESSAGE_FILE not in _git(tree, "ls-files")

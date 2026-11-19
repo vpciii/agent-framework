@@ -15,6 +15,7 @@ from ..artifacts import criterion_text, section, task_block
 from ..errors import UnknownTaskError
 from ..proc import Runner, run_command
 from ..project import DEFAULTS, ProjectConfig
+from .session import COMMIT_MESSAGE_FILE, RESULT_FILE
 from .types import TaskSpec
 
 _SC_RE = re.compile(r"\bSC-\d+\b")
@@ -27,6 +28,31 @@ or, if you are escalating (see ESCALATION below):
   {"status": "escalated", "detail": "<the blocking question>",
    "spec_location": "<file and section you are challenging>"}
 A missing or malformed file means your work cannot be accepted."""
+
+# A headless session has nobody to approve a command, and the CLI refuses
+# some command shapes whatever they do. A session that met three refusals in
+# a row concluded it could not commit and escalated finished work
+# (dispatch-from-issue T-5, issue 155). The shapes below were run under the
+# worker's own profile before being written here: the refused ones were
+# refused and the commit through a message file went through.
+_COMMANDS = f"""\
+HOW TO WRITE FILES AND COMMIT:
+- Every shell command is checked for its shape before it runs, and nobody
+  can approve one for you. Some shapes are refused whatever they do: a
+  heredoc or a quoted argument holding braces beside quotes, angle
+  brackets or a `$`; an in-place `sed`; several commands joined with `&&`,
+  `;` or `|` when one part is of that kind.
+- A refusal for a command's shape is of that one command, never of what
+  you were trying to do. Do the same thing another way and carry on. It
+  does not mean you cannot commit, and is not by itself a reason to
+  escalate. (A task that needs something the LIMITS forbid still is.)
+- Create and change files with the Write and Edit tools, not with a script
+  or a heredoc passed to a shell command. That includes `{RESULT_FILE}`.
+- To commit: write the message with the Write tool to
+  `{COMMIT_MESSAGE_FILE}` in the repository root (git ignores it); run
+  `git add` with the paths; then run
+  `git commit -q -F {COMMIT_MESSAGE_FILE}`. Each is its own command. Do
+  not pass the message with `-m` or a heredoc."""
 
 _ESCALATION = """\
 ESCALATION: if you believe the spec or task is wrong, contradictory, or
@@ -201,6 +227,8 @@ Your branch: {branch_name(task)} (already checked out in this worktree).
 Your PR body will declare: Satisfies: {", ".join(task.criteria) or "—"}
 
 {_conventions(project)}
+
+{_COMMANDS}
 
 {_RESULT_CONTRACT}"""
 

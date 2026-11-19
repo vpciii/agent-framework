@@ -17,7 +17,7 @@ from pathlib import Path
 from ..errors import WorktreeError
 from ..proc import Runner, run_command
 from .brief import branch_name
-from .session import RESULT_FILE
+from .session import COMMIT_MESSAGE_FILE, RESULT_FILE
 from .types import TaskSpec
 
 WORKTREES_DIR = Path(".worktrees")
@@ -34,9 +34,9 @@ NO_HOOKS = ("-c", "core.hooksPath=/dev/null")
 # The note a stopped session's worktree carries for the next session —
 # `handoff.HANDOFF_FILE`, named here because `handoff` imports this module.
 HANDOFF_FILE = "HANDOFF.md"
-# What the exclude file must list: files the orchestrator writes into a
-# worker's tree that no commit should carry.
-EXCLUDED = (RESULT_FILE, HANDOFF_FILE)
+# What the exclude file must list: files the orchestrator or the session
+# writes into a worker's tree that no commit should carry.
+EXCLUDED = (RESULT_FILE, HANDOFF_FILE, COMMIT_MESSAGE_FILE)
 
 
 def derive(task: TaskSpec) -> tuple[Path, str]:
