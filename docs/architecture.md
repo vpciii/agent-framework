@@ -258,7 +258,7 @@ carries a change to one, so update this list promptly when one changes
 - `specs/worker-spend-and-record/` — Implemented (frozen).
 - `specs/worker-eval/` — Implemented (frozen).
 - `specs/dispatch-from-issue/` — Approved, with an Approved `plan.md`
-  and `tasks.md`. Seven of its nine tasks are merged: the
+  and `tasks.md`. Eight of its nine tasks are merged: the
   `agent-framework-dispatch` command and everything a pass does are in
   `src/agent_framework/dispatch/`. It is not implemented and nothing
   runs it: no schedule exists and this repository has no `[dispatch]`
