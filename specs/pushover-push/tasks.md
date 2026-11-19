@@ -1,6 +1,9 @@
 # Tasks: The phone push goes through Pushover, encrypted before it leaves the Mac
 
-- **Status:** Draft
+- **Status:** Approved
+- **Approved:** 2026-11-19, signed off by vpc, accepting the departure
+  from the spec described below (three tasks where its fifth answered
+  question says one)
 - **Spec:** ./spec.md
 
 PR-sized tasks for the spec, which has no separate plan (its *Approach*
@@ -16,7 +19,7 @@ PR number when done. Task PRs carry a `Satisfies:` declaration and name
 **Criterion coverage:** SC-1, SC-2, SC-3, SC-4, SC-6, SC-7, SC-8 → T-1 ·
 SC-5 → T-2 · SC-1 → T-3 (the live half: a phone that reads it).
 
-**One departure from the spec, to be accepted with this list.** The
+**One departure from the spec, accepted with this list.** The
 spec's fifth answered question says the worker builds this from a
 one-task list. Here it is two worker tasks and one done with vpc. The
 nine tasks dispatched for `specs/dispatch-from-issue` were written for
