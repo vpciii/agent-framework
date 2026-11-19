@@ -1,7 +1,9 @@
 # Spec: The phone push goes through Pushover, encrypted before it leaves the Mac
 
-- **Status:** Approved
+- **Status:** Implemented
 - **Approved:** 2026-11-19, signed off by vpc
+- **Implemented:** 2026-11-19 — T-1 (#168), T-2 (#169) and T-3 (the
+  live check, recorded under *Rollout and undo*); signed off by vpc
 - **Date:** 2026-11-19
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0011 (alert text leaves the machine as a
@@ -203,6 +205,22 @@ They cannot prove a phone can read it. That is the live check below.
   GitHub issue; an escalation from a project with `push_detail = "full"`
   shows the question; and the Home Assistant card still shows the short
   line.
+- **The live check as seen, 2026-11-19, on vpc's iPhone.** Two alerts
+  were sent by hand from the main checkout, each opening an issue as its
+  record (#170, #172; both closed afterwards).
+  - *A readable title and message:* yes. The first alert, sent with
+    `push_detail` at its default, arrived in the Pushover app readable.
+    Confirmed by vpc.
+  - *A tap opens its GitHub issue:* yes. Confirmed by vpc.
+  - *The question, for a project with `push_detail = "full"`:* yes.
+    After this repository's setting was merged (#171), the second alert
+    read the setting and carried a sample question of the length of a
+    real escalation's; it arrived readable. Confirmed by vpc. It was a
+    hand-made alert that followed the worker's rule, not an escalation
+    raised by a worker run.
+  - *The Home Assistant card still shows the short line:* yes, both
+    times, read from Home Assistant's own state; the second held none of
+    the question.
 - `docs/architecture.md` gains the three names and the Pushover account
   as settings outside the repository; `docs/adoption.md` says how to set
   them and what `push_detail` means.
