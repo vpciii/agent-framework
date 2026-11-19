@@ -19,8 +19,7 @@
   the session lock and did not say what a pass does when it cannot. The
   worker chose to fail the pass; the validator rejected #164 for
   behaviour the brief did not ask for and no test covered. The brief
-  now states it and asks for the test. vpc asked for this amendment on
-  2026-11-19; the wording awaits his sign-off.
+  now states it and asks for the test. Signed off by vpc 2026-11-19.
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
@@ -471,8 +470,7 @@ Names the later tasks rely on, fixed here so each brief stands alone:
   still alive — the pass starts nothing: the issue is left open and
   labelled, no run is recorded, and the pass ends as a failed one, so
   that passes held up this way reach the alert for failed passes in a
-  row. At
-  recovery, try to take that lock without waiting. Taken: no session is
+  row. At recovery, try to take that lock without waiting. Taken: no session is
   left, so release it, send no signal, and log that the session is
   already gone. Held: the session is alive, so stop the recorded process
   group as now. Nothing is read from `ps` or any other program, and no
