@@ -18,6 +18,7 @@ import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 
 LOCK_FILE = Path(".worktrees") / "dispatch.lock"
@@ -55,6 +56,11 @@ class Run:
     worktree: str
     session_pgid: int | None = None
     finished: bool = False
+
+    def elapsed_s(self, now: datetime | None = None) -> float:
+        """Seconds from when the run started to `now` (by default, now)."""
+        began = datetime.strptime(self.started, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
+        return max(0.0, ((now or datetime.now(UTC)) - began).total_seconds())
 
 
 def read_run(path: Path = LOCK_FILE) -> Run | None:
