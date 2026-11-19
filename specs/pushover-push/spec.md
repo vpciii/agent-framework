@@ -3,7 +3,7 @@
 - **Status:** Implemented
 - **Approved:** 2026-11-19, signed off by vpc
 - **Implemented:** 2026-11-19 — T-1 (#168), T-2 (#169) and T-3 (the
-  live check, recorded under *Rollout and undo*); awaiting vpc's sign-off
+  live check, recorded under *Rollout and undo*); signed off by vpc
 - **Date:** 2026-11-19
 - **Author:** Claude (draft) — vpc is author of record
 - **Related ADRs:** ADR 0011 (alert text leaves the machine as a
