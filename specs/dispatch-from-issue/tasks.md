@@ -10,7 +10,7 @@
   2026-11-19.
 - **Corrected:** 2026-11-19 — T-9's *Done when* contradicted itself and
   the worker escalated (#160); one sentence changed (the tally's last
-  row). Proposed; awaiting vpc's sign-off.
+  row). Signed off by vpc 2026-11-19.
 - **Spec:** ./spec.md
 - **Plan:** ./plan.md
 
