@@ -1,17 +1,20 @@
 """One pass of the dispatch tick (specs/dispatch-from-issue, the plan's *One pass*).
 
-In order: take the lock; read the configuration; fetch `origin/main` and
-resolve the commit; list the open `dispatch` issues; take the oldest; read
-the named spec's `tasks.md` at that commit; `decide`. A refused issue loses
-its `dispatch` label, gets one comment and is closed. An accepted issue is
-claimed by removing its label, written into the lock file as the run in
-progress, run through `work()` exactly as a hand dispatch runs it (but at
-the fetched commit, starting again if need be), then answered with one
-comment, closed, and its run marked finished.
+In order: take the lock; recover a run that died with the pass that started
+it; bring the checkout to `origin/main` by fast-forward (refusing a changed,
+diverged or nested checkout, and asking to start again once if it moved);
+read the configuration; list the open `dispatch` issues; take the oldest;
+read the named spec's `tasks.md` at the fetched commit; `decide`. A refused
+issue loses its `dispatch` label, gets one comment and is closed. An accepted
+issue is claimed by removing its label, written into the lock file as the run
+in progress, run through `work()` exactly as a hand dispatch runs it (but at
+the fetched commit, starting again if need be, with the session's process
+group recorded as it starts), then answered with one comment, closed, and its
+run marked finished.
 
-Every step logs one line. A fetch or a listing that fails is a failed pass;
-anything else that ends the pass early (another pass running, dispatch off,
-no issue) is a completed one.
+Every step logs one line. A fetch or a listing that fails is a failed pass; a
+checkout that cannot be used is a refused one; anything else that ends the
+pass early (another pass running, dispatch off, no issue) is a completed one.
 """
 
 from __future__ import annotations
@@ -23,20 +26,30 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from enum import StrEnum
+from functools import partial
 from pathlib import Path
 from typing import Protocol
 
-from ..errors import ProjectConfigError
+from ..alerts import GhIssueTracker, IssueTracker, Push, notify, push_from_env
+from ..errors import ProjectConfigError, WorkerError
 from ..proc import Runner, run_command
 from ..project import ProjectConfig, load_project_config
 from ..roster import Roster
+from ..worker.brief import parse_task_at
+from ..worker.handoff import write_handoff_note
 from ..worker.orchestrator import work
-from ..worker.session import DEFAULT_SPEND_LIMIT_USD
-from ..worker.types import WorkerOutcome
+from ..worker.session import DEFAULT_SPEND_LIMIT_USD, run_claude, stop_group
+from ..worker.types import TaskSpec, WorkerOutcome
 from ..worker.worktree import BASE_BRANCH, BASE_REF, BASE_REMOTE, WORKTREES_DIR
 from . import lock
 from .issue import Accepted, Issue, decide, oldest, parse_title
-from .report import refusal_comment, run_comment
+from .report import (
+    CheckoutRefusal,
+    checkout_alert,
+    dead_run_comment,
+    refusal_comment,
+    run_comment,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +57,20 @@ LABEL = "dispatch"
 # What is asked of the tracker about an issue, and nothing else: never the
 # body, the comments or the labels (R-6).
 LIST_FIELDS = "number,title,author,createdAt"
+# The kind and key every refused-checkout alert is raised under: one issue.
+CHECKOUT_ALERT = ("failed", "dispatch/checkout")
 
 WorkFn = Callable[..., WorkerOutcome]
+# `run_claude`'s shape: the session seam plus `on_start`, a keyword told the
+# session's process group as it starts.
+StartingSessionRunner = Callable[..., None]
 
 
 class PassResult(StrEnum):
     COMPLETED = "completed"
     FAILED = "failed"
+    REFUSED = "refused"  # the checkout could not be used (R-8)
+    RESTART = "restart"  # the checkout moved: start the command again, once
 
 
 @dataclass(frozen=True)
@@ -110,23 +130,141 @@ def run_pass(
     repo: Path = Path("."),
     run: Runner = run_command,
     work_fn: WorkFn = work,
+    session_run: StartingSessionRunner = run_claude,
+    alert_tracker: IssueTracker | None = None,
+    push_factory: Callable[[], Push | None] = push_from_env,
+    restarted: bool = False,
 ) -> PassResult:
     """One pass; held under the lock for its whole length (R-1, R-5).
 
-    `limits` and `work_fn` are what a run is started with; a pass that only
-    refuses never uses them.
+    `limits`, `work_fn` and `session_run` are what a run is started with; a
+    pass that only refuses never uses them. A pass whose fast-forward moved
+    the checkout returns `RESTART` before reading anything else, unless
+    `restarted` marks it as the pass the command already started again.
     """
     with lock.hold(repo / lock.LOCK_FILE) as taken:
         if not taken:
             logger.info("dispatch: another pass is running — nothing to do")
             return PassResult.COMPLETED
         logger.info("dispatch: lock taken")
-        return _locked_pass(tracker, repo=repo, run=run, limits=limits, work_fn=work_fn)
+        p = _Pass(tracker, repo, run, limits, work_fn, session_run, alert_tracker,
+                  push_factory)
+        if not p.recover():
+            return PassResult.FAILED
+        refused = p.checkout()
+        if refused is not None:
+            return refused
+        if p.moved and not restarted:
+            logger.info("dispatch: the checkout moved — starting again on the fetched code")
+            return PassResult.RESTART
+        return _locked_pass(p)
 
 
-def _locked_pass(
-    tracker: DispatchTracker, *, repo: Path, run: Runner, limits: Limits, work_fn: WorkFn
-) -> PassResult:
+@dataclass
+class _Pass:
+    tracker: DispatchTracker
+    repo: Path
+    run: Runner
+    limits: Limits
+    work_fn: WorkFn
+    session_run: StartingSessionRunner
+    alert_tracker: IssueTracker | None
+    push_factory: Callable[[], Push | None]
+    moved: bool = False
+
+    @property
+    def lock_file(self) -> Path:
+        return self.repo / lock.LOCK_FILE
+
+    def git(self, *args: str) -> str:
+        return self.run(["git", "-C", str(self.repo), *args])
+
+    def alert(self, kind: str, key: str, title: str, body: str) -> tuple[str, ...]:
+        # notify never raises: a failed channel is in its report, not the pass's.
+        report = notify(kind, key, title, body, f"{title}.",
+                        tracker=self.alert_tracker or GhIssueTracker(self.run),
+                        push=self.push_factory(), update_existing=True)
+        logger.info("dispatch: %s alert — %s", kind, "; ".join(report.lines()))
+        return report.lines()
+
+    def recover(self) -> bool:
+        """Step 2 (R-15): a run recorded and not finished died with its pass —
+        the lock is ours, so no process holds it. Stop what is left of its
+        session, write its handoff note, alert, answer its issue, clear the
+        record. False when the issue could not be answered: the record is
+        then kept, and the next pass tries again."""
+        dead = lock.read_run(self.lock_file)
+        if dead is None or dead.finished:
+            return True
+        logger.info("dispatch: #%d's run (%s %s) died unfinished — recovering",
+                    dead.issue, dead.spec, dead.task)
+        if dead.session_pgid is not None:
+            stop_group(dead.session_pgid)
+            logger.info("dispatch: process group %d stopped", dead.session_pgid)
+        note = write_handoff_note(self._task(dead), self.repo / dead.worktree,
+                                  budget_s=self.limits.timeout_s,
+                                  elapsed_s=dead.elapsed_s(), run=self.run)
+        logger.info("dispatch: handoff note written to %s", note)
+        alerts = self.alert(
+            "timeout", f"{dead.spec}/{dead.task}", f"{dead.task} of {dead.spec} stopped",
+            "The worker run stopped without finishing: the dispatch pass that started it "
+            f"ended first.\n\nWorktree preserved at `{dead.worktree}`; handoff note at "
+            f"`{Path(dead.worktree) / note.name}`.",
+        )
+        try:
+            self.tracker.comment(dead.issue, dead_run_comment(alerts))
+            self.tracker.close(dead.issue)
+        except Exception as e:  # noqa: BLE001 — reported as a failed pass, never raised
+            logger.error("dispatch: FAILED — cannot answer #%d: %s", dead.issue, e)
+            return False
+        lock.write_run(None, self.lock_file)
+        logger.info("dispatch: #%d commented and closed; the record cleared", dead.issue)
+        return True
+
+    def _task(self, dead: lock.Run) -> TaskSpec:
+        try:
+            return parse_task_at(dead.spec, dead.task, BASE_REF, repo=self.repo, run=self.run)
+        except WorkerError:  # the note still says what it can without the criteria
+            return TaskSpec(dead.spec, dead.task, (), "", {}, "")
+
+    def checkout(self) -> PassResult | None:
+        """Step 3 (R-8): the checkout at `origin/main` by fast-forward. None
+        when it is there; otherwise how the pass ends."""
+        try:
+            self.run(["git", "-C", str(self.repo.resolve().parent),
+                      "rev-parse", "--show-toplevel"])
+        except RuntimeError:
+            pass  # the parent directory is in no working tree
+        else:
+            return self.refuse(CheckoutRefusal.NESTED)
+        try:
+            if self.git("status", "--porcelain", "--untracked-files=no").strip():
+                return self.refuse(CheckoutRefusal.CHANGED)
+            self.git("fetch", BASE_REMOTE, BASE_BRANCH)
+            commit = self.git("rev-parse", "--verify", f"{BASE_REF}^{{commit}}").strip()
+            head = self.git("rev-parse", "--verify", "HEAD^{commit}").strip()
+        except RuntimeError as e:
+            logger.error("dispatch: FAILED — cannot fetch %s: %s", BASE_REF, e)
+            return PassResult.FAILED
+        if head != commit:
+            try:
+                self.git("merge-base", "--is-ancestor", head, commit)
+                self.git("reset", "-q", "--keep", commit)
+            except RuntimeError:
+                return self.refuse(CheckoutRefusal.DIVERGED)
+            self.moved = True
+        logger.info("dispatch: the checkout is at %s (%s)", BASE_REF, commit[:12])
+        return None
+
+    def refuse(self, reason: CheckoutRefusal) -> PassResult:
+        logger.error("dispatch: REFUSED — the checkout cannot be used: %s", reason.value)
+        self.alert(*CHECKOUT_ALERT, *checkout_alert(reason, str(self.repo.resolve())))
+        return PassResult.REFUSED
+
+
+def _locked_pass(p: _Pass) -> PassResult:
+    """Steps 4 to 7: the configuration, the issues, the decision."""
+    tracker, repo, run = p.tracker, p.repo, p.run
     try:
         project = load_project_config(repo)
         config = project.dispatch
@@ -142,13 +280,7 @@ def _locked_pass(
     logger.info("dispatch: on for issues opened by the configured author")
 
     git = ["git", "-C", str(repo)]
-    try:
-        run([*git, "fetch", BASE_REMOTE, BASE_BRANCH])
-        commit = run([*git, "rev-parse", "--verify", f"{BASE_REF}^{{commit}}"]).strip()
-    except RuntimeError as e:
-        logger.error("dispatch: FAILED — cannot fetch %s: %s", BASE_REF, e)
-        return PassResult.FAILED
-    logger.info("dispatch: %s is %s", BASE_REF, commit)
+    commit = run([*git, "rev-parse", "--verify", f"{BASE_REF}^{{commit}}"]).strip()
 
     try:
         issues = tracker.list_open()
@@ -176,8 +308,7 @@ def _locked_pass(
     if isinstance(decision, Accepted):
         logger.info("dispatch: #%d accepted (%s %s)", issue.number,
                     decision.spec_slug, decision.task_id)
-        return _claim_and_run(tracker, issue.number, decision, commit=commit, repo=repo,
-                              project=project, limits=limits, work_fn=work_fn)
+        return _claim_and_run(p, issue.number, decision, commit=commit, project=project)
 
     logger.info("dispatch: #%d refused — %s", issue.number, decision.reason.value)
     try:
@@ -192,22 +323,16 @@ def _locked_pass(
 
 
 def _claim_and_run(
-    tracker: DispatchTracker,
-    number: int,
-    task: Accepted,
-    *,
-    commit: str,
-    repo: Path,
-    project: ProjectConfig,
-    limits: Limits,
-    work_fn: WorkFn,
+    p: _Pass, number: int, task: Accepted, *, commit: str, project: ProjectConfig
 ) -> PassResult:
     """Claim the issue, run its task, answer it (R-4, R-9, R-10, R-11).
 
     `work()` gets what a hand dispatch gives it — the roster, the limits and
-    the project's configuration — plus only the fetched commit and
-    `existing="continue"`; never any seam or text of the tick's own.
+    the project's configuration — plus only the fetched commit,
+    `existing="continue"`, and the session seam told to record the session's
+    process group in the lock file (R-15); never any text of the tick's own.
     """
+    tracker, repo, limits = p.tracker, p.repo, p.limits
     try:
         tracker.remove_label(number)
     except Exception as e:  # noqa: BLE001 — an unclaimed issue starts nothing (R-4)
@@ -215,7 +340,7 @@ def _claim_and_run(
         return PassResult.FAILED
     logger.info("dispatch: #%d claimed — label removed", number)
 
-    lock_file = repo / lock.LOCK_FILE
+    lock_file = p.lock_file
     worktree = WORKTREES_DIR / f"{task.spec_slug}-{task.task_id.lower()}"
     started = lock.Run(
         pid=os.getpid(), started=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -224,11 +349,18 @@ def _claim_and_run(
     lock.write_run(started, lock_file)
     logger.info("dispatch: #%d run written to the lock file", number)
 
+    def record_group(pgid: int) -> None:
+        nonlocal started
+        started = replace(started, session_pgid=pgid)
+        lock.write_run(started, lock_file)
+        logger.info("dispatch: #%d session's process group %d recorded", number, pgid)
+
     try:
-        outcome = work_fn(
+        outcome = p.work_fn(
             task.spec_slug, task.task_id, Roster.from_file(repo / limits.roster),
             timeout_s=limits.timeout_s, spend_limit_usd=limits.spend_limit_usd,
             project=project, at=commit, existing="continue",
+            session_run=partial(p.session_run, on_start=record_group),
         )
     except Exception as e:  # noqa: BLE001 — a run that raises is still answered
         logger.error("dispatch: #%d run ended in an error — %s", number, e)

@@ -8,6 +8,7 @@ text taken from an issue — not its title, body, comments, labels or author
 from __future__ import annotations
 
 import re
+from enum import StrEnum
 
 from ..worker.types import (
     Escalated,
@@ -84,3 +85,36 @@ def run_comment(outcome: WorkerOutcome | None) -> str:
         return ("The worker run ended in an error: no pull request was opened.\n\n"
                 f"{_CLOSED}")
     return f"The worker run {why}\n\n{_alert(alerts)} {_CLOSED}"
+
+
+def dead_run_comment(alerts: tuple[str, ...]) -> str:
+    """The one comment an issue gets whose run died with the pass that
+    started it: a later pass found it unfinished (R-15)."""
+    return ("The worker run stopped without finishing: the pass that started it ended "
+            "before it did. The worktree and a handoff note are kept; a new dispatch issue "
+            f"resumes it.\n\n{_alert(alerts)} {_CLOSED}")
+
+
+class CheckoutRefusal(StrEnum):
+    """Why a pass will not use its checkout (R-8)."""
+
+    CHANGED = "tracked-file-changed"
+    DIVERGED = "cannot-fast-forward"
+    NESTED = "nested-checkout"
+
+
+_CHECKOUT: dict[CheckoutRefusal, str] = {
+    CheckoutRefusal.CHANGED: "a tracked file in the checkout has been changed",
+    CheckoutRefusal.DIVERGED: "the checkout cannot be fast-forwarded to `origin/main`",
+    CheckoutRefusal.NESTED: "the checkout lies inside another repository's working tree",
+}
+
+
+def checkout_alert(reason: CheckoutRefusal, checkout: str) -> tuple[str, str]:
+    """The (title, body) of the alert a refused checkout raises."""
+    return (
+        "dispatch tick refused its checkout",
+        (f"No dispatch pass will start a run until this is put right: {_CHECKOUT[reason]}."
+         f"\n\nCheckout: `{checkout}`. Reason code: `{reason.value}`. Nothing was listed, "
+         "claimed or started."),
+    )

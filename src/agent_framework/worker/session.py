@@ -21,6 +21,7 @@ import math
 import os
 import signal
 import subprocess
+import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -68,7 +69,8 @@ def check_spend_limit(limit_usd: float) -> float:
 
 
 def run_claude(
-    args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str], record: Path
+    args: Sequence[str], cwd: Path, timeout_s: float, env: Mapping[str, str], record: Path,
+    *, on_start: Callable[[int], None] | None = None,
 ) -> None:
     """Default seam: run the CLI in the worktree, kill on budget expiry.
 
@@ -76,7 +78,9 @@ def run_claude(
     a closed standard input. Its standard output goes straight to `record`,
     so whatever it wrote is on disk even if it is killed. The session leads
     its own process group, so a budget expiry stops it and every child it
-    started (test runs, shells) — none outlive it.
+    started (test runs, shells) — none outlive it. `on_start`, when given, is
+    told that group as soon as the session has started (the dispatch tick
+    records it, so a later pass can stop what a dead run left).
     """
     record.parent.mkdir(parents=True, exist_ok=True)
     with record.open("w", encoding="utf-8") as out:
@@ -91,6 +95,12 @@ def run_claude(
                 "the `claude` CLI is not installed or not on PATH — the worker "
                 "needs headless Claude Code (ADR 0004)"
             ) from None
+        if on_start is not None:
+            try:
+                on_start(proc.pid)  # the session leads its group: pgid == pid
+            except BaseException:
+                _kill_group(proc)  # a session nobody can account for does not run
+                raise
         try:
             _, stderr = proc.communicate(timeout=timeout_s)
         except subprocess.TimeoutExpired:
@@ -116,6 +126,25 @@ def _kill_group(proc: subprocess.Popen[str], grace_s: float = 5.0) -> None:
             return
         except subprocess.TimeoutExpired:
             continue
+
+
+def stop_group(pgid: int, grace_s: float = 5.0) -> None:
+    """SIGTERM a process group this process did not start, then SIGKILL
+    whatever of it is left after `grace_s`. A group already gone is fine."""
+    if pgid <= 1:
+        return  # never "every process" or init: only a real session's group
+    deadline = time.monotonic() + grace_s
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.killpg(pgid, sig)
+        except (ProcessLookupError, PermissionError):
+            return  # gone (or no longer ours to signal)
+        while sig == signal.SIGTERM and time.monotonic() < deadline:
+            try:
+                os.killpg(pgid, 0)
+            except (ProcessLookupError, PermissionError):
+                return
+            time.sleep(0.05)
 
 
 def read_end(record: Path) -> SessionEnd | None:

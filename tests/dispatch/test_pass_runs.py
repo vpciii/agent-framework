@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import json
 import subprocess
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from functools import partial
@@ -38,6 +38,7 @@ from agent_framework.errors import SessionResultError, SessionTimeoutError
 from agent_framework.proc import run_command
 from agent_framework.worker.__main__ import main as hand_dispatch
 from agent_framework.worker.orchestrator import work
+from agent_framework.worker.session import run_claude
 
 MARKER = "ZQX-MARKER-7731"
 PR = "https://github.com/x/y/pull/99"
@@ -188,7 +189,8 @@ class Session:
         self.seen: list[dict[str, Any]] = []
 
     def __call__(self, args: Sequence[str], cwd: Path, timeout_s: float,
-                 env: Mapping[str, str], record: Path) -> None:
+                 env: Mapping[str, str], record: Path,
+                 on_start: Callable[[int], None] | None = None) -> None:
         self.events.append("session")
         argv = list(args)
         self.seen.append({"argv": argv, "brief": argv[argv.index("-p") + 1],
@@ -222,8 +224,13 @@ def _issue(title: str = "fixture T-1", number: int = 7, day: int = 1) -> Issue:
 def _seams(session: Session, runner: Runner) -> WorkFn:
     """The real `work()` with only its outside edges faked — the same for the
     tick and for a hand dispatch."""
-    return partial(work, run=runner, session_run=session, tracker=AlertTracker(),
-                   push_factory=lambda: None)
+    return partial(_tick_seams(runner), session_run=session)
+
+
+def _tick_seams(runner: Runner) -> WorkFn:
+    """As `_seams`, but the session seam left to the tick, which passes its
+    own (the session, told to record its process group)."""
+    return partial(work, run=runner, tracker=AlertTracker(), push_factory=lambda: None)
 
 
 def _pass(*issues: Issue, ending: str = "pr", open_pr: str = "", fail_claim: bool = False,
@@ -231,7 +238,8 @@ def _pass(*issues: Issue, ending: str = "pr", open_pr: str = "", fail_claim: boo
     events: list[str] = []
     tracker = Tracker(events, *issues, fail_claim=fail_claim)
     session, runner = Session(events, ending), Runner(open_pr)
-    result = run_pass(tracker, limits=LIMITS, run=runner, work_fn=_seams(session, runner))
+    result = run_pass(tracker, limits=LIMITS, run=runner, work_fn=_tick_seams(runner),
+                      session_run=session)
     return result, tracker, session, runner, events
 
 
@@ -316,7 +324,8 @@ def test_sc7_the_session_is_launched_as_a_hand_dispatch_launches_it(repo: Path) 
 def test_sc7_work_gets_nothing_of_the_ticks_own_but_the_commit_and_continue(
     repo: Path,
 ) -> None:
-    """SC-7: beside a hand dispatch's arguments, only `at` and `existing`."""
+    """SC-7: beside a hand dispatch's arguments, only `at`, `existing` and the
+    default session seam, told only where to record the process group."""
     calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
 
     def spy(*args: Any, **kwargs: Any) -> Any:
@@ -326,7 +335,10 @@ def test_sc7_work_gets_nothing_of_the_ticks_own_but_the_commit_and_continue(
     run_pass(Tracker([], _issue()), limits=LIMITS, work_fn=spy)
     ((args, kwargs),) = calls
     assert args[:2] == ("fixture", "T-1")
-    assert set(kwargs) == {"timeout_s", "spend_limit_usd", "project", "at", "existing"}
+    assert set(kwargs) == {"timeout_s", "spend_limit_usd", "project", "at", "existing",
+                           "session_run"}
+    seam = kwargs["session_run"]
+    assert seam.func is run_claude and seam.args == () and set(seam.keywords) == {"on_start"}
     assert (kwargs["timeout_s"], kwargs["spend_limit_usd"]) == (600, 3.0)
     assert kwargs["existing"] == "continue"
     assert kwargs["at"] == _git(repo, "rev-parse", "origin/main")
