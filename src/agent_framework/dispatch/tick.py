@@ -69,6 +69,8 @@ from .report import (
     reset_failed_passes,
     run_comment,
     send_heartbeat,
+    unstarted_run_alert,
+    unstarted_run_comment,
     version_alert,
 )
 
@@ -88,7 +90,7 @@ STATE_FILE = WORKTREES_DIR / "dispatch-state.json"
 
 WorkFn = Callable[..., WorkerOutcome]
 # `run_claude`'s shape: the session seam plus `on_start`, a keyword told the
-# session's process group as it starts.
+# session's process group as it starts, and `pass_fds`, what it inherits.
 StartingSessionRunner = Callable[..., None]
 
 
@@ -241,30 +243,47 @@ class _Pass:
 
     def recover(self) -> bool:
         """Step 2 (R-15): a run recorded and not finished died with its pass —
-        the lock is ours, so no process holds it. Stop what is left of its
-        session, write its handoff note, alert, answer its issue, clear the
-        record. False when the issue could not be answered: the record is
-        then kept, and the next pass tries again."""
+        the lock is ours, so no process holds it. Stop its session if the
+        session lock says one is left, write its handoff note when its
+        worktree was cut, alert, answer its issue, clear the record. False
+        when the worktrees cannot be listed or the issue answered: the record
+        is then kept, and the next pass tries again."""
         dead = lock.read_run(self.lock_file)
         if dead is None or dead.finished:
             return True
         logger.info("dispatch: #%d's run (%s %s) died unfinished — recovering",
                     dead.issue, dead.spec, dead.task)
         if dead.session_pgid is not None:
-            stop_group(dead.session_pgid)
-            logger.info("dispatch: process group %d stopped", dead.session_pgid)
-        note = write_handoff_note(self._task(dead), self.repo / dead.worktree,
-                                  budget_s=self.limits.timeout_s,
-                                  elapsed_s=dead.elapsed_s(), run=self.run)
-        logger.info("dispatch: handoff note written to %s", note)
-        alerts = self.alert(
-            "timeout", f"{dead.spec}/{dead.task}", f"{dead.task} of {dead.spec} stopped",
-            "The worker run stopped without finishing: the dispatch pass that started it "
-            f"ended first.\n\nWorktree preserved at `{dead.worktree}`; handoff note at "
-            f"`{Path(dead.worktree) / note.name}`.",
-        )
+            if lock.session_alive(self.repo / lock.SESSION_LOCK_FILE):
+                stop_group(dead.session_pgid)
+                logger.info("dispatch: process group %d stopped", dead.session_pgid)
+            else:
+                logger.info("dispatch: the session is already gone — no signal sent")
         try:
-            self.tracker.comment(dead.issue, dead_run_comment(alerts))
+            cut = self._is_worktree(dead.worktree)
+        except RuntimeError as e:
+            logger.error("dispatch: FAILED — cannot list the worktrees: %s", e)
+            return False
+        if cut:
+            note = write_handoff_note(self._task(dead), self.repo / dead.worktree,
+                                      budget_s=self.limits.timeout_s,
+                                      elapsed_s=dead.elapsed_s(), run=self.run)
+            logger.info("dispatch: handoff note written to %s", note)
+            alerts = self.alert(
+                "timeout", f"{dead.spec}/{dead.task}",
+                f"{dead.task} of {dead.spec} stopped",
+                "The worker run stopped without finishing: the dispatch pass that started "
+                f"it ended first.\n\nWorktree preserved at `{dead.worktree}`; handoff note "
+                f"at `{Path(dead.worktree) / note.name}`.",
+            )
+            comment = dead_run_comment(alerts)
+        else:
+            logger.info("dispatch: no worktree was cut — no handoff note")
+            alerts = self.alert("timeout", f"{dead.spec}/{dead.task}",
+                                *unstarted_run_alert(dead.spec, dead.task))
+            comment = unstarted_run_comment(alerts)
+        try:
+            self.tracker.comment(dead.issue, comment)
             self.tracker.close(dead.issue)
         except Exception as e:  # noqa: BLE001 — reported as a failed pass, never raised
             logger.error("dispatch: FAILED — cannot answer #%d: %s", dead.issue, e)
@@ -272,6 +291,13 @@ class _Pass:
         lock.write_run(None, self.lock_file)
         logger.info("dispatch: #%d commented and closed; the record cleared", dead.issue)
         return True
+
+    def _is_worktree(self, worktree: str) -> bool:
+        """Whether `git worktree list --porcelain` names the recorded worktree."""
+        wanted = (self.repo / worktree).resolve()
+        listed = self.git("worktree", "list", "--porcelain")
+        return any(Path(line.removeprefix("worktree ")).resolve() == wanted
+                   for line in listed.splitlines() if line.startswith("worktree "))
 
     def _task(self, dead: lock.Run) -> TaskSpec:
         try:
@@ -383,9 +409,9 @@ def _claim_and_run(
     `work()` gets what a hand dispatch gives it — the roster, the limits and
     the project's configuration — plus only the fetched commit,
     `existing="continue"`, and the session seam told to record the session's
-    process group in the lock file (R-15); never any text of the tick's own.
+    process group in the lock file and handed the session lock to inherit
+    (R-15); never any text of the tick's own.
     """
-    tracker, repo, limits = p.tracker, p.repo, p.limits
     wanted = project.dispatch.worker_cli_version
     if wanted is not None:
         installed = reported_version(claude_code_version(p.run))
@@ -395,6 +421,39 @@ def _claim_and_run(
             p.alert(*CLI_VERSION_ALERT, *version_alert(wanted, installed), quiet=True)
             return PassResult.COMPLETED
         logger.info("dispatch: the worker CLI is the configured %s", wanted)
+    fd = lock.take_session(p.repo / lock.SESSION_LOCK_FILE)
+    if fd is None:  # a session outlived recovery: start no second one
+        logger.error("dispatch: FAILED — a session still holds the session lock")
+        return PassResult.FAILED
+    session_lock = _SessionLock(fd)
+    try:
+        return _run_claimed(p, number, task, commit=commit, project=project,
+                            session_lock=session_lock)
+    finally:
+        session_lock.close()
+
+
+@dataclass
+class _SessionLock:
+    """The tick's copy of the session lock's descriptor, closed once only:
+    a number closed twice might by then name another file."""
+
+    fd: int
+    closed: bool = False
+
+    def close(self) -> None:
+        if not self.closed:
+            self.closed = True
+            os.close(self.fd)
+
+
+def _run_claimed(
+    p: _Pass, number: int, task: Accepted, *, commit: str, project: ProjectConfig,
+    session_lock: _SessionLock,
+) -> PassResult:
+    """`_claim_and_run` holding the session lock: the session inherits it,
+    and this process closes its own copy as soon as the session has started."""
+    tracker, repo, limits = p.tracker, p.repo, p.limits
     try:
         tracker.remove_label(number)
     except Exception as e:  # noqa: BLE001 — an unclaimed issue starts nothing (R-4)
@@ -416,6 +475,7 @@ def _claim_and_run(
         started = replace(started, session_pgid=pgid)
         lock.write_run(started, lock_file)
         logger.info("dispatch: #%d session's process group %d recorded", number, pgid)
+        session_lock.close()  # the session holds the session lock now, not the tick
 
     records = repo / RECORDS_DIR
     pattern = f"{task.spec_slug}-{task.task_id.lower()}-*.jsonl"
@@ -425,7 +485,8 @@ def _claim_and_run(
             task.spec_slug, task.task_id, Roster.from_file(repo / limits.roster),
             timeout_s=limits.timeout_s, spend_limit_usd=limits.spend_limit_usd,
             project=project, at=commit, existing="continue",
-            session_run=partial(p.session_run, on_start=record_group),
+            session_run=partial(p.session_run, on_start=record_group,
+                                pass_fds=(session_lock.fd,)),
         )
     except Exception as e:  # noqa: BLE001 — a run that raises is still answered
         logger.error("dispatch: #%d run ended in an error — %s", number, e)
