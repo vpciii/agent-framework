@@ -161,6 +161,20 @@ def test_sc4_the_session_environment_is_an_allowlist(repo: Path) -> None:  # noq
     assert session_env(ProjectConfig(), environ).get("UV_INDEX_URL") is None  # undeclared
 
 
+def test_pushover_sc3_the_session_environment_holds_none_of_pushovers_names() -> None:
+    """specs/pushover-push SC-3: the environment built for a worker session
+    from one holding Pushover's three names holds none of them."""
+    environ = {
+        "PATH": "/usr/bin", "HOME": "/Users/x",
+        "AF_PUSHOVER_TOKEN": "TOKEN-MARKER", "AF_PUSHOVER_USER": "USER-MARKER",
+        "AF_PUSHOVER_KEY": "ab" * 32,
+    }
+    env = session_env(ProjectConfig(), environ)
+
+    assert env == {"PATH": "/usr/bin", "HOME": "/Users/x"}
+    assert not any(name.startswith("AF_PUSHOVER") for name in env)
+
+
 def test_the_default_seam_hands_the_process_only_the_given_environment(tmp_path: Path) -> None:
     """The real subprocess seam: the child sees the allowlisted environment,
     not this process's, and its standard input is closed."""
